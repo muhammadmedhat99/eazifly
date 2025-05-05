@@ -20,7 +20,7 @@ export const Sidebar = () => {
       />
       <Accordion selectionMode="multiple" variant="splitted">
         <AccordionItem
-          key="stydents"
+          key="students"
           aria-label="Accordion 1"
           title={
             <div className="flex items-center gap-1">
