@@ -22,6 +22,7 @@ module.exports = {
             warning: "#E08420",
             stroke: "#E5E7EB",
             main: "#fff",
+            light: "#F8F9FA"
           },
         },
         dark: {
@@ -34,6 +35,7 @@ module.exports = {
             warning: "#E08420",
             stroke: "1a1a1a",
             main: "#000",
+            light: "#0f0f0f"
           },
         },
       },
