@@ -27,7 +27,7 @@ export function Providers({ children, themeProps }: ProvidersProps) {
   return (
     <HeroUIProvider navigate={router.push}>
       <ToastProvider placement="top-center" toastOffset={20} />
-      <NextThemesProvider {...themeProps}>
+      <NextThemesProvider {...themeProps} defaultTheme="light">
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
