@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Input } from "@heroui/react";
 import { Notification, MessageText1, SearchNormal1 } from "iconsax-reactjs";
-import Image from "next/image";
 import { useDebounce } from "@/lib/hooks/useDebounce"; // see below for implementation
 
 export const Header = () => {
