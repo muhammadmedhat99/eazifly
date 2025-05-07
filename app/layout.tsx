@@ -3,6 +3,8 @@ import "@/styles/globals.css";
 import { Metadata } from "next";
 
 import { Providers } from "./providers";
+import clsx from "clsx";
+import { ibmPlexSansArabic } from "./fonts";
 
 export const metadata: Metadata = {
   title: {
@@ -22,7 +24,12 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="ar" dir="rtl">
       <head />
-      <body className="min-h-screen bg-background antialiased">
+      <body
+        className={clsx(
+          "min-h-screen bg-background antialiased",
+          ibmPlexSansArabic.className
+        )}
+      >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
           {children}
         </Providers>
