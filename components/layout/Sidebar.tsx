@@ -41,7 +41,8 @@ export const Sidebar = () => {
                     </div>
                   }
                   classNames={{
-                    trigger: "justify-between px-0.5 py-3",
+                    base: "shadow-none px-2.5",
+                    trigger: "justify-between px-0.5 py-3 shadow-none",
                     content: "px-3 pt-0 pb-3",
                     indicator:
                       "duration-300 -rotate-90 data-[open=true]:rotate-90 w-3 h-3",
