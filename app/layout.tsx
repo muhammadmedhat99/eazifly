@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning lang="ar" dir="rtl">
+    <html suppressHydrationWarning lang="ar" dir="rtl" className="light">
       <head />
       <body
         className={clsx(
