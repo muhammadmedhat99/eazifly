@@ -3,9 +3,10 @@
 import type { ThemeProviderProps } from "next-themes";
 
 import * as React from "react";
-import { HeroUIProvider } from "@heroui/react";
+import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export interface ProvidersProps {
   children: React.ReactNode;
@@ -22,10 +23,15 @@ declare module "@react-types/shared" {
 
 export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
-
+  const queryClient = new QueryClient();
   return (
     <HeroUIProvider navigate={router.push}>
-      <NextThemesProvider {...themeProps}>{children}</NextThemesProvider>
+      <ToastProvider placement="top-center" toastOffset={20} />
+      <NextThemesProvider {...themeProps}>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </NextThemesProvider>
     </HeroUIProvider>
   );
 }
