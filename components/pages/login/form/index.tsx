@@ -8,8 +8,6 @@ import { addToast, Button, Checkbox, Input, Spinner } from "@heroui/react";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-import { setCookie } from "cookies-next";
 
 const emailOrEgyptPhoneSchema = yup
   .string()
@@ -43,7 +41,6 @@ const schema = yup
 type FormData = yup.InferType<typeof schema>;
 
 export const LoginForm = () => {
-  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -65,7 +62,6 @@ export const LoginForm = () => {
       return postData("client/login", formdata, myHeaders);
     },
     onSuccess: (data) => {
-      console.log(" data ===>>", data);
       if (data.message !== "success") {
         addToast({
           title: data?.message,
@@ -80,9 +76,9 @@ export const LoginForm = () => {
           shouldShowTimeoutProgress: true,
           color: "success",
         });
-        setCookie("token", data?.data?.token);
         reset({ phone: "", password: "" });
-        router.replace("/");
+        document.cookie = `token=${data?.data?.token}; path=/;`;
+        window.location.href = "/";
       }
     },
     onError: () => {
