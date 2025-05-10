@@ -27,9 +27,11 @@ export default function TableComponent({
           <User
             avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
             description={
-              <span className="text-[#5E5E5E] font-semibold text-start">
-                تاريخ الإنشاء : {item.renew}
-              </span>
+              item.renew && (
+                <span className="text-[#5E5E5E] font-semibold text-start">
+                  تاريخ الإنشاء : {item.renew}
+                </span>
+              )
             }
             name={cellValue}
           ></User>
@@ -61,10 +63,41 @@ export default function TableComponent({
             </span>
           </Chip>
         );
+
+      case "order_status":
+        return (
+          <div className="flex items-center gap-2">
+            <span
+              className={`size-2 rounded-full bg-${item?.order_status?.color}`}
+            ></span>
+            <span className={`text-${item?.order_status?.color} font-bold`}>
+              {item?.order_status?.name}
+            </span>
+          </div>
+        );
+      case "subscription_status":
+        return (
+          <div className="flex items-center gap-2">
+            <span
+              className={`size-2 rounded-full bg-${item?.subscription_status?.color}`}
+            ></span>
+            <span
+              className={`text-${item?.subscription_status?.color} font-bold`}
+            >
+              {item?.subscription_status?.name}
+            </span>
+          </div>
+        );
+      case "price":
+        return (
+          <span className="text-title font-bold">
+            {cellValue} <span className="text-xs">ج.م</span>
+          </span>
+        );
       case "actions":
         return (
           <React.Fragment>
-            <ActionsComponent />
+            <ActionsComponent id={item.id} />
           </React.Fragment>
         );
       default:
