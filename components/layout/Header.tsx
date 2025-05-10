@@ -29,7 +29,7 @@ export const Header = () => {
         <input
           type="text"
           placeholder="بحث..."
-          className="w-full py-2 h-10 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
+          className="w-full py-2 h-10 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-[#F8F9FA] dark:bg-black/80"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
