@@ -30,9 +30,7 @@ export default function RootLayout({
           ibmPlexSansArabic.className
         )}
       >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          {children}
-        </Providers>
+        <Providers themeProps={{ attribute: "class" }}>{children}</Providers>
       </body>
     </html>
   );
