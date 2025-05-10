@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 
-import TableComponent from "@/components/global/Table";
-import { Options } from "@/components/global/Icons";
+import { useDebounce } from "@/lib/hooks/useDebounce";
+
 import {
   Button,
   Dropdown,
@@ -11,44 +11,51 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from "@heroui/react";
-import { useDebounce } from "@/lib/hooks/useDebounce";
+
 import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
 import { CustomPagination } from "@/components/global/Pagination";
+import { Options } from "@/components/global/Icons";
+import TableComponent from "@/components/global/Table";
 
 const columns = [
+  { name: "رقم الطلب", uid: "num" },
   { name: "إسم الطالب", uid: "name" },
-  { name: "رقم الهاتف", uid: "phone" },
-  { name: "البريد الإلكتروني", uid: "email" },
-  { name: "البرامج الملحق بها", uid: "courses" },
-  { name: "موعد التجديد", uid: "renew" },
-  { name: "الحالة", uid: "status" },
+  { name: "حالة  مرسل الطلب", uid: "subscription_status" },
+  { name: "نوع الإشتراك", uid: "type" },
+  { name: "إسم البرنامج", uid: "courses" },
+  { name: "قيمة الإشتراك", uid: "price" },
+  { name: "تاريخ الطلب", uid: "date" },
+  { name: "حالة الطلب", uid: "order_status" },
   { name: <Options />, uid: "actions" },
 ];
 
 const data = [
   {
     id: 1,
+    num: "37676",
     name: "أحمد علي",
-    phone: "201004443303+",
-    email: "tony.reichert@example.com",
+    subscription_status: { name: "جديد", color: "success" },
+    type: "فردي",
     courses: "برنامج مادة الرياضيات للصف السادس",
-    renew: "12-2-2025",
-    status: "نشط",
+    price: "450",
+    date: "12-2-2025",
+    order_status: { name: "جديد", color: "success" },
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
   },
   {
     id: 2,
-    name: "أحمد علي",
-    phone: "201004443303+",
-    email: "tony.reichert@example.com",
+    num: "87826",
+    name: "خالد تركي",
+    subscription_status: { name: "تجديد الإشتراك", color: "primary" },
+    type: "عائلي",
     courses: "برنامج مادة الرياضيات للصف السادس",
-    renew: "12-2-2025",
-    status: "متوقف",
+    price: "450",
+    date: "12-2-2025",
+    order_status: { name: "معلق", color: "warning" },
     avatar: "https://i.pravatar.cc/150?u=a092581d4ef9026700d",
   },
 ];
-
-const OptionsComponent = () => {
+const OptionsComponent = ({ id }: { id: number }) => {
   return (
     <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
       <DropdownTrigger>
@@ -57,21 +64,20 @@ const OptionsComponent = () => {
         </button>
       </DropdownTrigger>
       <DropdownMenu aria-label="Static Actions">
-        <DropdownItem key="show">عرض البيانات</DropdownItem>
-        <DropdownItem key="edit">تعديل البيانات</DropdownItem>
-        <DropdownItem key="add-to-course">إلحاق ببرنامج</DropdownItem>
-        <DropdownItem key="change-password">تغيير كلمة المرور</DropdownItem>
-        <DropdownItem key="send-mail">إرسال رسالة</DropdownItem>
+        <DropdownItem key="show" href={`/students/subscriptions/${id}`}>
+          عرض الطلب
+        </DropdownItem>
+        <DropdownItem key="approve">موافقة</DropdownItem>
+        <DropdownItem key="decline">رفض</DropdownItem>
         <DropdownItem key="delete">حذف</DropdownItem>
+        <DropdownItem key="send-message">إرسال رسالة</DropdownItem>
       </DropdownMenu>
     </Dropdown>
   );
 };
-
-export const AllStudents = () => {
+export const AllStudentsSubscriptions = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
-  const [selectedStatus, setSelectedStatus] = useState("1");
   return (
     <div>
       <div className="p-4 flex items-center justify-between flex-wrap">
@@ -118,52 +124,36 @@ export const AllStudents = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button
-            id="1"
-            variant="flat"
-            color={selectedStatus === "1" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
-          >
-            الكل
-          </Button>
-          <Button
-            id="2"
-            variant="flat"
-            color={selectedStatus === "2" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
-          >
-            نشط
-          </Button>
-          <Button
-            id="3"
-            variant="flat"
-            color={selectedStatus === "3" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
-          >
-            متوقف
-          </Button>
-          <Button
-            id="4"
-            variant="flat"
-            color={selectedStatus === "4" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
-          >
-            ملغي
-          </Button>
+          <Dropdown classNames={{ content: "min-w-36" }} showArrow>
+            <DropdownTrigger>
+              <Button variant="flat" className="font-semibold" radius="sm">
+                حالة مرسل الطلب
+                <ArrowDown2 size={14} />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Static Actions">
+              <DropdownItem key="show">جديد</DropdownItem>
+              <DropdownItem key="edit">تجديد الإشتراك</DropdownItem>
+              <DropdownItem key="add-to-course">إلغاء الإشتراك</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+          <Dropdown classNames={{ content: "min-w-36" }} showArrow>
+            <DropdownTrigger>
+              <Button variant="flat" className="font-semibold" radius="sm">
+                حالة الطلب
+                <ArrowDown2 size={14} />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Static Actions">
+              <DropdownItem key="show">جديد</DropdownItem>
+              <DropdownItem key="edit">معلق</DropdownItem>
+              <DropdownItem key="add-to-course">تم الإشتراك</DropdownItem>
+              <DropdownItem key="change-password">مرفوض</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </div>
       </div>
+
       <TableComponent
         columns={columns}
         data={data}
