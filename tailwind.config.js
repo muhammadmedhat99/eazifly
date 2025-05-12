@@ -26,7 +26,8 @@ const config = {
           stroke: "#E5E7EB",
           main: "#fff",
           title: "#3D5066",
-          input: "#F0F0F0"
+          input: "#F0F0F0",
+          "black-text": "#272727"
         }
       },
       dark: {
@@ -40,7 +41,8 @@ const config = {
           stroke: "#1a1a1a",
           main: "#000",
           title: "#3D5066",
-          input: "#F0F0F0"
+          input: "#F0F0F0",
+          "black-text": "#272727"
         }
       }
     }

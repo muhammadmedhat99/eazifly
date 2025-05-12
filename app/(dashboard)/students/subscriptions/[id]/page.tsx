@@ -1,4 +1,5 @@
 import { BreadCrumb } from "@/components/global/BreadCrumb";
+import { StudentsSubscriptionDetails } from "@/components/pages/students-subscriptions-details";
 import Link from "next/link";
 import React from "react";
 
@@ -26,7 +27,7 @@ const BreadCrumbItems = [
 
 export default function page() {
   return (
-    <div>
+    <>
       <BreadCrumb items={BreadCrumbItems}>
         <div className="flex items-center gap-2">
           <Link
@@ -37,6 +38,8 @@ export default function page() {
           </Link>
         </div>
       </BreadCrumb>
-    </div>
+
+      <StudentsSubscriptionDetails />
+    </>
   );
 }
