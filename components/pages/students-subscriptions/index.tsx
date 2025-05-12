@@ -16,6 +16,11 @@ import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
 import { CustomPagination } from "@/components/global/Pagination";
 import { Options } from "@/components/global/Icons";
 import TableComponent from "@/components/global/Table";
+import { useQuery } from "@tanstack/react-query";
+import { fetchClient } from "@/lib/utils";
+import { AllQueryKeys } from "@/keys";
+import { axios_config } from "@/lib/const";
+import { Loader } from "@/components/global/Loader";
 
 const columns = [
   { name: "رقم الطلب", uid: "num" },
@@ -29,32 +34,6 @@ const columns = [
   { name: <Options />, uid: "actions" },
 ];
 
-const data = [
-  {
-    id: 1,
-    num: "37676",
-    name: "أحمد علي",
-    subscription_status: { name: "جديد", color: "success" },
-    type: "فردي",
-    courses: "برنامج مادة الرياضيات للصف السادس",
-    price: "450",
-    date: "12-2-2025",
-    order_status: { name: "جديد", color: "success" },
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-  },
-  {
-    id: 2,
-    num: "87826",
-    name: "خالد تركي",
-    subscription_status: { name: "تجديد الإشتراك", color: "primary" },
-    type: "عائلي",
-    courses: "برنامج مادة الرياضيات للصف السادس",
-    price: "450",
-    date: "12-2-2025",
-    order_status: { name: "معلق", color: "warning" },
-    avatar: "https://i.pravatar.cc/150?u=a092581d4ef9026700d",
-  },
-];
 const OptionsComponent = ({ id }: { id: number }) => {
   return (
     <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
@@ -78,6 +57,32 @@ const OptionsComponent = ({ id }: { id: number }) => {
 export const AllStudentsSubscriptions = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
+
+  const { data: studentsSubscriptions, isLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/order?search=${debouncedSearch}`, axios_config),
+    queryKey: AllQueryKeys.GetAllStudentSubscriptions(debouncedSearch),
+  });
+
+  const formattedData =
+    studentsSubscriptions?.data?.map((item: any) => ({
+      id: item.id,
+      num: item.id,
+      name: `${item.first_name} ${item.last_name}`,
+      subscription_status: {
+        name: item?.status,
+        color: item?.status === "new" ? "primary" : "warning",
+      },
+      type: item?.type || "N/A",
+      courses: item.order_details[0]?.program || "N/A",
+      price: `${item.total_after_discount} ${item.currency}`,
+      date: item?.created_at || "N/A",
+      order_status: {
+        name: item.order_details[0]?.status || "N/A",
+        color: item.order_details[0]?.status === "new" ? "primary" : "warning",
+      },
+      avatar: item.image || "N/A",
+    })) || [];
   return (
     <div>
       <div className="p-4 flex items-center justify-between flex-wrap">
@@ -154,11 +159,15 @@ export const AllStudentsSubscriptions = () => {
         </div>
       </div>
 
-      <TableComponent
-        columns={columns}
-        data={data}
-        ActionsComponent={OptionsComponent}
-      />
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <TableComponent
+          columns={columns}
+          data={formattedData}
+          ActionsComponent={OptionsComponent}
+        />
+      )}
 
       <div className="my-10 px-6">
         <CustomPagination />

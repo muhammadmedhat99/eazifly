@@ -1,3 +1,4 @@
+import { getCookie } from "cookies-next";
 import {
   Profile2User,
   Teacher,
@@ -99,3 +100,12 @@ export const routes = [
     icon: Setting,
   },
 ];
+
+export const axios_config = {
+  headers: {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    local: "en",
+    Authorization: `Bearer ${getCookie("token")}`,
+  },
+};

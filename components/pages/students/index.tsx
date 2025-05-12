@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
 import {
+  avatar,
   Button,
   Dropdown,
   DropdownItem,
@@ -14,6 +15,11 @@ import {
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
 import { CustomPagination } from "@/components/global/Pagination";
+import { useQuery } from "@tanstack/react-query";
+import { fetchClient } from "@/lib/utils";
+import { axios_config } from "@/lib/const";
+import { AllQueryKeys } from "@/keys";
+import { Loader } from "@/components/global/Loader";
 
 const columns = [
   { name: "إسم الطالب", uid: "name" },
@@ -25,30 +31,7 @@ const columns = [
   { name: <Options />, uid: "actions" },
 ];
 
-const data = [
-  {
-    id: 1,
-    name: "أحمد علي",
-    phone: "201004443303+",
-    email: "tony.reichert@example.com",
-    courses: "برنامج مادة الرياضيات للصف السادس",
-    renew: "12-2-2025",
-    status: "نشط",
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-  },
-  {
-    id: 2,
-    name: "أحمد علي",
-    phone: "201004443303+",
-    email: "tony.reichert@example.com",
-    courses: "برنامج مادة الرياضيات للصف السادس",
-    renew: "12-2-2025",
-    status: "متوقف",
-    avatar: "https://i.pravatar.cc/150?u=a092581d4ef9026700d",
-  },
-];
-
-const OptionsComponent = () => {
+const OptionsComponent = ({ id }: { id: number }) => {
   return (
     <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
       <DropdownTrigger>
@@ -57,7 +40,9 @@ const OptionsComponent = () => {
         </button>
       </DropdownTrigger>
       <DropdownMenu aria-label="Static Actions">
-        <DropdownItem key="show">عرض البيانات</DropdownItem>
+        <DropdownItem href={`/students/${id}`} key="show">
+          عرض البيانات
+        </DropdownItem>
         <DropdownItem key="edit">تعديل البيانات</DropdownItem>
         <DropdownItem key="add-to-course">إلحاق ببرنامج</DropdownItem>
         <DropdownItem key="change-password">تغيير كلمة المرور</DropdownItem>
@@ -72,8 +57,27 @@ export const AllStudents = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [selectedStatus, setSelectedStatus] = useState("1");
+
+  const { data: studentsData, isLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/user?search=${debouncedSearch}`, axios_config),
+    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch),
+  });
+
+  const formattedData =
+    studentsData?.data?.map((item: any) => ({
+      id: item.id,
+      name: `${item.first_name} ${item.last_name}`,
+      avatar: item.image,
+      phone: item.phone,
+      email: item.email,
+      courses: item.courses || "N/A", // Adjust based on your data structure
+      renew: item.renew || "N/A", // Adjust based on your data structure
+      status: item.status || "N/A", // Adjust based on your data structure
+    })) || [];
+
   return (
-    <div>
+    <>
       <div className="p-4 flex items-center justify-between flex-wrap">
         <div className="flex items-center gap-2">
           <div className="relative min-w-80">
@@ -164,15 +168,19 @@ export const AllStudents = () => {
           </Button>
         </div>
       </div>
-      <TableComponent
-        columns={columns}
-        data={data}
-        ActionsComponent={OptionsComponent}
-      />
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <TableComponent
+          columns={columns}
+          data={formattedData}
+          ActionsComponent={OptionsComponent}
+        />
+      )}
 
       <div className="my-10 px-6">
         <CustomPagination />
       </div>
-    </div>
+    </>
   );
 };
