@@ -12,29 +12,35 @@ import {
   User,
   Chip,
 } from "@heroui/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function TableComponent({
   columns,
   data,
   ActionsComponent,
 }: any) {
+  const pathname = usePathname();
+
   const renderCell = React.useCallback((item: any, columnKey: any) => {
     const cellValue = item[columnKey];
 
     switch (columnKey) {
       case "name":
         return (
-          <User
-            avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
-            description={
-              item.renew && (
-                <span className="text-[#5E5E5E] font-semibold text-start">
-                  تاريخ الإنشاء : {item.renew}
-                </span>
-              )
-            }
-            name={cellValue}
-          ></User>
+          <Link href={`${pathname}/${item?.id}` || ""}>
+            <User
+              avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
+              description={
+                item.renew && (
+                  <span className="text-[#5E5E5E] font-semibold text-start">
+                    تاريخ الإنشاء : {item.renew}
+                  </span>
+                )
+              }
+              name={cellValue}
+            ></User>
+          </Link>
         );
 
       case "status":
