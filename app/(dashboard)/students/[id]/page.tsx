@@ -1,5 +1,5 @@
 import { BreadCrumb } from "@/components/global/BreadCrumb";
-import { StudentDetails } from "@/components/pages/student-details";
+import { StudentDetails } from "@/components/pages/students/student-details";
 import Link from "next/link";
 import React from "react";
 
