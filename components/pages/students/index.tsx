@@ -25,8 +25,9 @@ const columns = [
   { name: "إسم الطالب", uid: "name" },
   { name: "رقم الهاتف", uid: "phone" },
   { name: "البريد الإلكتروني", uid: "email" },
-  { name: "البرامج الملحق بها", uid: "courses" },
-  { name: "موعد التجديد", uid: "renew" },
+  { name: "البرامج الملحق بها", uid: "programs" },
+  { name: "موعد التجديد", uid: "renew_date" },
+  { name: "أخر ظهور", uid: "last_active" },
   { name: "الحالة", uid: "status" },
   { name: <Options />, uid: "actions" },
 ];
@@ -71,9 +72,10 @@ export const AllStudents = () => {
       avatar: item.image,
       phone: item.phone,
       email: item.email,
-      courses: item.courses || "N/A", // Adjust based on your data structure
-      renew: item.renew || "N/A", // Adjust based on your data structure
-      status: item.status || "N/A", // Adjust based on your data structure
+      programs: item.programs || "N/A",
+      renew_date: item.renew_date || "N/A",
+      last_active: item.last_active || "N/A",
+      status: item.status || "N/A",
     })) || [];
 
   return (

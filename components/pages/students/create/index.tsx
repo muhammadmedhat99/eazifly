@@ -37,8 +37,7 @@ export const CreateStudent = () => {
           البرامج
         </div>
       </div>
-
-      <InformationForm />
+      {activeStep === 0 ? <InformationForm /> : <></>}
     </div>
   );
 };

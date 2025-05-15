@@ -25,7 +25,7 @@ import { Loader } from "@/components/global/Loader";
 const columns = [
   { name: "رقم الطلب", uid: "num" },
   { name: "إسم الطالب", uid: "name" },
-  { name: "حالة  مرسل الطلب", uid: "subscription_status" },
+  { name: "نوع الطلب", uid: "request_type" },
   { name: "نوع الإشتراك", uid: "type" },
   { name: "إسم البرنامج", uid: "courses" },
   { name: "قيمة الإشتراك", uid: "price" },
@@ -69,9 +69,9 @@ export const AllStudentsSubscriptions = () => {
       id: item.id,
       num: item.id,
       name: `${item.first_name} ${item.last_name}`,
-      subscription_status: {
-        name: item?.status,
-        color: item?.status === "new" ? "primary" : "warning",
+      request_type: {
+        name: item?.type,
+        color: item?.type === "new" ? "primary" : "warning",
       },
       type: item?.type || "N/A",
       courses: item.order_details[0]?.program || "N/A",
