@@ -32,9 +32,9 @@ export default function TableComponent({
             <User
               avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
               description={
-                item.renew && (
+                item.renew_date && (
                   <span className="text-[#5E5E5E] font-semibold text-start">
-                    تاريخ الإنشاء : {item.renew}
+                    تاريخ الإنشاء : {item.renew_date}
                   </span>
                 )
               }
@@ -81,7 +81,7 @@ export default function TableComponent({
             </span>
           </div>
         );
-      case "subscription_status":
+      case "request_type":
         return (
           <div className="flex items-center gap-2">
             <span
@@ -90,15 +90,9 @@ export default function TableComponent({
             <span
               className={`text-${item?.subscription_status?.color} font-bold`}
             >
-              {item?.subscription_status?.name}
+              {item?.request_type?.name}
             </span>
           </div>
-        );
-      case "price":
-        return (
-          <span className="text-title font-bold">
-            {cellValue} <span className="text-xs">ج.م</span>
-          </span>
         );
       case "actions":
         return (
