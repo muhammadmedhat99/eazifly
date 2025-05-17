@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { InformationForm } from "./InformationForm";
+import { ProgramForm } from "./ProgramForm";
 
 export const CreateStudent = () => {
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(1);
   return (
     <div className="bg-main py-10">
       <div className="flex items-center justify-center">
@@ -37,7 +38,11 @@ export const CreateStudent = () => {
           البرامج
         </div>
       </div>
-      {activeStep === 0 ? <InformationForm /> : <></>}
+      {activeStep === 0 ? (
+        <InformationForm setActiveStep={setActiveStep} />
+      ) : (
+        <ProgramForm setActiveStep={setActiveStep} />
+      )}
     </div>
   );
 };

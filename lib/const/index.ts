@@ -11,6 +11,7 @@ import {
   Rank,
   Brodcast
 } from "iconsax-reactjs";
+import { StylesConfig } from "react-select";
 
 export const routes = [
   {
@@ -108,4 +109,39 @@ export const axios_config = {
     local: "en",
     Authorization: `Bearer ${getCookie("token")}`,
   },
+};
+
+export const customStyles: StylesConfig = {
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: "#f5f5f5",
+    borderColor: state.isFocused ? "#fff" : "#fff",
+    // boxShadow: state.isFocused ? "0 0 0 1px #fff" : "none",
+    borderRadius: "0.75rem",
+    padding: "3px 4px",
+    direction: "rtl",
+    fontFamily: "inherit",
+    fontSize: "14px"
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected
+      ? "#3b82f6"
+      : state.isFocused
+        ? "#f0f0f0"
+        : "#fff",
+    color: state.isSelected ? "#fff" : "#111827",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    direction: "rtl",
+    fontFamily: "inherit",
+  }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+
 };
