@@ -5,7 +5,7 @@ import { InformationForm } from "./InformationForm";
 import { ProgramForm } from "./ProgramForm";
 
 export const CreateStudent = () => {
-  const [activeStep, setActiveStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(0);
   return (
     <div className="bg-main py-10">
       <div className="flex items-center justify-center">
