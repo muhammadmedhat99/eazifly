@@ -8,6 +8,7 @@ type DropzoneFieldProps = {
   onChange: (files: File[]) => void;
   error?: string;
   multiple?: boolean;
+  label?: string;
 };
 
 export const DropzoneField = ({
@@ -15,6 +16,7 @@ export const DropzoneField = ({
   onChange,
   error,
   multiple = false,
+  label,
 }: DropzoneFieldProps) => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
@@ -46,42 +48,42 @@ export const DropzoneField = ({
   }, [value]);
 
   return (
-    <div
-      {...getRootProps()}
-      className="border border-dashed p-4 rounded-xl cursor-pointer text-center mb-4 border-primary flex items-center flex-col gap-2 bg-input/50"
-    >
-      <input {...getInputProps()} />
-      {isDragActive ? (
-        <div className="flex items-center flex-col gap-2">
-          <FolderOpen size="32" className="text-primary" variant="Bold" />
-          <h6 className="text-primary font-bold">تحميل صورة او فيديو</h6>
-          <p className="font-semibold text-gray-500 text-xs">
-            قم بإفلات الملف هنا ...
-          </p>
-        </div>
-      ) : value?.length ? (
-        <div className="flex items-center flex-col gap-2">
-          {previewUrls.map((url, index) => (
-            <Image
-              key={index}
-              src={url || ""}
-              alt="user image"
-              width={1024}
-              height={1024}
-              className="w-full h-40 rounded-sm object-cover"
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="flex items-center flex-col gap-2">
-          <FolderOpen size="32" className="text-primary" variant="Bold" />
-          <h6 className="text-primary font-bold">تحميل صورة او فيديو</h6>
-          <p className="font-semibold text-gray-500 text-xs">
-            آو آضغط للتصفح (الحد الآقصي 10 ميجا)
-          </p>
-        </div>
-      )}
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+    <div {...getRootProps()} className="flex flex-col gap-1">
+      <label className="text-[#272727] font-bold text-sm">{label} </label>
+      <div className="border border-dashed p-4 rounded-xl cursor-pointer text-center mb-4 border-primary flex items-center flex-col gap-2 bg-input/50">
+        <input {...getInputProps()} />
+        {isDragActive ? (
+          <div className="flex items-center flex-col gap-2">
+            <FolderOpen size="32" className="text-primary" variant="Bold" />
+            <h6 className="text-primary font-bold">تحميل صورة او فيديو</h6>
+            <p className="font-semibold text-gray-500 text-xs">
+              قم بإفلات الملف هنا ...
+            </p>
+          </div>
+        ) : value?.length ? (
+          <div className="flex items-center flex-col gap-2">
+            {previewUrls.map((url, index) => (
+              <Image
+                key={index}
+                src={url || ""}
+                alt="user image"
+                width={1024}
+                height={1024}
+                className="w-full h-40 rounded-sm object-cover"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center flex-col gap-2">
+            <FolderOpen size="32" className="text-primary" variant="Bold" />
+            <h6 className="text-primary font-bold">تحميل صورة او فيديو</h6>
+            <p className="font-semibold text-gray-500 text-xs">
+              آو آضغط للتصفح (الحد الآقصي 10 ميجا)
+            </p>
+          </div>
+        )}
+      </div>
+      {error && <p className="text-red-500 text-sm font-bold">{error}</p>}
     </div>
   );
 };

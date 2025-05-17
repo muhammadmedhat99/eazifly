@@ -4,30 +4,66 @@ import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-import { Button, DatePicker, Input, Select, SelectItem } from "@heroui/react";
+import {
+  addToast,
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Spinner,
+} from "@heroui/react";
 import { DropzoneField } from "@/components/global/DropZoneField";
+import { useMutation } from "@tanstack/react-query";
+import { postData } from "@/lib/utils";
+import { getCookie } from "cookies-next";
+import React from "react";
 
 const schema = yup
   .object({
-    full_name: yup
+    first_name: yup
       .string()
-      .required("ادخل الاسم بالكامل")
-      .min(3, "الاسم بالكامل لا يجب ان يقل عن ٣ احرف"),
+      .required("ادخل الاسم الأول")
+      .min(3, "الاسم الأول لا يجب ان يقل عن ٣ احرف"),
+    last_name: yup
+      .string()
+      .required("ادخل الاسم الأخير")
+      .min(3, "الاسم الأخير لا يجب ان يقل عن ٣ احرف"),
+    user_name: yup
+      .string()
+      .required("ادخل اسم المستخدم")
+      .min(3, "اسم المستخدم لا يجب ان يقل عن ٣ احرف"),
     email: yup
       .string()
       .email("ادخل بريد إلكتروني صحيح")
       .required("ادخل بريد إلكتروني"),
     phone: yup.string().required("ادخل رقم الهاتف"),
-    type: yup.string().required("برجاء اختيار الجنس"),
-    birth_date: yup.string().required("ادخل تاريخ الميلاد"),
+    whats_app: yup.string().required("ادخل رقم الواتس آب"),
+    password: yup.string().required("ادخل كلمة المرور"),
+    password_confirmation: yup
+      .string()
+      .required("ادخل تأكيد كلمة المرور")
+      .oneOf([yup.ref("password")], "كلمة المرور غير متطابقة"),
+    gender: yup.string().required("برجاء اختيار الجنس"),
+    age: yup.string().required("ادخل العمر"),
     country: yup.string().required("إختر الدولة"),
-    file: yup.mixed().required("الرجاء تحميل ملف"),
+    image: yup
+      .mixed<FileList>()
+      .test(
+        "fileType",
+        "الرجاء تحميل ملف صحيح",
+        (value) => value && value.length > 0
+      )
+      .required("الرجاء تحميل ملف"),
   })
   .required();
 
 type FormData = yup.InferType<typeof schema>;
 
-export const InformationForm = () => {
+export const InformationForm = ({
+  setActiveStep,
+}: {
+  setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+}) => {
   const {
     register,
     handleSubmit,
@@ -38,7 +74,58 @@ export const InformationForm = () => {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data: FormData) => console.log(data);
+  const onSubmit = (data: FormData) => CreateStudent.mutate(data);
+
+  const CreateStudent = useMutation({
+    mutationFn: (submitData: FormData) => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      var formdata = new FormData();
+      formdata.append("first_name", submitData.first_name);
+      formdata.append("last_name", submitData.last_name);
+      formdata.append("user_name", submitData.user_name);
+      formdata.append("email", submitData.email);
+      formdata.append("phone", submitData.phone);
+      formdata.append("whats_app", submitData.whats_app);
+      formdata.append("password", submitData.password);
+      formdata.append(
+        "password_confirmation",
+        submitData.password_confirmation
+      );
+      formdata.append("gender", submitData.gender);
+      formdata.append("age", submitData.age);
+      formdata.append("country", submitData.country);
+      {
+        submitData.image && formdata.append("image", submitData.image[0]);
+      }
+
+      return postData("client/user/store", formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+        reset();
+        setActiveStep(1);
+      }
+    },
+    onError: (error) => {
+      console.log(" error ===>>", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
 
   return (
     <form
@@ -46,12 +133,40 @@ export const InformationForm = () => {
       className="grid grid-cols-1 gap-4 md:grid-cols-2 py-14 px-8"
     >
       <Input
-        label="الاسم بالكامل"
+        label="الاسم الأول"
         placeholder="نص الكتابه"
         type="text"
-        {...register("full_name")}
-        isInvalid={!!errors.full_name?.message}
-        errorMessage={errors.full_name?.message}
+        {...register("first_name")}
+        isInvalid={!!errors.first_name?.message}
+        errorMessage={errors.first_name?.message}
+        labelPlacement="outside"
+        classNames={{
+          label: "text-[#272727] font-bold text-sm",
+          inputWrapper: "shadow-none",
+          base: "mb-4",
+        }}
+      />
+      <Input
+        label="الاسم الأخير"
+        placeholder="نص الكتابه"
+        type="text"
+        {...register("last_name")}
+        isInvalid={!!errors.last_name?.message}
+        errorMessage={errors.last_name?.message}
+        labelPlacement="outside"
+        classNames={{
+          label: "text-[#272727] font-bold text-sm",
+          inputWrapper: "shadow-none",
+          base: "mb-4",
+        }}
+      />
+      <Input
+        label="اسم المستخدم"
+        placeholder="نص الكتابه"
+        type="text"
+        {...register("user_name")}
+        isInvalid={!!errors.user_name?.message}
+        errorMessage={errors.user_name?.message}
         labelPlacement="outside"
         classNames={{
           label: "text-[#272727] font-bold text-sm",
@@ -87,8 +202,64 @@ export const InformationForm = () => {
           base: "mb-4",
         }}
       />
+      <Input
+        label="رقم الواتس آب"
+        placeholder="نص الكتابه"
+        type="text"
+        {...register("whats_app")}
+        isInvalid={!!errors.whats_app?.message}
+        errorMessage={errors.whats_app?.message}
+        labelPlacement="outside"
+        classNames={{
+          label: "text-[#272727] font-bold text-sm",
+          inputWrapper: "shadow-none",
+          base: "mb-4",
+        }}
+      />
+      <Input
+        label="كلمة المرور"
+        placeholder="نص الكتابه"
+        type="password"
+        {...register("password")}
+        isInvalid={!!errors.password?.message}
+        errorMessage={errors.password?.message}
+        labelPlacement="outside"
+        classNames={{
+          label: "text-[#272727] font-bold text-sm",
+          inputWrapper: "shadow-none",
+          base: "mb-4",
+        }}
+      />
+      <Input
+        label="تأكيد كلمة المرور"
+        placeholder="نص الكتابه"
+        type="password"
+        {...register("password_confirmation")}
+        isInvalid={!!errors.password_confirmation?.message}
+        errorMessage={errors.password_confirmation?.message}
+        labelPlacement="outside"
+        classNames={{
+          label: "text-[#272727] font-bold text-sm",
+          inputWrapper: "shadow-none",
+          base: "mb-4",
+        }}
+      />
+      <Input
+        label="العمر"
+        placeholder="نص الكتابه"
+        type="text"
+        {...register("age")}
+        isInvalid={!!errors.age?.message}
+        errorMessage={errors.age?.message}
+        labelPlacement="outside"
+        classNames={{
+          label: "text-[#272727] font-bold text-sm",
+          inputWrapper: "shadow-none",
+          base: "mb-4",
+        }}
+      />
       <Controller
-        name="type"
+        name="gender"
         control={control}
         render={({ field }) => (
           <Select
@@ -101,8 +272,8 @@ export const InformationForm = () => {
             label="الجنس"
             labelPlacement="outside"
             placeholder="اختر الجنس"
-            isInvalid={!!errors.type?.message}
-            errorMessage={errors.type?.message}
+            isInvalid={!!errors.gender?.message}
+            errorMessage={errors.gender?.message}
             classNames={{
               label: "text-[#272727] font-bold text-sm",
               base: "mb-4",
@@ -110,8 +281,8 @@ export const InformationForm = () => {
             }}
           >
             {[
-              { key: "1", label: "ذكر" },
-              { key: "2", label: "انثي" },
+              { key: "male", label: "ذكر" },
+              { key: "female", label: "انثي" },
             ].map((item) => (
               <SelectItem key={item.key}>{item.label}</SelectItem>
             ))}
@@ -119,7 +290,7 @@ export const InformationForm = () => {
         )}
       />
 
-      <Controller
+      {/* <Controller
         name="birth_date"
         control={control}
         render={({ field }) => (
@@ -137,7 +308,7 @@ export const InformationForm = () => {
             }}
           />
         )}
-      />
+      /> */}
 
       <Controller
         name="country"
@@ -154,7 +325,7 @@ export const InformationForm = () => {
             errorMessage={errors.country?.message}
             classNames={{
               label: "text-[#272727] font-bold text-sm",
-              base: "mb-4",
+              base: "mb-4 col-span-2",
               value: "text-[#87878C] text-sm",
             }}
           >
@@ -169,7 +340,7 @@ export const InformationForm = () => {
       />
 
       <Controller
-        name="file"
+        name="image"
         control={control}
         render={({ field, fieldState }) => (
           <DropzoneField
@@ -195,7 +366,9 @@ export const InformationForm = () => {
           variant="solid"
           color="primary"
           className="text-white"
+          isDisabled={CreateStudent?.isPending}
         >
+          {CreateStudent?.isPending && <Spinner color="white" size="sm" />}
           التالي
         </Button>
       </div>

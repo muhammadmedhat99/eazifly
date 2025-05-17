@@ -18,8 +18,21 @@ export function Providers({ children, themeProps }: ProvidersProps) {
   const queryClient = new QueryClient();
   return (
     <HeroUIProvider navigate={router.push}>
-      <ToastProvider placement="top-center" toastOffset={20} />
-      <NextThemesProvider {...themeProps} defaultTheme="light">
+      <NextThemesProvider {...themeProps}>
+        <ToastProvider
+          placement="top-center"
+          toastOffset={20}
+          toastProps={{
+            radius: "lg",
+            variant: "solid",
+            shouldShowTimeoutProgress: true,
+            timeout: 2000,
+            classNames: {
+              closeButton:
+                "opacity-100 absolute end-4 start-[unset] top-1/2 -translate-y-1/2",
+            },
+          }}
+        />
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>

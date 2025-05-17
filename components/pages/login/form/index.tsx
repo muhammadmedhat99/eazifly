@@ -67,6 +67,7 @@ export const LoginForm = () => {
           title: data?.message,
           timeout: 3000,
           shouldShowTimeoutProgress: true,
+          variant: "solid",
           color: "danger",
         });
       } else {
@@ -74,6 +75,7 @@ export const LoginForm = () => {
           title: data?.message,
           timeout: 3000,
           shouldShowTimeoutProgress: true,
+          variant: "solid",
           color: "success",
         });
         reset({ phone: "", password: "" });
@@ -86,6 +88,7 @@ export const LoginForm = () => {
         title: "عذرا حدث خطأ ما",
         timeout: 3000,
         shouldShowTimeoutProgress: true,
+        variant: "solid",
         color: "danger",
       });
     },
