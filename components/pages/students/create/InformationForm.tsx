@@ -11,12 +11,17 @@ import {
   Select,
   SelectItem,
   Spinner,
+  Avatar,
 } from "@heroui/react";
 import { DropzoneField } from "@/components/global/DropZoneField";
-import { useMutation } from "@tanstack/react-query";
-import { postData } from "@/lib/utils";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
 import { getCookie } from "cookies-next";
 import React from "react";
+import { AllQueryKeys } from "@/keys";
+import { axios_config } from "@/lib/const";
+import { Loader } from "@/components/global/Loader";
+import Image from "next/image";
 
 const schema = yup
   .object({
@@ -127,7 +132,14 @@ export const InformationForm = ({
     },
   });
 
-  return (
+  const { data, isLoading } = useQuery({
+    queryKey: AllQueryKeys.GetAllCountries,
+    queryFn: async () => await fetchClient(`client/countries`, axios_config),
+  });
+
+  return isLoading ? (
+    <Loader />
+  ) : (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="grid grid-cols-1 gap-4 md:grid-cols-2 py-14 px-8"
@@ -201,6 +213,48 @@ export const InformationForm = ({
           inputWrapper: "shadow-none",
           base: "mb-4",
         }}
+        endContent={
+          data?.data?.length > 0 && (
+            <Select
+              className="max-w-40 -me-3 bg-white"
+              classNames={{
+                trigger: "rounded-s-none border-1 shadow-none",
+                listbox: "w-full",
+                listboxWrapper: "w-full",
+              }}
+              variant="bordered"
+              renderValue={(items) => {
+                return items?.map((item: any) => (
+                  <div key={item.id} className="flex items-center gap-2">
+                    <Avatar
+                      alt="country flag"
+                      className="flex-shrink-0 w-8 h-6"
+                      radius="none"
+                      src={item.image}
+                    />
+                  </div>
+                ));
+              }}
+            >
+              {data?.data?.map((country: any) => (
+                <SelectItem
+                  key={country.id}
+                  startContent={
+                    <Avatar
+                      className="w-6 h-4"
+                      radius="none"
+                      src={country?.image}
+                      alt="country flag"
+                    />
+                  }
+                  className="w-full"
+                >
+                  {country.phone_code}
+                </SelectItem>
+              ))}
+            </Select>
+          )
+        }
       />
       <Input
         label="رقم الواتس آب"

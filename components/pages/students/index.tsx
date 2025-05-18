@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
 import {
-  avatar,
   Button,
   Dropdown,
   DropdownItem,
@@ -21,12 +20,13 @@ import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 
+import { formatDate } from "@/lib/helper";
+
 const columns = [
   { name: "إسم الطالب", uid: "name" },
   { name: "رقم الهاتف", uid: "phone" },
   { name: "البريد الإلكتروني", uid: "email" },
   { name: "البرامج الملحق بها", uid: "programs" },
-  { name: "موعد التجديد", uid: "renew_date" },
   { name: "أخر ظهور", uid: "last_active" },
   { name: "الحالة", uid: "status" },
   { name: <Options />, uid: "actions" },
@@ -64,7 +64,6 @@ export const AllStudents = () => {
       await fetchClient(`client/user?search=${debouncedSearch}`, axios_config),
     queryKey: AllQueryKeys.GetAllUsers(debouncedSearch),
   });
-  console.log(" studentsData ===>>", studentsData);
 
   const formattedData =
     studentsData?.data?.map((item: any) => ({
@@ -76,9 +75,15 @@ export const AllStudents = () => {
       programs:
         `${item.programs[0]?.title} ${item.programs.length > 1 ? `(+${item.programs.length})` : ""}` ||
         "N/A",
-      renew_date: item.renew_date || "N/A",
-      last_active: item.last_active || "N/A",
-      status: item.status?.title || "N/A",
+      renew_date: formatDate(item.created_at) || "N/A",
+      last_active: item.last_active_at || "N/A",
+      status: {
+        name: item.status_label?.label || "N/A",
+        color:
+          item?.status_label?.color === "info"
+            ? "warning"
+            : item?.status_label?.color || "danger",
+      },
     })) || [];
 
   return (
