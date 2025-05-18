@@ -47,25 +47,11 @@ export default function TableComponent({
         return (
           <Chip
             className="capitalize px-4 min-w-24 text-center"
-            color={
-              item?.status === "نشط"
-                ? "success"
-                : item?.status === "متوقف"
-                  ? "warning"
-                  : "danger"
-            }
+            color={item?.status?.color}
             variant="flat"
           >
-            <span
-              className={`${
-                item?.status === "نشط"
-                  ? "text-success"
-                  : item?.status === "متوقف"
-                    ? "text-warning"
-                    : "text-danger"
-              } font-bold`}
-            >
-              {cellValue}
+            <span className={`text-${item?.status?.color} font-bold`}>
+              {item?.status?.name}
             </span>
           </Chip>
         );

@@ -5,4 +5,5 @@ export const AllQueryKeys = {
   GetUserById: (id: string) => ['GetUserById', id],
   GetAllStudentSubscriptions: (search: string) => ['GetAllStudentSubscriptions', axios_config, search],
   GetSubscriptionRequestById: (postId: string | number) => ['GetSubscriptionRequestById', postId],
+  GetAllCountries: ["GetAllCountries", axios_config]
 };
