@@ -64,6 +64,7 @@ export const AllStudents = () => {
       await fetchClient(`client/user?search=${debouncedSearch}`, axios_config),
     queryKey: AllQueryKeys.GetAllUsers(debouncedSearch),
   });
+  console.log(" studentsData ===>>", studentsData);
 
   const formattedData =
     studentsData?.data?.map((item: any) => ({
@@ -72,10 +73,12 @@ export const AllStudents = () => {
       avatar: item.image,
       phone: item.phone,
       email: item.email,
-      programs: item.programs || "N/A",
+      programs:
+        `${item.programs[0]?.title} ${item.programs.length > 1 ? `(+${item.programs.length})` : ""}` ||
+        "N/A",
       renew_date: item.renew_date || "N/A",
       last_active: item.last_active || "N/A",
-      status: item.status || "N/A",
+      status: item.status?.title || "N/A",
     })) || [];
 
   return (
