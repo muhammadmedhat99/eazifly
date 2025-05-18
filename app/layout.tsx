@@ -2,8 +2,8 @@ import "@/styles/globals.css";
 import { Metadata } from "next";
 
 import { Providers } from "./providers";
-import { ibmPlexSansArabic } from "./fonts";
 import { cn } from "@heroui/react";
+import { ibmPlexSansArabic } from "./fonts";
 
 export const metadata: Metadata = {
   title: {
@@ -21,11 +21,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl">
+    <html
+      lang="ar"
+      dir="rtl"
+      className="light"
+      style={{ colorScheme: "light" }}
+    >
       <head />
       <body
         className={cn(
-          "min-h-screen bg-background antialiased",
+          "min-h-screen bg-background",
           ibmPlexSansArabic.className
         )}
       >
