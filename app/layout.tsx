@@ -1,10 +1,9 @@
 import "@/styles/globals.css";
-
 import { Metadata } from "next";
 
 import { Providers } from "./providers";
-import clsx from "clsx";
 import { ibmPlexSansArabic } from "./fonts";
+import { cn } from "@heroui/react";
 
 export const metadata: Metadata = {
   title: {
@@ -22,10 +21,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning lang="ar" dir="rtl" className="light">
+    <html lang="ar" dir="rtl">
       <head />
       <body
-        className={clsx(
+        className={cn(
           "min-h-screen bg-background antialiased",
           ibmPlexSansArabic.className
         )}
