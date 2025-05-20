@@ -1,9 +1,11 @@
 "use client";
 
-import { Tabs, Tab, Card, CardBody } from "@heroui/react";
+import { Tabs, Tab } from "@heroui/react";
 
 import { Information } from "./tabs/Information";
 import { TimelineDemo } from "./tabs/Timeline";
+import { Programs } from "./tabs/Programs";
+import { RelatedStudents } from "./tabs/RelatedStudents";
 
 export const StudentDetails = () => {
   return (
@@ -22,25 +24,13 @@ export const StudentDetails = () => {
           <Information />
         </Tab>
         <Tab key="programs" title="البرامج و اللإشتراكات">
-          <Card>
-            <CardBody>
-              Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-              reprehenderit in voluptate velit esse cillum dolore eu fugiat
-              nulla pariatur.
-            </CardBody>
-          </Card>
+          <Programs />
         </Tab>
         <Tab key="actions" title="الإجراءات السابقة">
           <TimelineDemo />
         </Tab>
         <Tab key="other" title="الطلاب التابعين">
-          <Card>
-            <CardBody>
-              Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
-              officia deserunt mollit anim id est laborum.
-            </CardBody>
-          </Card>
+          <RelatedStudents />
         </Tab>
       </Tabs>
     </div>

@@ -14,6 +14,7 @@ import {
 } from "@heroui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 export default function TableComponent({
   columns,
@@ -23,7 +24,7 @@ export default function TableComponent({
   const pathname = usePathname();
 
   const renderCell = React.useCallback((item: any, columnKey: any) => {
-    const cellValue = item[columnKey];
+    const cellValue: string = item[columnKey];
 
     switch (columnKey) {
       case "name":
@@ -67,6 +68,7 @@ export default function TableComponent({
             </span>
           </div>
         );
+
       case "request_type":
         return (
           <div className="flex items-center gap-2">
@@ -80,14 +82,16 @@ export default function TableComponent({
             </span>
           </div>
         );
+
       case "actions":
         return (
           <React.Fragment>
             <ActionsComponent id={item.id} />
           </React.Fragment>
         );
+
       default:
-        return cellValue;
+        return <React.Fragment>{cellValue}</React.Fragment>;
     }
   }, []);
 
