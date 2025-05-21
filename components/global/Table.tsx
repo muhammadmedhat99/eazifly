@@ -20,6 +20,7 @@ export default function TableComponent({
   columns,
   data,
   ActionsComponent,
+  selectable = false,
 }: any) {
   const pathname = usePathname();
 
@@ -97,6 +98,7 @@ export default function TableComponent({
 
   return (
     <Table
+      {...(selectable && { selectionMode: "multiple" })}
       removeWrapper
       aria-label="Example table with custom cells"
       dir="rtl"
