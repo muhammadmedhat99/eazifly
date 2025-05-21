@@ -13,6 +13,10 @@ import {
   Tabs,
 } from "@heroui/react";
 import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
+import { MainInformation } from "./tabs/MainInformation";
+import { ProgramTeachers } from "./tabs/ProgramTeachers";
+import { ProgramSubscriptions } from "./tabs/ProgramSubscriptions";
+import { ProgramContent } from "./tabs/ProgramContent";
 
 export const ProgramDetails = () => {
   const [search, setSearch] = useState("");
@@ -28,19 +32,22 @@ export const ProgramDetails = () => {
             "text-[#5E5E5E] text-sm font-bold group-data-[selected=true]:text-primary",
         }}
       >
-        <Tab key="info" title="البيانات الشخصية">
-          nsajndsaj
+        <Tab key="info" title="بيانات البرنامج">
+          <MainInformation />
         </Tab>
-        <Tab key="programs" title="البرامج">
-          sdassada
+        <Tab key="program_teachers" title="المعلمين المشتركين">
+          <ProgramTeachers />
         </Tab>
-        <Tab key="transactions" title="المعاملات المالية">
-          dafmskalmfa
+        <Tab key="subscriptions" title="أنواع الأشتراكات">
+          <ProgramSubscriptions />
         </Tab>
-        <Tab key="statistics" title="الأحصائيات">
+        <Tab key="content" title="محتوي البرنامج">
+          <ProgramContent />
+        </Tab>
+        <Tab key="goals" title="أهداف البرنامج">
           lsa;md;lasm
         </Tab>
-        <Tab key="reports" title="تقارير المعلمين">
+        <Tab key="statistics" title="الإحصائيات">
           lsa;md;lasm
         </Tab>
       </Tabs>
