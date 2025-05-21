@@ -34,11 +34,12 @@ export default function TableComponent({
             <User
               avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
               description={
-                item.renew_date && (
+                item.renew_date ||
+                (item?.created_at && (
                   <span className="text-[#5E5E5E] font-semibold text-start">
-                    تاريخ الإنشاء : {item.renew_date}
+                    تاريخ الإنشاء : {item.renew_date || item?.created_at}
                   </span>
-                )
+                ))
               }
               name={cellValue}
             ></User>
@@ -104,6 +105,7 @@ export default function TableComponent({
       dir="rtl"
       classNames={{
         th: "bg-primary/10 text-primary font-bold text-sm first:rounded-s-none last:rounded-e-none first:ps-5 h-[64px]",
+        tr: "h-[52px] border-b border-b-stroke",
       }}
     >
       <TableHeader columns={columns} className="bg-primary">
