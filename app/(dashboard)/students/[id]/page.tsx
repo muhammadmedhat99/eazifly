@@ -1,31 +1,45 @@
 import { BreadCrumb } from "@/components/global/BreadCrumb";
 import { StudentDetails } from "@/components/pages/students/student-details";
-import Link from "next/link";
+import { fetchData } from "@/lib/utils";
+import { cookies } from "next/headers";
 import React from "react";
 
-const BreadCrumbItems = [
-  {
-    id: 1,
-    name: "الرئيسية",
-    link: "/",
-  },
-  {
-    id: 2,
-    name: "الطلاب",
-    link: "/students",
-  },
-  {
-    id: 3,
-    name: "بيانات الطلاب",
-  },
-];
+export default async function page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token");
+  const data = await fetchData(`client/user/show/${id}`, token?.value);
 
-export default function page() {
+  const BreadCrumbItems = [
+    {
+      id: 1,
+      name: "الرئيسية",
+      link: "/",
+    },
+    {
+      id: 2,
+      name: "الطلاب",
+      link: "/students",
+    },
+    {
+      id: 3,
+      name: "بيانات الطلاب",
+    },
+    {
+      id: 4,
+      name:
+        `${data?.data?.first_name} ${data?.data?.last_name}` || "بيانات الطلاب",
+    },
+  ];
   return (
     <>
       <BreadCrumb items={BreadCrumbItems} />
 
-      <StudentDetails />
+      <StudentDetails data={data} />
     </>
   );
 }
