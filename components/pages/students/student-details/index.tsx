@@ -7,7 +7,27 @@ import { TimelineDemo } from "./tabs/Timeline";
 import { Programs } from "./tabs/Programs";
 import { RelatedStudents } from "./tabs/RelatedStudents";
 
-export const StudentDetails = () => {
+type StudentDetailsProps = {
+  data: {
+    data: {
+      id: number;
+      first_name: string;
+      last_name: string;
+      user_name: string;
+      email: string;
+      phone: string;
+      whats_app: string;
+      image: string;
+      created_at: string;
+      status_label: {
+        label: string;
+        color: string;
+      };
+    };
+  };
+};
+
+export const StudentDetails = ({ data }: StudentDetailsProps) => {
   return (
     <div className="flex w-full flex-col">
       <Tabs
@@ -21,7 +41,7 @@ export const StudentDetails = () => {
         }}
       >
         <Tab key="info" title="البيانات الشخصية">
-          <Information />
+          <Information data={data} />
         </Tab>
         <Tab key="programs" title="البرامج و اللإشتراكات">
           <Programs />
