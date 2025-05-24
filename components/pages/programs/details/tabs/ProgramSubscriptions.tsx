@@ -71,7 +71,7 @@ const data = [
 
 export const ProgramSubscriptions = () => {
   return (
-    <div className="-mx-1 bg-main">
+    <div className="bg-main">
       <TableComponent
         columns={columns}
         data={data}
