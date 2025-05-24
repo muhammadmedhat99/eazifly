@@ -2,7 +2,7 @@ import React from "react";
 
 export const ProgramContent = () => {
   return (
-    <div className="bg-main -mx-1">
+    <div className="bg-main">
       {/* main info  */}
       <div className="flex flex-col md:flex-row gap-4 p-4">
         <div className="w-full relative">
