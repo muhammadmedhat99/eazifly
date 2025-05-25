@@ -168,7 +168,7 @@ export const AllTeachers = () => {
               setSelectedStatus(e.target.id);
             }}
           >
-            معلق
+            مرفوض
           </Button>
         </div>
       </div>
