@@ -9,11 +9,19 @@ import {
   MirroringScreen,
   Setting,
   Rank,
-  Brodcast
+  Brodcast,
+  Home2
 } from "iconsax-reactjs";
 import { StylesConfig } from "react-select";
 
 export const routes = [
+  {
+    id: 0,
+    name: "الرئيسيه",
+    route: "/",
+    icon: Home2,
+
+  },
   {
     id: 1,
     name: "الطلاب",
