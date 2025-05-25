@@ -63,21 +63,7 @@ const schema = yup
   })
   .required();
 
-type FormData = {
-  name_ar: string;
-  name_en: string;
-  address: string;
-  email: string;
-  phone: string;
-  whats_app: string;
-  password: string;
-  password_confirmation: string;
-  gender: string;
-  age: string;
-  country: string;
-  can_approve_question: boolean;
-  image: FileList;
-};
+type FormData = yup.InferType<typeof schema>;
 
 export const InformationForm = ({
   setActiveStep,
