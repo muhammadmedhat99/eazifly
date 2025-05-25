@@ -34,9 +34,7 @@ const schema = yup
       .string()
       .required("ادخل الاسم بالإنجليزية")
       .min(3, "الاسم بالإنجليزية لا يجب ان يقل عن ٣ احرف"),
-    address: yup
-      .string()
-      .required("ادخل العنوان"),
+    address: yup.string().required("ادخل العنوان"),
     email: yup
       .string()
       .email("ادخل بريد إلكتروني صحيح")
@@ -52,8 +50,8 @@ const schema = yup
     age: yup.string().required("ادخل العمر"),
     country: yup.string().required("إختر الدولة"),
     can_approve_question: yup
-    .boolean()
-    .oneOf([true], "حدد إذا كان يمكنه الموافقة على الأسئلة"),
+      .boolean()
+      .required("حدد إذا كان يمكنه الموافقة على الأسئلة"),
     image: yup
       .mixed<FileList>()
       .test(
@@ -65,7 +63,21 @@ const schema = yup
   })
   .required();
 
-type FormData = yup.InferType<typeof schema>;
+type FormData = {
+  name_ar: string;
+  name_en: string;
+  address: string;
+  email: string;
+  phone: string;
+  whats_app: string;
+  password: string;
+  password_confirmation: string;
+  gender: string;
+  age: string;
+  country: string;
+  can_approve_question: boolean;
+  image: FileList;
+};
 
 export const InformationForm = ({
   setActiveStep,
@@ -105,7 +117,10 @@ export const InformationForm = ({
       formdata.append("gender", submitData.gender);
       formdata.append("age", submitData.age);
       formdata.append("country", submitData.country);
-      formdata.append("can_approve_question", submitData.can_approve_question ? "yes" : "no");
+      formdata.append(
+        "can_approve_question",
+        submitData.can_approve_question ? "yes" : "no"
+      );
       {
         submitData.image && formdata.append("image", submitData.image[0]);
       }
@@ -348,7 +363,6 @@ export const InformationForm = ({
         )}
       />
 
-
       <Controller
         name="country"
         control={control}
@@ -377,23 +391,23 @@ export const InformationForm = ({
           </Select>
         )}
       />
-      
+
       <div className="mb-4 flex flex-col justify-center">
         <label className="inline-flex items-center">
-            <input
+          <input
             type="checkbox"
             {...register("can_approve_question")}
             className="form-checkbox h-5 w-5 text-primary me-2"
-            />
-            <span className="ml-2 text-[#272727] font-bold text-sm">
+          />
+          <span className="ml-2 text-[#272727] font-bold text-sm">
             هل يمكنه الموافقة على الأسئلة؟
-            </span>
+          </span>
         </label>
 
         {errors.can_approve_question?.message && (
-            <p className="text-red-500 text-sm mt-1">
+          <p className="text-red-500 text-sm mt-1">
             {errors.can_approve_question.message}
-            </p>
+          </p>
         )}
       </div>
 
