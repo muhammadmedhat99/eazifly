@@ -1,8 +1,9 @@
-// components/global/JoditInput.tsx
 "use client";
 
 import React, { useRef } from "react";
-import JoditEditor from "jodit-react";
+import dynamic from "next/dynamic";
+
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 interface JoditInputProps {
   value: string;
