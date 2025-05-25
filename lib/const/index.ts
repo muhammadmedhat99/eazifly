@@ -50,7 +50,7 @@ export const routes = [
     icon: DocumentText,
     sub_routes: [
       { id: 1, name: "بيانات البرامج", route: "" },
-      { id: 2, name: "إنشاء برنامج جديد", route: "/new" },
+      { id: 2, name: "إنشاء برنامج جديد", route: "/create" },
     ],
   },
   {
