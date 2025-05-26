@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import { InformationForm } from "./InformationForm";
+import { TeacherAndContent } from "./TeacherAndContent";
 
 export const CreateProgram = () => {
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(1);
 
   return (
     <div className="bg-main py-10">
@@ -84,7 +85,7 @@ export const CreateProgram = () => {
           case 0:
             return <InformationForm setActiveStep={setActiveStep} />;
           case 1:
-            return <span>teacher and content</span>;
+            return <TeacherAndContent setActiveStep={setActiveStep} />;
           case 2:
             return <span>payment</span>;
           case 3:

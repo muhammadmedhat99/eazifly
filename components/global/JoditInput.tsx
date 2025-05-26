@@ -28,7 +28,7 @@ export const JoditInput: React.FC<JoditInputProps> = ({
         </label>
       )}
       <div
-        className={`border rounded-xl ${error ? "border-red-500" : "border-gray-300"}`}
+        className={`border rounded-xl ${error ? "border-red-500" : "border-gray-300"} overflow-hidden`}
       >
         <JoditEditor
           ref={editor}
