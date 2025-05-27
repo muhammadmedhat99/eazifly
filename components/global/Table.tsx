@@ -112,7 +112,8 @@ export default function TableComponent({
         {(column: any) => (
           <TableColumn
             key={column.uid}
-            align={column.uid === "actions" ? "center" : "start"}
+            align="center" 
+            className="text-center"
           >
             {column.name}
           </TableColumn>
