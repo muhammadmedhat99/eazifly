@@ -2,6 +2,8 @@ import { CreateTeacher } from "@/components/pages/teachers/create";
 import { BreadCrumb } from "@/components/global/BreadCrumb";
 import React from "react";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { fetchData } from "@/lib/utils";
 
 const BreadCrumbItems = [
   {
@@ -20,7 +22,11 @@ const BreadCrumbItems = [
   },
 ];
 
-export default function page() {
+export default async function page() {
+  const cookieStore = await cookies();  
+  const token = cookieStore.get("token");
+  const Specializations = await fetchData(`client/Specializations`, token?.value);
+
   return (
     <div>
         <BreadCrumb items={BreadCrumbItems}>
@@ -33,7 +39,7 @@ export default function page() {
           </Link>
         </div>
       </BreadCrumb>
-      <CreateTeacher />
+      <CreateTeacher Specializations={Specializations}/>
     </div>
   );
 }

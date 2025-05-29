@@ -46,7 +46,7 @@ const schema = yup
       .string()
       .required("ادخل تأكيد كلمة المرور")
       .oneOf([yup.ref("password")], "كلمة المرور غير متطابقة"),
-    gender: yup.string().required("برجاء اختيار الجنس"),
+    gender: yup.string().required("برجاء اختيار النوع"),
     age: yup.string().required("ادخل العمر"),
     country: yup.string().required("إختر الدولة"),
     can_approve_question: yup
@@ -67,8 +67,10 @@ type FormData = yup.InferType<typeof schema>;
 
 export const InformationForm = ({
   setActiveStep,
+  setTeacherId
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  setTeacherId: React.Dispatch<React.SetStateAction<number | null>>
 }) => {
   const {
     register,
@@ -126,6 +128,7 @@ export const InformationForm = ({
         });
         reset();
         setActiveStep(1);
+        setTeacherId(data.data.id)
       }
     },
     onError: (error) => {
@@ -328,9 +331,9 @@ export const InformationForm = ({
               field.onChange(Array.from(keys)[0]);
               console.log(Array.from(keys)[0]);
             }}
-            label="الجنس"
+            label="النوع"
             labelPlacement="outside"
-            placeholder="اختر الجنس"
+            placeholder="اختر النوع"
             isInvalid={!!errors.gender?.message}
             errorMessage={errors.gender?.message}
             classNames={{
@@ -405,6 +408,8 @@ export const InformationForm = ({
             value={(field.value as any) || []}
             onChange={field.onChange}
             error={fieldState.error?.message}
+            label="الصورة الشخصية"
+            description="تحميل صورة"
           />
         )}
       />
