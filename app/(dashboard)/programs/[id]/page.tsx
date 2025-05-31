@@ -1,5 +1,7 @@
 import { BreadCrumb } from "@/components/global/BreadCrumb";
 import { ProgramDetails } from "@/components/pages/programs/details";
+import { fetchData } from "@/lib/utils";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import React from "react";
 
@@ -20,7 +22,15 @@ const BreadCrumbItems = [
   },
 ];
 
-export default function page() {
+export default async function page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token");
+  const data = await fetchData(`client/program/show/${id}`, token?.value);
   return (
     <>
       <BreadCrumb items={BreadCrumbItems}>
@@ -34,7 +44,7 @@ export default function page() {
         </div>
       </BreadCrumb>
 
-      <ProgramDetails />
+      <ProgramDetails data={data} />
     </>
   );
 }

@@ -20,7 +20,29 @@ import { ProgramContent } from "./tabs/ProgramContent";
 import { ProgramGoals } from "./tabs/ProgramGoals";
 import { ProgramStatistics } from "./tabs/ProgramStatistics";
 
-export const ProgramDetails = () => {
+type ProgramDetailsProps = {
+  data: {
+    data: {
+      id: number;
+      title: string;
+      label: string;
+      category: string;
+      content: string;
+      description: string;
+      image: string;
+      duration: string;
+      goals: string;
+      number_of_students: number;
+      number_of_lessons: number;
+      payment_methods: {
+        id: number;
+        title: string;
+      }[];
+    };
+  };
+};
+
+export const ProgramDetails = ({ data }: ProgramDetailsProps) => {
   const [search, setSearch] = useState("");
   return (
     <div className="flex w-full flex-col">
@@ -36,7 +58,7 @@ export const ProgramDetails = () => {
         }}
       >
         <Tab key="info" title="بيانات البرنامج">
-          <MainInformation />
+          <MainInformation mainData={data.data} />
         </Tab>
         <Tab key="program_teachers" title="المعلمين المشتركين">
           <ProgramTeachers />

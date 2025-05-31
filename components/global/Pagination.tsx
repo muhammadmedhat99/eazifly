@@ -3,16 +3,30 @@ import { Button, Pagination } from "@heroui/react";
 import { ArrowLeft2, ArrowRight2 } from "iconsax-reactjs";
 import React, { useState } from "react";
 
-export const CustomPagination = () => {
-  const [currentPage, setCurrentPage] = useState(1);
+type CustomPaginationProps = {
+  currentPage?: number;
+  setCurrentPage?: React.Dispatch<React.SetStateAction<number>>;
+  total?: number;
+  last_page?: number;
+};
 
+export const CustomPagination = ({
+  currentPage,
+  setCurrentPage,
+  total,
+  last_page,
+}: CustomPaginationProps) => {
   return (
     <div className="flex items-center justify-end gap-5">
-      <p className="text-sm text-title font-bold">عرض 1 - 10 من 120</p>
+      <p className="text-sm text-title font-bold">عرض 1 - 10 من {total}</p>
       <Button
         size="sm"
         variant="flat"
-        onPress={() => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev))}
+        isDisabled={currentPage === 1}
+        onPress={() => {
+          setCurrentPage &&
+            setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+        }}
         className="size-9 min-w-[unset]"
       >
         <ArrowRight2 />
@@ -21,7 +35,7 @@ export const CustomPagination = () => {
         color="primary"
         variant="light"
         page={currentPage}
-        total={10}
+        total={last_page || 10}
         onChange={setCurrentPage}
         radius="sm"
         classNames={{
@@ -32,7 +46,11 @@ export const CustomPagination = () => {
       <Button
         size="sm"
         variant="flat"
-        onPress={() => setCurrentPage((prev) => (prev < 10 ? prev + 1 : prev))}
+        isDisabled={currentPage === last_page}
+        onPress={() => {
+          setCurrentPage &&
+            setCurrentPage((prev) => (prev < 10 ? prev + 1 : prev));
+        }}
         className="size-9 min-w-[unset]"
       >
         <ArrowLeft2 />

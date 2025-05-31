@@ -1,8 +1,12 @@
 "use client";
 import { Options } from "@/components/global/Icons";
+import { Loader } from "@/components/global/Loader";
 import { CustomPagination } from "@/components/global/Pagination";
 import TableComponent from "@/components/global/Table";
+import { AllQueryKeys } from "@/keys";
+import { axios_config } from "@/lib/const";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { fetchClient } from "@/lib/utils";
 import {
   Avatar,
   AvatarGroup,
@@ -12,6 +16,7 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from "@heroui/react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
 import Image from "next/image";
 import { useState } from "react";
@@ -22,7 +27,6 @@ const columns = [
   { name: "المعلمين المشتركين", uid: "related_teachers" },
   { name: "عدد الطلاب المشتركين", uid: "all_students" },
   { name: "عدد الحصص", uid: "number_of_lessons" },
-  { name: "حالة البرنامج", uid: "order_status" },
   { name: <Options />, uid: "actions" },
 ];
 
@@ -48,39 +52,49 @@ const OptionsComponent = ({ id }: { id: number }) => {
   );
 };
 
-const data = [
-  {
-    id: "1",
+export const AllPrograms = () => {
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+  const [selectedStatus, setSelectedStatus] = useState("1");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const { data: allPrograms, isLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(
+        `client/program?search=${debouncedSearch}&page=${currentPage}`,
+        axios_config
+      ),
+    queryKey: AllQueryKeys.GetAllPrograms(debouncedSearch, currentPage),
+  });
+
+  const tableData = allPrograms?.data?.map((item: any) => ({
+    id: item?.id,
     image: (
       <Image
-        src="/img/static/program_image.png"
+        src={item?.image || "/img/static/program_image.png"}
         alt="table image"
         width={1440}
         height={120}
         className="h-10 w-full object-cover"
       />
     ),
-    program_name: "الرياضيات للصف السادس",
+    program_name: item?.title || "N/A",
     related_teachers: (
       <AvatarGroup isBordered max={3}>
-        <Avatar src="https://i.pravatar.cc/150?u=a042581f4e29026024d" />
-        <Avatar src="https://i.pravatar.cc/150?u=a04258a2462d826712d" />
-        <Avatar src="https://i.pravatar.cc/150?u=a042581f4e29026704d" />
-        <Avatar src="https://i.pravatar.cc/150?u=a04258114e29026302d" />
-        <Avatar src="https://i.pravatar.cc/150?u=a04258114e29026702d" />
-        <Avatar src="https://i.pravatar.cc/150?u=a04258114e29026708c" />
+        {item?.instructurs?.map((instructor: any) => (
+          <Avatar
+            key={instructor?.id}
+            src={instructor?.image}
+            name={instructor?.name}
+            showFallback
+          />
+        ))}
       </AvatarGroup>
     ),
-    all_students: 10,
-    number_of_lessons: 120,
-    order_status: { name: "جاري", color: "success" },
-  },
-];
+    all_students: item?.number_of_students,
+    number_of_lessons: item?.number_of_sessions,
+  }));
 
-export const AllPrograms = () => {
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 500);
-  const [selectedStatus, setSelectedStatus] = useState("1");
   return (
     <>
       <div className="p-4 flex items-center justify-between flex-wrap">
@@ -174,15 +188,26 @@ export const AllPrograms = () => {
         </div>
       </div>
 
-      <TableComponent
-        columns={columns}
-        data={data}
-        ActionsComponent={OptionsComponent}
-      />
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <>
+          <TableComponent
+            columns={columns}
+            data={tableData}
+            ActionsComponent={OptionsComponent}
+          />
 
-      <div className="my-10 px-6">
-        <CustomPagination />
-      </div>
+          <div className="my-10 px-6">
+            <CustomPagination
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              last_page={allPrograms?.meta?.last_page}
+              total={allPrograms?.meta?.total}
+            />
+          </div>
+        </>
+      )}
     </>
   );
 };
