@@ -9,6 +9,7 @@ type DropzoneFieldProps = {
   error?: string;
   multiple?: boolean;
   label?: string;
+  description?: string;
 };
 
 export const DropzoneField = ({
@@ -17,6 +18,7 @@ export const DropzoneField = ({
   error,
   multiple = false,
   label,
+  description,
 }: DropzoneFieldProps) => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
@@ -55,7 +57,7 @@ export const DropzoneField = ({
         {isDragActive ? (
           <div className="flex items-center flex-col gap-2">
             <FolderOpen size="32" className="text-primary" variant="Bold" />
-            <h6 className="text-primary font-bold">تحميل صورة او فيديو</h6>
+            <h6 className="text-primary font-bold">{description || "تحميل صورة او فيديو"}</h6>
             <p className="font-semibold text-gray-500 text-xs">
               قم بإفلات الملف هنا ...
             </p>
@@ -76,7 +78,7 @@ export const DropzoneField = ({
         ) : (
           <div className="flex items-center flex-col gap-2">
             <FolderOpen size="32" className="text-primary" variant="Bold" />
-            <h6 className="text-primary font-bold">تحميل صورة او فيديو</h6>
+            <h6 className="text-primary font-bold">{description || "تحميل صورة او فيديو"}</h6>
             <p className="font-semibold text-gray-500 text-xs">
               آو آضغط للتصفح (الحد الآقصي 10 ميجا)
             </p>
