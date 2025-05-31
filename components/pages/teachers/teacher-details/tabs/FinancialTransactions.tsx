@@ -15,6 +15,7 @@ const columns = [
     { name: "النوع", uid: "type" },
     { name: "تاريخ الطلب", uid: "created_at" },
     { name: "قيمة الطلب", uid: "amount" }, 
+    { name: "طريقة الدفع", uid: "instructor_payment_method" }, 
     { name: "حالة الطلب", uid: "status" },
     { name: <Options />, uid: "actions" },
 ];
@@ -71,6 +72,7 @@ const formattedData =
   ? new Date(item.created_at).toISOString().slice(0, 16).replace('T', ' ') 
   : "N/A",
       amount: item.amount ? `${item.amount} ج.م` : "N/A",
+      instructor_payment_method: item.instructor_payment_method || "N/A",
       status: statusInfo,
     };
   }) || [];

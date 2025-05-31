@@ -13,9 +13,6 @@ export default async function page({
   const cookieStore = await cookies();  
   const token = cookieStore.get("token");
   const data = await fetchData(`client/instructor/show/${id}`, token?.value);
-  console.log('id', id)
-  console.log('data', data)
-  console.log("//////////////////////")
 
   const BreadCrumbItems = [
     {
@@ -26,7 +23,7 @@ export default async function page({
     {
       id: 2,
       name: "المعلمين",
-      link: "/students",
+      link: "/teachers",
     },
     {
       id: 3,
