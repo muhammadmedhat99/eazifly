@@ -35,6 +35,7 @@ export const DropzoneField = ({
     multiple,
     accept: {
       "image/*": [],
+      "application/pdf": [],
     },
   });
 
@@ -63,18 +64,29 @@ export const DropzoneField = ({
             </p>
           </div>
         ) : value?.length ? (
-          <div className="flex items-center flex-col gap-2">
-            {previewUrls.map((url, index) => (
-              <Image
-                key={index}
-                src={url || ""}
-                alt="user image"
-                width={1024}
-                height={1024}
-                className="w-full h-40 rounded-sm object-cover"
-              />
-            ))}
-          </div>
+            <div className="flex items-center flex-col gap-2">
+              {value.map((file, index) => {
+                const isImage = file.type.startsWith("image/");
+                const url = URL.createObjectURL(file);
+                return (
+                  <div key={index} className="w-full">
+                    {isImage ? (
+                      <Image
+                        src={url}
+                        alt={file.name}
+                        width={1024}
+                        height={1024}
+                        className="w-full h-40 rounded-sm object-cover"
+                      />
+                    ) : (
+                      <p className="font-semibold text-gray-500 text-xs">
+                        {file.name}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
         ) : (
           <div className="flex items-center flex-col gap-2">
             <FolderOpen size="32" className="text-primary" variant="Bold" />
