@@ -86,7 +86,7 @@ export const CreateTeacher = ({ Specializations }: CreateTeacherProps) => {
             case 2:
             return <WorkingHoursForm setActiveStep={setActiveStep} teacherId={teacherId}/>;
             case 3:
-            return <AttachmentsForm setActiveStep={setActiveStep} />;
+            return <AttachmentsForm setActiveStep={setActiveStep} teacherId={teacherId}/>;
             default:
             return null;
         }
