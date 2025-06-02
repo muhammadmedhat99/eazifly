@@ -22,6 +22,7 @@ import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const schema = yup
     .object({
@@ -33,31 +34,28 @@ const schema = yup
                 (value) => value && value.length > 0
             )
             .required("الرجاء تحميل ملف"),
-        qualification_data: yup
+        files: yup
             .mixed<FileList>()
             .test(
                 "fileType",
                 "الرجاء تحميل ملف صحيح",
-                (value) => value && value.length > 0
+                (value) => {
+                if (!value) return true; 
+                return value.length > 0;
+                }
             )
-            .required("الرجاء تحميل ملف"),
-        other_file: yup
-            .mixed<FileList>()
-            .test(
-                "fileType",
-                "الرجاء تحميل ملف صحيح",
-                (value) => value && value.length > 0
-            )
-            .required("الرجاء تحميل ملف"),
-    })
+            .notRequired()
+            })
     .required();
 
 type FormData = yup.InferType<typeof schema>;
 
 export const AttachmentsForm = ({
   setActiveStep,
+  teacherId,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  teacherId: number | null;
     }) => {
     const {
         register,
@@ -66,12 +64,56 @@ export const AttachmentsForm = ({
         reset,
         control,
     } = useForm<FormData>({
-        resolver: yupResolver(schema),
+        resolver: yupResolver(schema) as any,
     });
 
-    const onSubmit = (data: FormData) => {
-    console.log(data)
-  };
+    const router = useRouter();
+
+    const onSubmit = (data: FormData) => CreateAttachments.mutate(data);
+
+    const CreateAttachments = useMutation({
+        mutationFn: (submitData: FormData) => {
+            var myHeaders = new Headers();
+            myHeaders.append("local", "ar");
+            myHeaders.append("Accept", "application/json");
+            myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+            var formData = new FormData();
+
+            if (teacherId !== null) {
+                formData.append("instructor_id", teacherId.toString());
+            } else {
+                formData.append("instructor_id", "");
+            }
+            formData.append("cv", submitData.cv[0]);
+            for (const file of Array.from(submitData.files ?? [])) {
+            formData.append("files[]", file);
+            }
+            return postData("client/instructor/files", formData, myHeaders);
+        },
+        onSuccess: (data) => {
+            if (data.message !== "success") {
+                addToast({
+                    title: "error",
+                    color: "danger",
+                });
+            } else {
+                addToast({
+                    title: data?.message,
+                    color: "success",
+                });
+                reset();
+                router.push('/teachers');
+            }
+        },
+        onError: (error) => {
+            console.log(" error ===>>", error);
+            addToast({
+                title: "عذرا حدث خطأ ما",
+                color: "danger",
+            });
+        },
+    });
 
   return (
       <form
@@ -87,34 +129,23 @@ export const AttachmentsForm = ({
                           value={(field.value as any) || []}
                           onChange={field.onChange}
                           error={fieldState.error?.message}
+                          description="تحميل ملف"
                       />
                   </div>
               )}
           />
           <Controller
-              name="qualification_data"
+              name="files"
               control={control}
               render={({ field, fieldState }) => (
                   <div className="flex flex-col gap-1 flex-1">
-                      <label className="text-[#272727] font-bold text-sm">بيانات الموهل</label>
+                      <label className="text-[#272727] font-bold text-sm">ملفات أخري</label>
                       <DropzoneField
                           value={(field.value as any) || []}
                           onChange={field.onChange}
                           error={fieldState.error?.message}
-                      />
-                  </div>
-              )}
-          />
-          <Controller
-              name="other_file"
-              control={control}
-              render={({ field, fieldState }) => (
-                  <div className="flex flex-col gap-1 flex-1">
-                      <label className="text-[#272727] font-bold text-sm">ملف أخر</label>
-                      <DropzoneField
-                          value={(field.value as any) || []}
-                          onChange={field.onChange}
-                          error={fieldState.error?.message}
+                          description="تحميل ملف"
+                          multiple={true}
                       />
                   </div>
               )}
