@@ -33,9 +33,25 @@ type TeacherDetailsProps = {
       }[];
     };
   };
+  reportsData: {
+    data: {
+      id: number;
+      report_maker_type: string;
+      report_maker_name: string;
+      report_maker_image: string;
+      report_for_type: string;
+      report_for_name: string;
+      report_for_image: string;
+      program: string;
+      report_question: string;
+      report_question_answer: string;
+      note: string;
+      created_at: string;
+    }[];
+  };
 };
 
-export const TeacherDetails = ({ data }: TeacherDetailsProps) => {
+export const TeacherDetails = ({ data, reportsData }: TeacherDetailsProps) => {
   return (
     <div className="flex w-full flex-col">
       <Tabs
@@ -61,7 +77,7 @@ export const TeacherDetails = ({ data }: TeacherDetailsProps) => {
             <Statistics />
         </Tab>
         <Tab key="teacher-reports" title="تقارير المعلمين">
-            <TeacherReports />
+            <TeacherReports reportsData={reportsData} />
         </Tab>
       </Tabs>
     </div>
