@@ -1,8 +1,7 @@
 import React from "react";
 
-import { Controller, useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import { Controller, UseFormReturn } from "react-hook-form";
+
 import {
   Button,
   cn,
@@ -51,44 +50,14 @@ const options: Option[] = [
   },
 ];
 
-const schema = yup
-  .object({
-    subscription_plan: yup.string().required("إختر خطة الاشتراك"),
-    subscription_type: yup.string().required("إختر نوع الاشتراك"),
-    subscription_price: yup
-      .number()
-      .typeError("الرجاء ادخال رقم صحيح")
-      .positive("الرجاء ادخال رقم صحيح")
-      .integer("الرجاء ادخال رقم صحيح")
-      .required("الرجاء ادخال المبلغ المدفوع"),
-    sell_price: yup
-      .number()
-      .typeError("الرجاء ادخال رقم صحيح")
-      .positive("الرجاء ادخال رقم صحيح")
-      .integer("الرجاء ادخال رقم صحيح")
-      .required("الرجاء ادخال المبلغ المبيع"),
-    number_of_lessons: yup
-      .number()
-      .typeError("الرجاء ادخال رقم صحيح")
-      .positive("الرجاء ادخال رقم صحيح")
-      .integer("الرجاء ادخال رقم صحيح")
-      .required("الرجاء ادخال عدد الحصص"),
-    lesson_duration: yup.string().required("اختر مدة الحصة"),
-    lessons_days: yup
-      .array()
-      .of(yup.string())
-      .min(1, "اختر يوم الحصة")
-      .required("اختر يوم الحصة"),
-    repeated_table: yup.string().required("اختر يوم الحصة"),
-  })
-  .required();
-
-type FormData = yup.InferType<typeof schema>;
+import { FormData } from "@/components/pages/programs/create";
 
 export const Subscriptions = ({
   setActiveStep,
+  form,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  form: UseFormReturn<FormData>;
 }) => {
   const {
     register,
@@ -96,9 +65,7 @@ export const Subscriptions = ({
     formState: { errors },
     reset,
     control,
-  } = useForm<FormData>({
-    resolver: yupResolver(schema),
-  });
+  } = form;
 
   const onSubmit = (data: FormData) => console.log(data);
   return (
@@ -432,13 +399,12 @@ export const Subscriptions = ({
           إلغاء
         </Button>
         <Button
-          type="submit"
+          type="button"
           variant="solid"
           color="primary"
           className="text-white"
-          // isDisabled={CreateStudent?.isPending}
+          onPress={() => setActiveStep((prev) => prev + 1)}
         >
-          {/* {CreateStudent?.isPending && <Spinner color="white" size="sm" />} */}
           التالي
         </Button>
       </div>

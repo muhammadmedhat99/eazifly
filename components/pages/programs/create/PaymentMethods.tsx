@@ -2,39 +2,23 @@ import { Button, cn, Switch } from "@heroui/react";
 import { EmptyWalletChange, WalletMinus } from "iconsax-reactjs";
 import Image from "next/image";
 
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, UseFormReturn } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 
-const schema = yup
-  .object({
-    instant_payment: yup.boolean().required(),
-    wallet_payment: yup.boolean().required(),
-    instapay_Payment: yup.boolean().required(),
-  })
-  .required();
-
-type FormData = yup.InferType<typeof schema>;
+import { FormData } from "@/components/pages/programs/create";
 
 export const PaymentMethods = ({
   setActiveStep,
+  form,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  form: UseFormReturn<FormData>;
 }) => {
   const {
-    register,
     handleSubmit,
     formState: { errors },
-    reset,
     control,
-  } = useForm<FormData>({
-    resolver: yupResolver(schema),
-    defaultValues: {
-      instant_payment: true,
-      wallet_payment: true,
-      instapay_Payment: true,
-    },
-  });
+  } = form;
 
   const onSubmit = (data: FormData) => console.log(data);
 
@@ -185,7 +169,7 @@ export const PaymentMethods = ({
       <div className="flex items-center justify-end gap-4 mt-8">
         <Button
           type="button"
-          onPress={() => reset()}
+          onPress={() => form.reset()}
           variant="solid"
           color="primary"
           className="text-white"
@@ -193,13 +177,12 @@ export const PaymentMethods = ({
           إلغاء
         </Button>
         <Button
-          type="submit"
+          type="button"
           variant="solid"
           color="primary"
           className="text-white"
-          // isDisabled={CreateStudent?.isPending}
+          onPress={() => setActiveStep((prev) => prev + 1)}
         >
-          {/* {CreateStudent?.isPending && <Spinner color="white" size="sm" />} */}
           التالي
         </Button>
       </div>
