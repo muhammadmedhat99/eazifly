@@ -23,11 +23,47 @@ type StudentDetailsProps = {
         label: string;
         color: string;
       };
+      childrens: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        user_name: string;
+        email: string;
+        phone: string;
+        whats_app: string;
+        image: string;
+        gender: string;
+         age: string;
+        status_label: {
+          label: string;
+          color: string;
+        };
+        programs: any[];
+        chat_id: number;
+      }[];
     };
   };
+  subscriptionsData: {
+    data: {
+      id: number;
+      program_id: number;
+      program: string;
+      price: number;
+      instructor: {
+        name: string;
+        image: string;
+      },
+      DaysToExpire: number;
+      subscription_date: string;
+      expire_date: string;
+      student_number: number;
+      missed_sessions: number;
+      completed_sessions: number;
+    }[];
+  }
 };
 
-export const StudentDetails = ({ data }: StudentDetailsProps) => {
+export const StudentDetails = ({ data, subscriptionsData }: StudentDetailsProps) => {
   return (
     <div className="flex w-full flex-col">
       <Tabs
@@ -44,13 +80,13 @@ export const StudentDetails = ({ data }: StudentDetailsProps) => {
           <Information data={data} />
         </Tab>
         <Tab key="programs" title="البرامج و اللإشتراكات">
-          <Programs />
+          <Programs subscriptionsData={subscriptionsData} />
         </Tab>
         <Tab key="actions" title="الإجراءات السابقة">
           <TimelineDemo />
         </Tab>
         <Tab key="other" title="الطلاب التابعين">
-          <RelatedStudents />
+          <RelatedStudents data={data} />
         </Tab>
       </Tabs>
     </div>
