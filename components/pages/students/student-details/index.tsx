@@ -23,6 +23,24 @@ type StudentDetailsProps = {
         label: string;
         color: string;
       };
+      childrens: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        user_name: string;
+        email: string;
+        phone: string;
+        whats_app: string;
+        image: string;
+        gender: string;
+         age: string;
+        status_label: {
+          label: string;
+          color: string;
+        };
+        programs: any[];
+        chat_id: number;
+      }[];
     };
   };
   subscriptionsData: {
@@ -68,7 +86,7 @@ export const StudentDetails = ({ data, subscriptionsData }: StudentDetailsProps)
           <TimelineDemo />
         </Tab>
         <Tab key="other" title="الطلاب التابعين">
-          <RelatedStudents />
+          <RelatedStudents data={data} />
         </Tab>
       </Tabs>
     </div>
