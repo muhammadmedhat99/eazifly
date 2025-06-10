@@ -30,6 +30,7 @@ export const routes = [
     sub_routes: [
       { id: 1, name: "بيانات الطلاب", route: "" },
       { id: 2, name: "اشتراكات الطلاب", route: "/subscriptions" },
+      { id: 3, name: "مواعيد التجديد", route: "/renewals" },
     ],
   },
   {
