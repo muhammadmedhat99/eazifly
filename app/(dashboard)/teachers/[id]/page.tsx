@@ -13,6 +13,7 @@ export default async function page({
   const cookieStore = await cookies();  
   const token = cookieStore.get("token");
   const data = await fetchData(`client/instructor/show/${id}`, token?.value);
+  const reportsData = await fetchData(`client/instructor/reports/${id}`, token?.value);
 
   const BreadCrumbItems = [
     {
@@ -39,7 +40,7 @@ export default async function page({
     <>
       <BreadCrumb items={BreadCrumbItems} />
 
-      <TeacherDetails data={data} />
+      <TeacherDetails data={data} reportsData={reportsData} />
     </>
   );
 }
