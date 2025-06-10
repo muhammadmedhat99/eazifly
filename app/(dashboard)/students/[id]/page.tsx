@@ -13,6 +13,7 @@ export default async function page({
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
   const data = await fetchData(`client/user/show/${id}`, token?.value);
+  const subscriptionsData = await fetchData(`client/user/subscriptions/${id}`, token?.value);
 
   const BreadCrumbItems = [
     {
@@ -39,7 +40,7 @@ export default async function page({
     <>
       <BreadCrumb items={BreadCrumbItems} />
 
-      <StudentDetails data={data} />
+      <StudentDetails data={data} subscriptionsData={subscriptionsData} />
     </>
   );
 }
