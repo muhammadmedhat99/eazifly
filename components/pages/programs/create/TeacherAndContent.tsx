@@ -2,61 +2,34 @@
 
 import React from "react";
 
-import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import {
+  Controller,
+  useFieldArray,
+  useForm,
+  UseFormReturn,
+  useWatch,
+} from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 
 import { DropzoneField } from "@/components/global/DropZoneField";
 import { Button, Input, Select, SelectItem, Switch } from "@heroui/react";
 import { JoditInput } from "@/components/global/JoditInput";
 
-const schema = yup
-  .object({
-    what_to_learn: yup
-      .string()
-      .required("ادخل ماذا سوف يتعلم الطلاب ما الدورة ؟"),
-    program_benefits: yup.string().required("ادخل مزايا البرنامج"),
-    courses: yup.string().required("أختر المواد العلمية"),
-    instructor: yup.string().required("أختر المعلم المناسب"),
-    hour_rate: yup.string().required("ادخل سعر ساعة المعلم"),
-    files: yup
-      .array()
-      .of(
-        yup.object().shape({
-          file_name: yup.string().required("ادخل اسم الملف"),
-          show_student: yup.boolean(),
-          image: yup
-            .mixed<FileList>()
-            .test(
-              "fileType",
-              "الرجاء تحميل ملف صحيح",
-              (value) => value && value.length > 0
-            ),
-        })
-      )
-      .required(),
-  })
-  .required();
-
-type FormData = yup.InferType<typeof schema>;
+import { FormData } from "@/components/pages/programs/create";
 
 export const TeacherAndContent = ({
   setActiveStep,
+  form,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  form: UseFormReturn<FormData>;
 }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
     control,
-  } = useForm<FormData>({
-    resolver: yupResolver(schema),
-    defaultValues: {
-      files: [{ file_name: "", show_student: false, image: undefined }],
-    },
-  });
+  } = form;
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -256,7 +229,7 @@ export const TeacherAndContent = ({
       <div className="flex items-center justify-end gap-4 mt-8 col-span-3">
         <Button
           type="button"
-          onPress={() => reset()}
+          onPress={() => form.reset()}
           variant="solid"
           color="primary"
           className="text-white"
@@ -264,13 +237,12 @@ export const TeacherAndContent = ({
           إلغاء
         </Button>
         <Button
-          type="submit"
+          type="button"
           variant="solid"
           color="primary"
           className="text-white"
-          // isDisabled={CreateStudent?.isPending}
+          onPress={() => setActiveStep((prev) => prev + 1)}
         >
-          {/* {CreateStudent?.isPending && <Spinner color="white" size="sm" />} */}
           التالي
         </Button>
       </div>
