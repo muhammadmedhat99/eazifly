@@ -21,6 +21,7 @@ import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 
 import { formatDate } from "@/lib/helper";
+import StudentModal from "./StudentModal";
 
 const columns = [
   { name: "إسم الطالب", uid: "name" },
@@ -59,6 +60,14 @@ export const Renewals = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [selectedStatus, setSelectedStatus] = useState("1");
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+
+  const handleRowClick = (student: any) => {
+    setSelectedStudent(student);
+    setModalOpen(true);
+  };
 
   const isLoading = false; 
 
@@ -192,8 +201,14 @@ export const Renewals = () => {
           columns={columns}
           data={formattedData}
           ActionsComponent={OptionsComponent}
+          handleRowClick={handleRowClick}
         />
       )}
+      <StudentModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        student={selectedStudent}
+      />
 
       <div className="my-10 px-6">
         <CustomPagination />

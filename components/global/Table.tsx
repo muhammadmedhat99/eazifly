@@ -20,6 +20,7 @@ export default function TableComponent({
   columns,
   data,
   ActionsComponent,
+  handleRowClick,
   selectable = false,
 }: any) {
   const pathname = usePathname();
@@ -29,21 +30,23 @@ export default function TableComponent({
 
     switch (columnKey) {
       case "name":
-        return (
-          <Link href={`${pathname}/${item?.id}` || ""}>
-            <User
-              avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
-              description={
-                item.renew_date ||
-                (item?.created_at && (
-                  <span className="text-[#5E5E5E] font-semibold text-start">
-                    تاريخ الإنشاء : {item.renew_date || item?.created_at}
-                  </span>
-                ))
-              }
-              name={cellValue}
-            ></User>
-          </Link>
+        const content = (
+          <User
+            avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
+            description={
+              item.renew_date ||
+              (item?.created_at && (
+                <span className="text-[#5E5E5E] font-semibold text-start">
+                  تاريخ الإنشاء : {item.renew_date || item?.created_at}
+                </span>
+              ))
+            }
+            name={cellValue}
+          />
+        );
+
+        return typeof handleRowClick === "function" ? content : (
+          <Link href={`${pathname}/${item?.id}`}>{content}</Link>
         );
 
       case "status":
@@ -121,7 +124,10 @@ export default function TableComponent({
       </TableHeader>
       <TableBody items={data}>
         {(item: any) => (
-          <TableRow key={item.id}>
+          <TableRow 
+          key={item.id} 
+          onClick={() => typeof handleRowClick === "function" && handleRowClick(item)} 
+          className={typeof handleRowClick === "function" ? "cursor-pointer" : ""}>
             {(columnKey) => (
               <TableCell className="text-xs font-semibold text-light">
                 {renderCell(item, columnKey)}
