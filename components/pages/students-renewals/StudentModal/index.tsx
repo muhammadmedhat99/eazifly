@@ -27,9 +27,10 @@ export default function StudentModal({
   student,
 }: StudentModalProps) {
   const [selectedTab, setSelectedTab] = useState("info");
+  const [scrollBehavior, setScrollBehavior] = useState<"inside" | "normal" | "outside">("inside");
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={(open) => !open && onClose()} size="4xl">
+    <Modal isOpen={isOpen} scrollBehavior={scrollBehavior}  onOpenChange={(open) => !open && onClose()} size="4xl">
       <ModalContent>
         {(closeModal) => (
           <>
@@ -50,7 +51,7 @@ export default function StudentModal({
                     }}
                 >
                     <Tab key="action" title="الإجراء">
-                    <Action />
+                    <Action studentInfo={student}/>
                     </Tab>
                     <Tab key="personal" title="البيانات الشخصية">
                     <PersonalInfo />
@@ -67,26 +68,6 @@ export default function StudentModal({
                 </Tabs>
               </div>
             </ModalBody>
-
-              <div className="flex items-center justify-center gap-5 px-6 py-4">
-                <Button
-                type="button"
-                onPress={closeModal}
-                variant="solid"
-                color="primary"
-                className="text-white w-36"
-                >
-                إلغاء
-                </Button>
-                <Button
-                type="submit"
-                variant="solid"
-                color="primary"
-                className="text-white w-36"
-                >
-                حفظ
-                </Button>
-              </div>
           </>
         )}
       </ModalContent>
