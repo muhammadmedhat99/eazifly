@@ -24,8 +24,8 @@ import { formatDate } from "@/lib/helper";
 import StudentModal from "./StudentModal";
 
 const columns = [
-  { name: "إسم الطالب", uid: "name" },
-  { name: "بيانات التواصل", uid: "phone" },
+  { name: "إسم الطالب", uid: "renewal_student_name" },
+  { name: "بيانات التواصل", uid: "contact_info" },
   { name: "أخر موعد تواصل", uid: "last_contact" },
   { name: "قيمة التجديد", uid: "renewal_amount" },
   { name: "موعد التجديد", uid: "renewal_date" },
@@ -59,7 +59,6 @@ const OptionsComponent = ({ id }: { id: number }) => {
 export const Renewals = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
-  const [selectedStatus, setSelectedStatus] = useState("1");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -69,40 +68,42 @@ export const Renewals = () => {
     setModalOpen(true);
   };
 
-  const isLoading = false; 
+  const { data: renewalsData, isLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/user/subscriptions?search=${debouncedSearch}`, axios_config),
+    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch),
+  });
 
-  const formattedData = [
-  {
-    id: 1,
-    name: "أحمد علي",
-    avatar: null,
-    phone: "01012345678",
-    email: "ahmed@example.com",
-    renewal_date: "بعد 3 يوم",
-    last_contact: "2025-06-05",
-    renewal_amount: "200",
-    avg_renewal_days: "+ 3 يوم",
-    status: {
-      name: "سيتم التجديد",
-      color: "success",
-    },
-  },
-  {
-    id: 2,
-    name: "سارة محمد",
-    avatar: null,
-    phone: "01198765432",
-    email: "sara@example.com",
-    renewal_date: "12-2-2025",
-    last_contact: "2025-06-07",
-    renewal_amount: "150",
-    avg_renewal_days: "-3 يوم",
-    status: {
-      name: "سيتم الإلغاء",
-      color: "danger",
-    },
-  },
-];
+  const formattedData =
+    renewalsData?.data?.map((item: any) => ({
+      id: item.id,
+      user_id: item.user_id,
+      renewal_student_name: item.user_name,
+      subscripe_date: formatDate(item.subscripe_date),
+      contact_info: {
+      phone: item.user_phone,
+      email: item.user_email,
+      },
+      last_contact: item.last_contact_date,
+      renewal_amount: item.subscriped_price,
+      renewal_date: formatDate(item.expire_date),
+      expire_date: item.expire_date,
+      avg_renewal_days: item.average_renewal_days,
+      subscription_status: {
+        name: item.subscription_status?.status || "N/A",
+        color:
+          item?.subscription_status?.color === "dark"
+            ? "danger"
+            : item?.subscription_status?.color,
+      },
+      status: {
+        name: item.renewal_status?.status || "N/A",
+        color:
+          item?.renewal_status?.color === "dark"
+            ? "danger"
+            : item?.renewal_status?.color,
+      },
+    })) || [];
 
   return (
     <>

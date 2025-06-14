@@ -87,7 +87,42 @@ export default function TableComponent({
             </span>
           </div>
         );
+      
+      case "renewal_student_name":
+        return (
+          <div className="flex items-center gap-2">
+            <Chip
+            className="capitalize text-center w-10 h-10"
+            color={item?.subscription_status?.color}
+            variant="flat">
+              <span className={`text-${item?.subscription_status?.color} font-bold text-xs`}>
+                {item.subscription_status?.name || "منتهي"}
+              </span>
+            </Chip>
+            <div className="flex flex-col items-start">
+              <span className="text-[#272727] text-sm font-bold">{item.renewal_student_name}</span>
+              {item.subscripe_date && (
+                <span className="text-[#5E5E5E] text-sm font-semibold">
+                  تاريخ الإلتحاق : {item.subscripe_date}
+                </span>
+              )}
+            </div>
 
+          </div>
+        );
+
+      case "contact_info":
+        return (
+          <div className="flex flex-col gap-1">
+            <span className="text-[#272727] text-sm font-bold">
+              {item.contact_info?.phone}
+            </span>
+            <span className="text-[#5E5E5E] text-sm font-semibold">
+              {item.contact_info?.email}
+            </span>
+          </div>
+        );
+      
       case "actions":
         return (
           <React.Fragment>
@@ -129,7 +164,7 @@ export default function TableComponent({
           onClick={() => typeof handleRowClick === "function" && handleRowClick(item)} 
           className={typeof handleRowClick === "function" ? "cursor-pointer" : ""}>
             {(columnKey) => (
-              <TableCell className="text-xs font-semibold text-light">
+              <TableCell className="text-sm font-semibold text-light">
                 {renderCell(item, columnKey)}
               </TableCell>
             )}
