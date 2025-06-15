@@ -54,10 +54,10 @@ export default function StudentModal({
                     <Action studentInfo={student}/>
                     </Tab>
                     <Tab key="personal" title="البيانات الشخصية">
-                    <PersonalInfo />
+                    <PersonalInfo studentInfo={student} />
                     </Tab>
                     <Tab key="subscription" title="بيانات اللإشتراك">
-                    <SubscriptionInfo />
+                    <SubscriptionInfo  studentInfo={student}/>
                     </Tab>
                     <Tab key="history" title="الإجراءات السابقة">
                     <PreviousActions />

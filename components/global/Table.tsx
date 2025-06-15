@@ -123,6 +123,13 @@ export default function TableComponent({
           </div>
         );
       
+      case "last_contact_days":
+        return (
+            <span className="text-sm font-semibold text-light">
+              قبل {item.last_contact_days} يوم
+            </span>
+        );
+      
       case "actions":
         return (
           <React.Fragment>

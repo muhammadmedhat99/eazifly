@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
@@ -26,7 +26,7 @@ import StudentModal from "./StudentModal";
 const columns = [
   { name: "إسم الطالب", uid: "renewal_student_name" },
   { name: "بيانات التواصل", uid: "contact_info" },
-  { name: "أخر موعد تواصل", uid: "last_contact" },
+  { name: "أخر موعد تواصل", uid: "last_contact_days" },
   { name: "قيمة التجديد", uid: "renewal_amount" },
   { name: "موعد التجديد", uid: "renewal_date" },
   { name: "متوسط أيام التجديد", uid: "avg_renewal_days" },
@@ -62,11 +62,33 @@ export const Renewals = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [studentDetails, setStudentDetails] = useState<any>(null)
 
   const handleRowClick = (student: any) => {
     setSelectedStudent(student);
     setModalOpen(true);
   };
+
+  useEffect(() => {
+  const fetchStudentDetails = async () => {
+    if (selectedStudent?.id) {
+      try {
+        const res = await fetchClient(
+          `client/user/subscriptions/details/${selectedStudent.id}`,
+          axios_config
+        );
+        setStudentDetails(res.data); 
+      } catch (error) {
+        console.error("error while fetching data:", error);
+        setStudentDetails(null);
+      }
+    }
+  };
+
+  if (modalOpen) {
+    fetchStudentDetails();
+  }
+}, [selectedStudent, modalOpen]);
 
   const { data: renewalsData, isLoading } = useQuery({
     queryFn: async () =>
@@ -76,6 +98,12 @@ export const Renewals = () => {
 
   const formattedData =
     renewalsData?.data?.map((item: any) => ({
+      user_name: item.user_name,
+      user_email: item.user_email,
+      user_phone: item.user_phone,
+      user_image: item.user_image,
+      total_sessions: item.total_sessions,
+      total_children: item.total_children,
       id: item.id,
       user_id: item.user_id,
       renewal_student_name: item.user_name,
@@ -84,7 +112,8 @@ export const Renewals = () => {
       phone: item.user_phone,
       email: item.user_email,
       },
-      last_contact: item.last_contact_date,
+      last_contact_date: formatDate(item.last_contact_date),
+      last_contact_days: item.last_contact_days,
       renewal_amount: item.subscriped_price,
       renewal_date: formatDate(item.expire_date),
       expire_date: item.expire_date,
@@ -102,6 +131,13 @@ export const Renewals = () => {
           item?.renewal_status?.color === "dark"
             ? "danger"
             : item?.renewal_status?.color,
+      },
+      status_label: {
+        label: item.status_label?.label || "N/A",
+        color:
+          item?.status_label?.color === "dark"
+            ? "danger"
+            : item?.status_label?.color,
       },
     })) || [];
 
@@ -208,7 +244,7 @@ export const Renewals = () => {
       <StudentModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        student={selectedStudent}
+        student={studentDetails}
       />
 
       <div className="my-10 px-6">
