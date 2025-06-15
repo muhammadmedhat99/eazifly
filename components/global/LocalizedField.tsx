@@ -1,12 +1,12 @@
 import { Input } from "@heroui/react";
-import { FormData } from "../pages/programs/create";
+
 import { Control, Controller } from "react-hook-form";
 import { JoditInput } from "./JoditInput";
 const languages = ["ar", "en"] as const;
 
 interface LocalizedFieldProps {
-  control: Control<FormData>;
-  name: keyof FormData["localizedFields"]["ar"];
+  control: Control<any>;
+  name: string;
   label: string;
 }
 
