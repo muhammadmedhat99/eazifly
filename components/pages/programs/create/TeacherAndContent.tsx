@@ -1,83 +1,48 @@
 "use client";
 
 import React from "react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+
+import {
+  Controller,
+  useFieldArray,
+  useForm,
+  UseFormReturn,
+  useWatch,
+} from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+
 import { DropzoneField } from "@/components/global/DropZoneField";
 import { Button, Input, Select, SelectItem, Switch } from "@heroui/react";
 import { JoditInput } from "@/components/global/JoditInput";
-import { teacherAndContentSchema } from "./schemas";
+
+import { FormData } from "@/components/pages/programs/create";
 
 export const TeacherAndContent = ({
   setActiveStep,
-  programId,
-  specializationId,
+  form,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-  programId: string;
-  specializationId: string;
+  form: UseFormReturn<FormData>;
 }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     control,
-    reset,
-    watch,
-  } = useForm({
-    resolver: yupResolver(teacherAndContentSchema),
-    defaultValues: {
-      files: [{ file_name: "", show_student: false, image: undefined }],
-    },
-  });
+  } = form;
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "files",
   });
 
-  const selectedCourse = watch("courses");
+  const selectedCourse = useWatch({
+    control,
+    name: "courses",
+  });
 
-  const onSubmit = async (data: any) => {
-    try {
-      const formData = new FormData();
-      formData.append("program_id", programId);
-      formData.append("specialization_id", specializationId);
+  const onSubmit = (data: FormData) => console.log(data);
 
-      // Add all other fields
-      Object.entries(data).forEach(([key, value]) => {
-        if (key === "files") {
-          // Handle files array separately
-          data.files.forEach((file: any, index: number) => {
-            formData.append(`files[${index}][file_name]`, file.file_name);
-            formData.append(
-              `files[${index}][show_student]`,
-              file.show_student.toString()
-            );
-            if (file.image && file.image.length > 0) {
-              formData.append(`files[${index}][image]`, file.image[0]);
-            }
-          });
-        } else {
-          formData.append(key, value as string);
-        }
-      });
-
-      const response = await fetch("/client/program/update-content", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update program content");
-      }
-
-      setActiveStep(2);
-    } catch (error) {
-      console.error("Error updating program content:", error);
-      // Handle error
-    }
-  };
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -199,7 +164,7 @@ export const TeacherAndContent = ({
 
       <div className="col-span-3 bg-primary h-px my-5" />
 
-      {fields.map((field: any, index: number) => (
+      {fields.map((field, index) => (
         <div className="flex flex-col gap-2" key={field.id}>
           <div className="flex gap-2">
             <Input
@@ -264,20 +229,19 @@ export const TeacherAndContent = ({
       <div className="flex items-center justify-end gap-4 mt-8 col-span-3">
         <Button
           type="button"
-          onPress={() => reset()}
+          onPress={() => form.reset()}
           variant="solid"
           color="primary"
           className="text-white"
-          isDisabled={isSubmitting}
         >
           إلغاء
         </Button>
         <Button
-          type="submit"
+          type="button"
           variant="solid"
           color="primary"
           className="text-white"
-          isLoading={isSubmitting}
+          onPress={() => setActiveStep((prev) => prev + 1)}
         >
           التالي
         </Button>
