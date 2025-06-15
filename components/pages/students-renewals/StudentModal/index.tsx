@@ -60,7 +60,7 @@ export default function StudentModal({
                     <SubscriptionInfo  studentInfo={student}/>
                     </Tab>
                     <Tab key="history" title="الإجراءات السابقة">
-                    <PreviousActions />
+                    <PreviousActions studentInfo={student}/>
                     </Tab>
                     <Tab key="behavior" title="سلوك المستخدم">
                     <UserBehavior  />

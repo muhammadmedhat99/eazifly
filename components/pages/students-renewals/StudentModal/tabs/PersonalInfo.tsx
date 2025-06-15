@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/helper";
 import { Avatar } from "@heroui/react";
 import React from "react";
 
@@ -24,7 +25,7 @@ type StudentDetailsProps = {
     expire_date: string;
     days_to_expire: string;
     average_renewal_days: number;
-    renewal_amount: string;
+    plan_price: string;
     renewal_status: {
       status: string;
       color: string;
@@ -76,7 +77,7 @@ export const PersonalInfo = ({studentInfo} : StudentDetailsProps) => {
         <div className="flex flex-col gap-2">
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">تاريخ الإلتحاق</span>
           <span className="text-black-text font-bold text-[15px]">
-            {studentInfo.subscripe_date}
+            {formatDate(studentInfo.subscripe_date)}
           </span>
         </div>
       </div>
@@ -84,7 +85,7 @@ export const PersonalInfo = ({studentInfo} : StudentDetailsProps) => {
         <div className="flex flex-col gap-2">
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">قيمة التجديد</span>
           <span className="text-black-text font-bold text-[15px]">
-            {studentInfo.renewal_amount}
+            {studentInfo.plan_price}
           </span>
         </div>
       </div>
@@ -123,7 +124,7 @@ export const PersonalInfo = ({studentInfo} : StudentDetailsProps) => {
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">أخر موعد تم التواصل فية مع الطالب</span>
           <div className="flex justify-between">
             <span className="text-black-text font-bold text-[15px]">
-            {studentInfo.last_contact_date} 
+            {formatDate(studentInfo.last_contact_date)}
           </span>
           <span className="text-black-text font-bold text-[15px]">
             منذ {studentInfo.last_contact_days} يوم
