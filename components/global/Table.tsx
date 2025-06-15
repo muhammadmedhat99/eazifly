@@ -20,6 +20,7 @@ export default function TableComponent({
   columns,
   data,
   ActionsComponent,
+  handleRowClick,
   selectable = false,
 }: any) {
   const pathname = usePathname();
@@ -29,21 +30,23 @@ export default function TableComponent({
 
     switch (columnKey) {
       case "name":
-        return (
-          <Link href={`${pathname}/${item?.id}` || ""}>
-            <User
-              avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
-              description={
-                item.renew_date ||
-                (item?.created_at && (
-                  <span className="text-[#5E5E5E] font-semibold text-start">
-                    تاريخ الإنشاء : {item.renew_date || item?.created_at}
-                  </span>
-                ))
-              }
-              name={cellValue}
-            ></User>
-          </Link>
+        const content = (
+          <User
+            avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
+            description={
+              item.renew_date ||
+              (item?.created_at && (
+                <span className="text-[#5E5E5E] font-semibold text-start">
+                  تاريخ الإنشاء : {item.renew_date || item?.created_at}
+                </span>
+              ))
+            }
+            name={cellValue}
+          />
+        );
+
+        return typeof handleRowClick === "function" ? content : (
+          <Link href={`${pathname}/${item?.id}`}>{content}</Link>
         );
 
       case "status":
@@ -84,7 +87,49 @@ export default function TableComponent({
             </span>
           </div>
         );
+      
+      case "renewal_student_name":
+        return (
+          <div className="flex items-center gap-2">
+            <Chip
+            className="capitalize text-center w-10 h-10"
+            color={item?.subscription_status?.color}
+            variant="flat">
+              <span className={`text-${item?.subscription_status?.color} font-bold text-xs`}>
+                {item.subscription_status?.name || "منتهي"}
+              </span>
+            </Chip>
+            <div className="flex flex-col items-start">
+              <span className="text-[#272727] text-sm font-bold">{item.renewal_student_name}</span>
+              {item.subscripe_date && (
+                <span className="text-[#5E5E5E] text-sm font-semibold">
+                  تاريخ الإلتحاق : {item.subscripe_date}
+                </span>
+              )}
+            </div>
 
+          </div>
+        );
+
+      case "contact_info":
+        return (
+          <div className="flex flex-col gap-1">
+            <span className="text-[#272727] text-sm font-bold">
+              {item.contact_info?.phone}
+            </span>
+            <span className="text-[#5E5E5E] text-sm font-semibold">
+              {item.contact_info?.email}
+            </span>
+          </div>
+        );
+      
+      case "last_contact_days":
+        return (
+            <span className="text-sm font-semibold text-light">
+              قبل {item.last_contact_days} يوم
+            </span>
+        );
+      
       case "actions":
         return (
           <React.Fragment>
@@ -121,9 +166,12 @@ export default function TableComponent({
       </TableHeader>
       <TableBody items={data}>
         {(item: any) => (
-          <TableRow key={item.id}>
+          <TableRow 
+          key={item.id} 
+          onClick={() => typeof handleRowClick === "function" && handleRowClick(item)} 
+          className={typeof handleRowClick === "function" ? "cursor-pointer" : ""}>
             {(columnKey) => (
-              <TableCell className="text-xs font-semibold text-light">
+              <TableCell className="text-sm font-semibold text-light">
                 {renderCell(item, columnKey)}
               </TableCell>
             )}
