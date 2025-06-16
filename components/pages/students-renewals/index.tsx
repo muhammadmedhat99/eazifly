@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
@@ -21,11 +21,12 @@ import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 
 import { formatDate } from "@/lib/helper";
+import StudentModal from "./StudentModal";
 
 const columns = [
-  { name: "إسم الطالب", uid: "name" },
-  { name: "بيانات التواصل", uid: "phone" },
-  { name: "أخر موعد تواصل", uid: "last_contact" },
+  { name: "إسم الطالب", uid: "renewal_student_name" },
+  { name: "بيانات التواصل", uid: "contact_info" },
+  { name: "أخر موعد تواصل", uid: "last_contact_days" },
   { name: "قيمة التجديد", uid: "renewal_amount" },
   { name: "موعد التجديد", uid: "renewal_date" },
   { name: "متوسط أيام التجديد", uid: "avg_renewal_days" },
@@ -58,42 +59,87 @@ const OptionsComponent = ({ id }: { id: number }) => {
 export const Renewals = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
-  const [selectedStatus, setSelectedStatus] = useState("1");
 
-  const isLoading = false; 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [studentDetails, setStudentDetails] = useState<any>(null)
 
-  const formattedData = [
-  {
-    id: 1,
-    name: "أحمد علي",
-    avatar: null,
-    phone: "01012345678",
-    email: "ahmed@example.com",
-    renewal_date: "بعد 3 يوم",
-    last_contact: "2025-06-05",
-    renewal_amount: "200",
-    avg_renewal_days: "+ 3 يوم",
-    status: {
-      name: "سيتم التجديد",
-      color: "success",
-    },
-  },
-  {
-    id: 2,
-    name: "سارة محمد",
-    avatar: null,
-    phone: "01198765432",
-    email: "sara@example.com",
-    renewal_date: "12-2-2025",
-    last_contact: "2025-06-07",
-    renewal_amount: "150",
-    avg_renewal_days: "-3 يوم",
-    status: {
-      name: "سيتم الإلغاء",
-      color: "danger",
-    },
-  },
-];
+  const handleRowClick = (student: any) => {
+    setSelectedStudent(student);
+    setModalOpen(true);
+  };
+
+  useEffect(() => {
+  const fetchStudentDetails = async () => {
+    if (selectedStudent?.id) {
+      try {
+        const res = await fetchClient(
+          `client/user/subscriptions/details/${selectedStudent.id}`,
+          axios_config
+        );
+        setStudentDetails(res.data); 
+      } catch (error) {
+        console.error("error while fetching data:", error);
+        setStudentDetails(null);
+      }
+    }
+  };
+
+  if (modalOpen) {
+    fetchStudentDetails();
+  }
+}, [selectedStudent, modalOpen]);
+
+  const { data: renewalsData, isLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/user/subscriptions?search=${debouncedSearch}`, axios_config),
+    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch),
+  });
+
+  const formattedData =
+    renewalsData?.data?.map((item: any) => ({
+      user_name: item.user_name,
+      user_email: item.user_email,
+      user_phone: item.user_phone,
+      user_image: item.user_image,
+      total_sessions: item.total_sessions,
+      total_children: item.total_children,
+      id: item.id,
+      user_id: item.user_id,
+      renewal_student_name: item.user_name,
+      subscripe_date: formatDate(item.subscripe_date),
+      contact_info: {
+      phone: item.user_phone,
+      email: item.user_email,
+      },
+      last_contact_date: formatDate(item.last_contact_date),
+      last_contact_days: item.last_contact_days,
+      renewal_amount: item.subscriped_price,
+      renewal_date: formatDate(item.expire_date),
+      expire_date: item.expire_date,
+      avg_renewal_days: item.average_renewal_days,
+      subscription_status: {
+        name: item.subscription_status?.status || "N/A",
+        color:
+          item?.subscription_status?.color === "dark"
+            ? "danger"
+            : item?.subscription_status?.color,
+      },
+      status: {
+        name: item.renewal_status?.status || "N/A",
+        color:
+          item?.renewal_status?.color === "dark"
+            ? "danger"
+            : item?.renewal_status?.color,
+      },
+      status_label: {
+        label: item.status_label?.label || "N/A",
+        color:
+          item?.status_label?.color === "dark"
+            ? "danger"
+            : item?.status_label?.color,
+      },
+    })) || [];
 
   return (
     <>
@@ -192,8 +238,14 @@ export const Renewals = () => {
           columns={columns}
           data={formattedData}
           ActionsComponent={OptionsComponent}
+          handleRowClick={handleRowClick}
         />
       )}
+      <StudentModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        student={studentDetails}
+      />
 
       <div className="my-10 px-6">
         <CustomPagination />
