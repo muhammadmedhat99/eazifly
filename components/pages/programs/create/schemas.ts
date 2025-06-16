@@ -33,7 +33,7 @@ export const informationFormSchema = yup.object({
     .oneOf(["adult", "child"])
     .required("اختر الفئة المناسبة"),
   specialization_id: yup.string().required("اختر التخصص"),
-  slug: yup.string().required("ادخل اسم البرنامج"),
+  slug: yup.string().required("ادخل slug الخاص ب البرنامج"),
   limit_users: yup.number().required("ادخل عدد المستخدمين"),
 });
 

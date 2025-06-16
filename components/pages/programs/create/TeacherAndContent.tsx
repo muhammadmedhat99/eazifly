@@ -5,6 +5,10 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, Input, Select, SelectItem } from "@heroui/react";
 import { TeacherAndContentFormData, teacherAndContentSchema } from "./schemas";
+import { useQuery } from "@tanstack/react-query";
+import { fetchClient } from "@/lib/utils";
+import { axios_config } from "@/lib/const";
+import { AllQueryKeys } from "@/keys";
 
 interface TeacherAndContentProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
@@ -12,13 +16,24 @@ interface TeacherAndContentProps {
   specializationId: string;
   specializationName?: string; // Add this to display the specialization name
 }
-
+interface Specialization {
+  id: string;
+  title: string;
+}
 export const TeacherAndContent = ({
   setActiveStep,
   programId,
   specializationId,
   specializationName = "التخصص المحدد", // Default fallback
 }: TeacherAndContentProps) => {
+  console.log(" specializationId ===>>", specializationId);
+  const { data: specializations, isLoading: loadingSpecializations } = useQuery(
+    {
+      queryFn: async (): Promise<{ data: Specialization[] }> =>
+        await fetchClient(`client/Specializations`, axios_config),
+      queryKey: AllQueryKeys.GetAllSpecializations,
+    }
+  );
   const {
     register,
     handleSubmit,
@@ -79,6 +94,7 @@ export const TeacherAndContent = ({
           render={({ field }) => (
             <Select
               {...field}
+              isLoading={loadingSpecializations}
               isDisabled={true}
               selectedKeys={[specializationId]}
               label="التخصص"
@@ -90,9 +106,11 @@ export const TeacherAndContent = ({
                 value: "text-[#87878C] text-sm",
               }}
             >
-              <SelectItem key={specializationId}>
-                {specializationName}
-              </SelectItem>
+              {specializations?.data?.map((specialization: Specialization) => (
+                <SelectItem key={specialization.id}>
+                  {specialization.title}
+                </SelectItem>
+              )) ?? []}
             </Select>
           )}
         />
