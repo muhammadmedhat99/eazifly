@@ -1,7 +1,6 @@
 import React from "react";
-
-import { Controller, UseFormReturn } from "react-hook-form";
-
+import { Controller, useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import {
   Button,
   cn,
@@ -11,53 +10,38 @@ import {
   Select as HeroSelect,
   SelectItem,
 } from "@heroui/react";
-
 import Select from "@/components/global/ClientOnlySelect";
 import { customStyles } from "@/lib/const";
+import { subscriptionsSchema, SubscriptionsFormData } from "./schemas";
 
 type Option = {
   value: string;
   label: string;
 };
+
 const options: Option[] = [
-  {
-    value: "1",
-    label: "السبت",
-  },
-  {
-    value: "2",
-    label: "الأحد",
-  },
-  {
-    value: "3",
-    label: "الاثنين",
-  },
-  {
-    value: "4",
-    label: "الثلاثاء",
-  },
-  {
-    value: "5",
-    label: "الاربعاء",
-  },
-  {
-    value: "6",
-    label: "الخميس",
-  },
-  {
-    value: "7",
-    label: "الجمعة",
-  },
+  { value: "1", label: "السبت" },
+  { value: "2", label: "الأحد" },
+  { value: "3", label: "الاثنين" },
+  { value: "4", label: "الثلاثاء" },
+  { value: "5", label: "الاربعاء" },
+  { value: "6", label: "الخميس" },
+  { value: "7", label: "الجمعة" },
 ];
 
-import { FormData } from "@/components/pages/programs/create";
+const lessonDurationOptions = [
+  { key: "1", label: "30 دقيقه" },
+  { key: "2", label: "60 دقيقه" },
+  { key: "3", label: "90 دقيقه" },
+  { key: "4", label: "120 دقيقه" },
+];
 
 export const Subscriptions = ({
   setActiveStep,
-  form,
+  programId,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-  form: UseFormReturn<FormData>;
+  programId: string;
 }) => {
   const {
     register,
@@ -65,9 +49,44 @@ export const Subscriptions = ({
     formState: { errors },
     reset,
     control,
-  } = form;
+  } = useForm<SubscriptionsFormData>({
+    resolver: yupResolver(subscriptionsSchema),
+    defaultValues: {
+      subscription_plan: "",
+      subscription_type: "",
+      subscription_price: "",
+      sell_price: "",
+      number_of_lessons: "",
+      lesson_duration: "",
+      lessons_days: [],
+      repeated_table: "",
+    },
+  });
 
-  const onSubmit = (data: FormData) => console.log(data);
+  const onSubmit = async (data: SubscriptionsFormData) => {
+    try {
+      console.log("Subscriptions Data:", data);
+      console.log("Program ID:", programId);
+
+      // Here you would typically send the data to your API
+      // const response = await updateProgramSubscriptions(programId, data);
+
+      // If successful, move to next step
+      setActiveStep((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error saving subscriptions:", error);
+      // Handle error (show toast, etc.)
+    }
+  };
+
+  const handleCancel = () => {
+    reset();
+  };
+
+  const handleBack = () => {
+    setActiveStep((prev) => prev - 1);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-5 border border-stroke rounded-xl">
@@ -78,9 +97,7 @@ export const Subscriptions = ({
             <RadioGroup
               {...field}
               value={field.value}
-              onChange={(key) => {
-                field.onChange(key);
-              }}
+              onChange={(key) => field.onChange(key)}
               isInvalid={!!errors.subscription_plan?.message}
               errorMessage={errors.subscription_plan?.message}
               label="خطة الإشتراك"
@@ -145,6 +162,7 @@ export const Subscriptions = ({
             </RadioGroup>
           )}
         />
+
         <Controller
           name="subscription_type"
           control={control}
@@ -152,9 +170,7 @@ export const Subscriptions = ({
             <RadioGroup
               {...field}
               value={field.value}
-              onChange={(key) => {
-                field.onChange(key);
-              }}
+              onChange={(key) => field.onChange(key)}
               isInvalid={!!errors.subscription_type?.message}
               errorMessage={errors.subscription_type?.message}
               label="نوع الإشتراك"
@@ -201,11 +217,12 @@ export const Subscriptions = ({
                   label: "text-xs group-data-[selected=true]:text-primary",
                 }}
               >
-                عائلة
+                عائلة
               </Radio>
             </RadioGroup>
           )}
         />
+
         <Input
           label="سعر الإشتراك"
           placeholder="أكتب السعر المناسب"
@@ -241,6 +258,7 @@ export const Subscriptions = ({
             <span className="text-black-text font-bold text-sm">ج.م</span>
           }
         />
+
         <Input
           label="عدد حصص البرنامج"
           placeholder="نص الكتابه"
@@ -271,7 +289,7 @@ export const Subscriptions = ({
               }}
               label="مدة المحاضره"
               labelPlacement="outside"
-              placeholder="اختر البرنامج"
+              placeholder="اختر مدة المحاضرة"
               isInvalid={!!errors.lesson_duration?.message}
               errorMessage={errors.lesson_duration?.message}
               classNames={{
@@ -280,24 +298,7 @@ export const Subscriptions = ({
                 value: "text-[#87878C] text-sm",
               }}
             >
-              {[
-                {
-                  key: "1",
-                  label: "30 دقيقه",
-                },
-                {
-                  key: "2",
-                  label: "60 دقيقه",
-                },
-                {
-                  key: "3",
-                  label: "90 دقيقه",
-                },
-                {
-                  key: "4",
-                  label: "120 دقيقه",
-                },
-              ].map((item) => (
+              {lessonDurationOptions.map((item) => (
                 <SelectItem key={item.key}>{item.label}</SelectItem>
               ))}
             </HeroSelect>
@@ -324,12 +325,16 @@ export const Subscriptions = ({
                   field.value?.includes(opt.value)
                 )}
                 onChange={(selected) =>
-                  field.onChange((selected as Option[]).map((opt) => opt.value))
+                  field.onChange(
+                    (selected as Option[])?.map((opt) => opt.value) || []
+                  )
                 }
               />
-              <p className="text-xs text-danger">
-                {errors?.lessons_days?.message}
-              </p>
+              {errors?.lessons_days?.message && (
+                <p className="text-xs text-danger">
+                  {errors.lessons_days.message}
+                </p>
+              )}
             </div>
           )}
         />
@@ -341,12 +346,10 @@ export const Subscriptions = ({
             <RadioGroup
               {...field}
               value={field.value}
-              onChange={(key) => {
-                field.onChange(key);
-              }}
+              onChange={(key) => field.onChange(key)}
               isInvalid={!!errors.repeated_table?.message}
               errorMessage={errors.repeated_table?.message}
-              label="نوع الإشتراك"
+              label="جدول متكرر"
               classNames={{
                 wrapper: "flex-row",
                 label: "text-[#272727] font-bold text-sm",
@@ -391,19 +394,18 @@ export const Subscriptions = ({
       <div className="flex items-center justify-end gap-4 mt-8">
         <Button
           type="button"
-          onPress={() => reset()}
+          onPress={handleCancel}
           variant="solid"
-          color="primary"
-          className="text-white"
+          color="default"
+          className="text-white bg-gray-500"
         >
           إلغاء
         </Button>
         <Button
-          type="button"
+          type="submit"
           variant="solid"
           color="primary"
           className="text-white"
-          onPress={() => setActiveStep((prev) => prev + 1)}
         >
           التالي
         </Button>
