@@ -1,247 +1,215 @@
 "use client";
 
 import React from "react";
-
-import {
-  Controller,
-  useFieldArray,
-  useForm,
-  UseFormReturn,
-  useWatch,
-} from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { Button, Input, Select, SelectItem } from "@heroui/react";
+import { TeacherAndContentFormData, teacherAndContentSchema } from "./schemas";
 
-import { DropzoneField } from "@/components/global/DropZoneField";
-import { Button, Input, Select, SelectItem, Switch } from "@heroui/react";
-import { JoditInput } from "@/components/global/JoditInput";
-
-import { FormData } from "@/components/pages/programs/create";
+interface TeacherAndContentProps {
+  setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  programId: string;
+  specializationId: string;
+  specializationName?: string; // Add this to display the specialization name
+}
 
 export const TeacherAndContent = ({
   setActiveStep,
-  form,
-}: {
-  setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-  form: UseFormReturn<FormData>;
-}) => {
+  programId,
+  specializationId,
+  specializationName = "التخصص المحدد", // Default fallback
+}: TeacherAndContentProps) => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     control,
-  } = form;
+    reset,
+  } = useForm<TeacherAndContentFormData>({
+    resolver: yupResolver(teacherAndContentSchema),
+    defaultValues: {
+      specialization_id: specializationId,
+      teachers: [{ teacher_id: "", hour_rate: "" }],
+    },
+  });
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "files",
+    name: "teachers",
   });
 
-  const selectedCourse = useWatch({
-    control,
-    name: "courses",
-  });
+  const onSubmit = async (data: TeacherAndContentFormData) => {
+    try {
+      const formData = new FormData();
+      formData.append("program_id", programId);
+      formData.append("specialization_id", data.specialization_id);
 
-  const onSubmit = (data: FormData) => console.log(data);
+      // Add teachers array
+      data.teachers.forEach((teacher, index) => {
+        formData.append(`teachers[${index}][teacher_id]`, teacher.teacher_id);
+        formData.append(`teachers[${index}][hour_rate]`, teacher.hour_rate);
+      });
+
+      const response = await fetch("/client/program/update-content", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update program content");
+      }
+
+      setActiveStep(2);
+    } catch (error) {
+      console.error("Error updating program content:", error);
+      // Handle error
+    }
+  };
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="py-14 px-5 grid grid-cols-3 gap-5 items-start"
     >
+      {/* Disabled Specialization Select */}
       <div className="col-span-3">
         <Controller
-          name="what_to_learn"
-          control={control}
-          render={({ field, fieldState }) => (
-            <JoditInput
-              value={field.value || ""}
-              onChange={field.onChange}
-              label="ماذا سوف يتعلم الطلاب ما الدورة ؟"
-              error={fieldState.error?.message}
-            />
-          )}
-        />
-      </div>
-      <div className="col-span-3">
-        <Controller
-          name="program_benefits"
-          control={control}
-          render={({ field, fieldState }) => (
-            <JoditInput
-              value={field.value || ""}
-              onChange={field.onChange}
-              label="مزايا البرنامج"
-              error={fieldState.error?.message}
-            />
-          )}
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Controller
-          name="courses"
+          name="specialization_id"
           control={control}
           render={({ field }) => (
             <Select
               {...field}
-              selectedKeys={field.value ? [field.value] : [""]}
-              onSelectionChange={(keys) => {
-                field.onChange(Array.from(keys)[0]);
-                console.log(Array.from(keys)[0]);
-              }}
-              label="أختر المواد العلمية"
+              isDisabled={true}
+              selectedKeys={[specializationId]}
+              label="التخصص"
               labelPlacement="outside"
-              placeholder="حدد المواد العلمية"
-              isInvalid={!!errors.courses?.message}
-              errorMessage={errors.courses?.message}
+              placeholder="التخصص المحدد"
               classNames={{
                 label: "text-[#272727] font-bold text-sm",
                 base: "mb-4",
                 value: "text-[#87878C] text-sm",
               }}
             >
-              {[
-                { key: "1", label: "محاضرة رقم ٣" },
-                { key: "2", label: "محاضرة رقم ٤" },
-              ].map((item) => (
-                <SelectItem key={item.key}>{item.label}</SelectItem>
-              ))}
+              <SelectItem key={specializationId}>
+                {specializationName}
+              </SelectItem>
             </Select>
           )}
         />
-        <span className="text-primary font-semibold text-sm">
-          بأختيارك المواد العملية يمكنك إختيار المعلم المناسب
-        </span>
       </div>
-
-      <Controller
-        name="instructor"
-        control={control}
-        render={({ field }) => (
-          <Select
-            {...field}
-            isDisabled={!selectedCourse}
-            selectedKeys={field.value ? [field.value] : [""]}
-            onSelectionChange={(keys) => {
-              field.onChange(Array.from(keys)[0]);
-              console.log(Array.from(keys)[0]);
-            }}
-            label="أختر المعلم المناسب"
-            labelPlacement="outside"
-            placeholder="حدد المعلم المناسب"
-            isInvalid={!!errors.instructor?.message}
-            errorMessage={errors.instructor?.message}
-            classNames={{
-              label: "text-[#272727] font-bold text-sm",
-              base: "mb-4",
-              value: "text-[#87878C] text-sm",
-            }}
-          >
-            {[
-              { key: "1", label: "محمد علي" },
-              { key: "2", label: "محمد محمد" },
-            ].map((item) => (
-              <SelectItem key={item.key}>{item.label}</SelectItem>
-            ))}
-          </Select>
-        )}
-      />
-
-      <Input
-        label="سعر ساعة المعلم"
-        placeholder="نص الكتابه"
-        type="text"
-        {...register("hour_rate")}
-        isInvalid={!!errors.hour_rate?.message}
-        errorMessage={errors.hour_rate?.message}
-        labelPlacement="outside"
-        classNames={{
-          label: "text-[#272727] font-bold text-sm",
-          inputWrapper: "shadow-none",
-          base: "mb-4",
-        }}
-        endContent={<span className="font-semibold text-sm">ج.م</span>}
-      />
 
       <div className="col-span-3 bg-primary h-px my-5" />
 
-      {fields.map((field, index) => (
-        <div className="flex flex-col gap-2" key={field.id}>
-          <div className="flex gap-2">
-            <Input
-              placeholder="أضغط لكتابة أسم الملف"
-              type="text"
-              {...register(`files.${index}.file_name`)}
-              isInvalid={!!errors.files?.[index]?.file_name?.message}
-              errorMessage={errors.files?.[index]?.file_name?.message}
-              labelPlacement="outside"
-              classNames={{
-                label: "text-[#272727] font-bold text-sm",
-                inputWrapper: "shadow-none",
-                base: "mb-4",
-              }}
-            />
-            <div className="flex flex-col gap-1 -mt-2">
-              <span className="text-[#272727] font-bold text-[10px]">
-                عرض للطالب
-              </span>
+      {/* Teachers Array Fields */}
+      <div className="col-span-3">
+        <h3 className="text-[#272727] font-bold text-lg mb-4">المعلمين</h3>
+
+        {fields.map((field, index) => (
+          <div
+            key={field.id}
+            className="grid grid-cols-3 gap-4 mb-6 p-4 border border-gray-200 rounded-lg"
+          >
+            {/* Teacher Select */}
+            <div className="col-span-2">
               <Controller
-                name={`files.${index}.show_student`}
+                name={`teachers.${index}.teacher_id`}
                 control={control}
                 render={({ field }) => (
-                  <Switch
-                    onChange={(e) => field.onChange(e.target.checked)}
-                    color="primary"
-                    aria-label="Automatic updates"
-                    size="lg"
-                  />
+                  <Select
+                    {...field}
+                    selectedKeys={field.value ? [field.value] : [""]}
+                    onSelectionChange={(keys) => {
+                      field.onChange(Array.from(keys)[0]);
+                    }}
+                    label="أختر المعلم"
+                    labelPlacement="outside"
+                    placeholder="حدد المعلم المناسب"
+                    isInvalid={!!errors.teachers?.[index]?.teacher_id?.message}
+                    errorMessage={errors.teachers?.[index]?.teacher_id?.message}
+                    classNames={{
+                      label: "text-[#272727] font-bold text-sm",
+                      base: "mb-4",
+                      value: "text-[#87878C] text-sm",
+                    }}
+                  >
+                    {[
+                      { key: "1", label: "محمد علي" },
+                      { key: "2", label: "محمد محمد" },
+                      { key: "3", label: "أحمد حسن" },
+                      { key: "4", label: "فاطمة أحمد" },
+                    ].map((item) => (
+                      <SelectItem key={item.key}>{item.label}</SelectItem>
+                    ))}
+                  </Select>
                 )}
               />
             </div>
-          </div>
 
-          <Controller
-            name={`files.${index}.image`}
-            control={control}
-            render={({ field, fieldState }) => (
-              <DropzoneField
-                value={(field.value as any) || []}
-                onChange={field.onChange}
-                error={fieldState.error?.message}
-                label=""
+            {/* Hour Rate Input */}
+            <div className="flex items-start gap-2">
+              <Input
+                label="سعر الساعة"
+                placeholder="سعر الساعة"
+                type="text"
+                {...register(`teachers.${index}.hour_rate`)}
+                isInvalid={!!errors.teachers?.[index]?.hour_rate?.message}
+                errorMessage={errors.teachers?.[index]?.hour_rate?.message}
+                labelPlacement="outside"
+                classNames={{
+                  label: "text-[#272727] font-bold text-sm",
+                  inputWrapper: "shadow-none",
+                  base: "mb-4",
+                }}
+                endContent={<span className="font-semibold text-sm">ج.م</span>}
               />
-            )}
-          />
-        </div>
-      ))}
 
-      <div className="col-span-3 text-center">
-        <button
-          type="button"
-          onClick={() =>
-            append({ file_name: "", show_student: false, image: undefined })
-          }
-          className="text-primary font-semibold text-sm"
-        >
-          أضافة ملف أخر
-        </button>
+              {/* Remove Button - Only show if more than one teacher */}
+              {fields.length > 1 && (
+                <Button
+                  type="button"
+                  onPress={() => remove(index)}
+                  variant="light"
+                  color="danger"
+                  size="sm"
+                  className="mt-6"
+                >
+                  حذف
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* Add Teacher Button */}
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => append({ teacher_id: "", hour_rate: "" })}
+            className="text-primary font-semibold text-sm hover:underline"
+          >
+            إضافة معلم آخر
+          </button>
+        </div>
       </div>
 
+      {/* Form Actions */}
       <div className="flex items-center justify-end gap-4 mt-8 col-span-3">
         <Button
           type="button"
-          onPress={() => form.reset()}
+          onPress={() => reset()}
           variant="solid"
           color="primary"
           className="text-white"
+          isDisabled={isSubmitting}
         >
           إلغاء
         </Button>
         <Button
-          type="button"
+          type="submit"
           variant="solid"
           color="primary"
           className="text-white"
-          onPress={() => setActiveStep((prev) => prev + 1)}
+          isLoading={isSubmitting}
         >
           التالي
         </Button>

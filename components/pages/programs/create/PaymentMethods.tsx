@@ -1,26 +1,54 @@
 import { Button, cn, Switch } from "@heroui/react";
 import { EmptyWalletChange, WalletMinus } from "iconsax-reactjs";
 import Image from "next/image";
-
-import { Controller, useForm, UseFormReturn } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-
-import { FormData } from "@/components/pages/programs/create";
+import { paymentMethodsSchema, PaymentMethodsFormData } from "./schemas";
 
 export const PaymentMethods = ({
   setActiveStep,
-  form,
+  programId,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-  form: UseFormReturn<FormData>;
+  programId: string;
 }) => {
   const {
     handleSubmit,
     formState: { errors },
     control,
-  } = form;
+    reset,
+  } = useForm<PaymentMethodsFormData>({
+    resolver: yupResolver(paymentMethodsSchema),
+    defaultValues: {
+      instant_payment: false,
+      wallet_payment: false,
+      instapay_Payment: false,
+    },
+  });
 
-  const onSubmit = (data: FormData) => console.log(data);
+  const onSubmit = async (data: PaymentMethodsFormData) => {
+    try {
+      console.log("Payment Methods Data:", data);
+      console.log("Program ID:", programId);
+
+      // Here you would typically send the data to your API
+      // const response = await updateProgramPaymentMethods(programId, data);
+
+      // If successful, move to next step
+      setActiveStep((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error saving payment methods:", error);
+      // Handle error (show toast, etc.)
+    }
+  };
+
+  const handleCancel = () => {
+    reset();
+  };
+
+  const handleBack = () => {
+    setActiveStep((prev) => prev - 1);
+  };
 
   return (
     <form
@@ -28,7 +56,7 @@ export const PaymentMethods = ({
       className="grid grid-cols-1 gap-3 px-4 py-6"
     >
       <Controller
-        name={`instant_payment`}
+        name="instant_payment"
         control={control}
         render={({ field }) => (
           <>
@@ -65,12 +93,15 @@ export const PaymentMethods = ({
                 </div>
               </div>
             </Switch>
-            <span className="text-danger text-xs font-bold">
-              {errors.instant_payment && errors.instant_payment.message}
-            </span>
+            {errors.instant_payment && (
+              <span className="text-danger text-xs font-bold">
+                {errors.instant_payment.message}
+              </span>
+            )}
           </>
         )}
       />
+
       <Controller
         name="wallet_payment"
         control={control}
@@ -109,9 +140,11 @@ export const PaymentMethods = ({
                 </div>
               </div>
             </Switch>
-            <span className="text-danger text-xs font-bold">
-              {errors.wallet_payment && errors.wallet_payment.message}
-            </span>
+            {errors.wallet_payment && (
+              <span className="text-danger text-xs font-bold">
+                {errors.wallet_payment.message}
+              </span>
+            )}
           </>
         )}
       />
@@ -159,9 +192,11 @@ export const PaymentMethods = ({
                 </div>
               </div>
             </Switch>
-            <span className="text-danger text-xs font-bold">
-              {errors.instapay_Payment && errors.instapay_Payment.message}
-            </span>
+            {errors.instapay_Payment && (
+              <span className="text-danger text-xs font-bold">
+                {errors.instapay_Payment.message}
+              </span>
+            )}
           </>
         )}
       />
@@ -169,19 +204,18 @@ export const PaymentMethods = ({
       <div className="flex items-center justify-end gap-4 mt-8">
         <Button
           type="button"
-          onPress={() => form.reset()}
+          onPress={handleCancel}
           variant="solid"
-          color="primary"
-          className="text-white"
+          color="default"
+          className="text-white bg-gray-500"
         >
           إلغاء
         </Button>
         <Button
-          type="button"
+          type="submit"
           variant="solid"
           color="primary"
           className="text-white"
-          onPress={() => setActiveStep((prev) => prev + 1)}
         >
           التالي
         </Button>

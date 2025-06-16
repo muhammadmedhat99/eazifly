@@ -3,7 +3,7 @@ const BaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
 export async function postData(
   url: string,
-  data: BodyInit,
+  data: any,
   headerData: HeadersInit
 ) {
   const res = await fetch(BaseUrl + url, {

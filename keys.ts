@@ -7,5 +7,7 @@ export const AllQueryKeys = {
   GetSubscriptionRequestById: (postId: string | number) => ['GetSubscriptionRequestById', postId],
   GetAllCountries: ["GetAllCountries", axios_config],
   GetAllResponses: ["GetAllResponses", axios_config],
-  GetAllPrograms: (search: string, currentPage: number) => ['GetAllPrograms', axios_config, search, currentPage]
+  GetAllPrograms: (search: string, currentPage: number) => ['GetAllPrograms', axios_config, search, currentPage],
+  GetAllSpecializations: ["GetAllSpecializations", axios_config],
+
 };
