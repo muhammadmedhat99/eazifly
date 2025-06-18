@@ -62,6 +62,7 @@ export const InformationForm = ({
     formState: { errors },
     control,
     reset,
+    getValues,
   } = useForm<InformationFormData>({
     resolver: yupResolver(informationFormSchema),
     defaultValues,
@@ -119,7 +120,7 @@ export const InformationForm = ({
           color: "danger",
         });
       } else {
-        onProgramCreated(data.id, data.specialization_id);
+        onProgramCreated(data.data.id, getValues("specialization_id"));
         setActiveStep(1);
         addToast({
           title: data?.message,
