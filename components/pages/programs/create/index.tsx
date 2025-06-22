@@ -11,7 +11,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { informationFormSchema } from "./schemas";
 
 export const CreateProgram = () => {
-  const [activeStep, setActiveStep] = useState(3);
+  const [activeStep, setActiveStep] = useState(0);
   const [programId, setProgramId] = useState<string>("");
   const [specializationId, setSpecializationId] = useState<string>("");
 
