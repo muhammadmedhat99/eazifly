@@ -6,19 +6,26 @@ const languages = ["ar", "en"] as const;
 
 interface LocalizedFieldProps {
   control: Control<any>;
-  name: string;
+  name: string; // This should be the base path like "subscriptions.0.localizedFields"
   label: string;
+  fieldName?: string; // This should be the specific field like "title", "label", etc.
+  className?: string;
 }
 
 export const LocalizedField: React.FC<LocalizedFieldProps> = ({
   control,
   name,
+  fieldName,
   label,
 }) => {
   return languages.map((lang) => (
     <Controller
-      key={`${lang}.${name}`}
-      name={`localizedFields.${lang}.${name}`}
+      key={fieldName ? `${lang}.${fieldName}` : `${lang}.${name}`}
+      name={
+        fieldName
+          ? `${name}.${lang}.${fieldName}`
+          : `localizedFields.${lang}.${name}`
+      }
       control={control}
       render={({ field, fieldState }) => (
         <Input
@@ -43,12 +50,18 @@ export const LocalizedField: React.FC<LocalizedFieldProps> = ({
 export const LocalizedTextArea: React.FC<LocalizedFieldProps> = ({
   control,
   name,
+  fieldName,
   label,
+  className,
 }) => {
   return languages.map((lang) => (
     <Controller
-      key={`${lang}.${name}`}
-      name={`localizedFields.${lang}.${name}`}
+      key={fieldName ? `${lang}.${fieldName}` : `${lang}.${name}`}
+      name={
+        fieldName
+          ? `${name}.${lang}.${fieldName}`
+          : `localizedFields.${lang}.${name}`
+      }
       control={control}
       render={({ field, fieldState }) => (
         <JoditInput
@@ -56,6 +69,7 @@ export const LocalizedTextArea: React.FC<LocalizedFieldProps> = ({
           onChange={field.onChange}
           error={fieldState.error?.message}
           label={`${label} (${lang.toUpperCase()})`}
+          className={className}
         />
       )}
     />

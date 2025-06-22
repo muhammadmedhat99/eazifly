@@ -3,12 +3,13 @@
 import React from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Button, Input, Select, SelectItem } from "@heroui/react";
+import { addToast, Button, Input, Select, SelectItem } from "@heroui/react";
 import { TeacherAndContentFormData, teacherAndContentSchema } from "./schemas";
-import { useQuery } from "@tanstack/react-query";
-import { fetchClient } from "@/lib/utils";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
+import { getCookie } from "cookies-next";
 
 interface TeacherAndContentProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
@@ -26,7 +27,6 @@ export const TeacherAndContent = ({
   specializationId,
   specializationName = "التخصص المحدد", // Default fallback
 }: TeacherAndContentProps) => {
-  console.log(" specializationId ===>>", specializationId);
   const { data: specializations, isLoading: loadingSpecializations } = useQuery(
     {
       queryFn: async (): Promise<{ data: Specialization[] }> =>
@@ -34,10 +34,15 @@ export const TeacherAndContent = ({
       queryKey: AllQueryKeys.GetAllSpecializations,
     }
   );
+  const { data: instructors, isLoading: instructorsLoading } = useQuery({
+    queryFn: async () => await fetchClient(`client/instructors`, axios_config),
+    queryKey: AllQueryKeys.GetAllInstructors,
+  });
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     control,
     reset,
   } = useForm<TeacherAndContentFormData>({
@@ -54,32 +59,53 @@ export const TeacherAndContent = ({
   });
 
   const onSubmit = async (data: TeacherAndContentFormData) => {
-    try {
-      const formData = new FormData();
-      formData.append("program_id", programId);
-      formData.append("specialization_id", data.specialization_id);
-
-      // Add teachers array
-      data.teachers.forEach((teacher, index) => {
-        formData.append(`teachers[${index}][teacher_id]`, teacher.teacher_id);
-        formData.append(`teachers[${index}][hour_rate]`, teacher.hour_rate);
-      });
-
-      const response = await fetch("/client/program/update-content", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update program content");
-      }
-
-      setActiveStep(2);
-    } catch (error) {
-      console.error("Error updating program content:", error);
-      // Handle error
-    }
+    assignInstructorsMutation.mutate(data);
   };
+
+  const assignInstructorsMutation = useMutation({
+    mutationFn: (submitData: TeacherAndContentFormData) => {
+      const myHeaders = new Headers();
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = {
+        program_id: programId,
+        specialization_id: submitData.specialization_id,
+        instructor_id: submitData.teachers.map((teacher) => teacher.teacher_id),
+        amount_per_hour: submitData.teachers.map(
+          (teacher) => teacher.hour_rate
+        ),
+      };
+
+      return postData(
+        "client/program/assign/instructor",
+        JSON.stringify(formdata),
+        myHeaders
+      );
+    },
+    onSuccess: (data: any) => {
+      if (data.status !== 200 && data.status !== 201) {
+        addToast({
+          title: `Error creating program: ${data.message}`,
+          color: "danger",
+        });
+      } else {
+        setActiveStep(2);
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Error creating program:", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
 
   return (
     <form
@@ -144,20 +170,22 @@ export const TeacherAndContent = ({
                     placeholder="حدد المعلم المناسب"
                     isInvalid={!!errors.teachers?.[index]?.teacher_id?.message}
                     errorMessage={errors.teachers?.[index]?.teacher_id?.message}
+                    isLoading={instructorsLoading}
                     classNames={{
                       label: "text-[#272727] font-bold text-sm",
                       base: "mb-4",
                       value: "text-[#87878C] text-sm",
                     }}
+                    scrollShadowProps={{
+                      isEnabled: false,
+                    }}
+                    maxListboxHeight={200}
                   >
-                    {[
-                      { key: "1", label: "محمد علي" },
-                      { key: "2", label: "محمد محمد" },
-                      { key: "3", label: "أحمد حسن" },
-                      { key: "4", label: "فاطمة أحمد" },
-                    ].map((item) => (
-                      <SelectItem key={item.key}>{item.label}</SelectItem>
-                    ))}
+                    {instructors?.data?.map(
+                      (item: { id: string; name_ar: string }) => (
+                        <SelectItem key={item.id}>{item.name_ar}</SelectItem>
+                      )
+                    )}
                   </Select>
                 )}
               />
@@ -215,10 +243,9 @@ export const TeacherAndContent = ({
         <Button
           type="button"
           onPress={() => reset()}
-          variant="solid"
+          variant="bordered"
           color="primary"
-          className="text-white"
-          isDisabled={isSubmitting}
+          isDisabled={assignInstructorsMutation.isPending}
         >
           إلغاء
         </Button>
@@ -227,7 +254,7 @@ export const TeacherAndContent = ({
           variant="solid"
           color="primary"
           className="text-white"
-          isLoading={isSubmitting}
+          isLoading={assignInstructorsMutation.isPending}
         >
           التالي
         </Button>

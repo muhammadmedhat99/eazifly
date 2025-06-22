@@ -1,6 +1,7 @@
 import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+
 import {
   Button,
   cn,
@@ -9,32 +10,24 @@ import {
   RadioGroup,
   Select as HeroSelect,
   SelectItem,
+  Accordion,
+  AccordionItem,
+  addToast,
 } from "@heroui/react";
-import Select from "@/components/global/ClientOnlySelect";
-import { customStyles } from "@/lib/const";
+
 import { subscriptionsSchema, SubscriptionsFormData } from "./schemas";
+import {
+  LocalizedField,
+  LocalizedTextArea,
+} from "@/components/global/LocalizedField";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
+import { axios_config } from "@/lib/const";
+import { AllQueryKeys } from "@/keys";
+import { AddSquare, CloseCircle } from "iconsax-reactjs";
+import { getCookie } from "cookies-next";
 
-type Option = {
-  value: string;
-  label: string;
-};
-
-const options: Option[] = [
-  { value: "1", label: "السبت" },
-  { value: "2", label: "الأحد" },
-  { value: "3", label: "الاثنين" },
-  { value: "4", label: "الثلاثاء" },
-  { value: "5", label: "الاربعاء" },
-  { value: "6", label: "الخميس" },
-  { value: "7", label: "الجمعة" },
-];
-
-const lessonDurationOptions = [
-  { key: "1", label: "30 دقيقه" },
-  { key: "2", label: "60 دقيقه" },
-  { key: "3", label: "90 دقيقه" },
-  { key: "4", label: "120 دقيقه" },
-];
+const locales = ["ar", "en"] as const;
 
 export const Subscriptions = ({
   setActiveStep,
@@ -43,6 +36,17 @@ export const Subscriptions = ({
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   programId: string;
 }) => {
+  const { data: subscriptionPeriods, isLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/plan/subscription/period`, axios_config),
+    queryKey: AllQueryKeys.GetAllSubscriptionPeriods,
+  });
+  const { data: sessionPeriods, isLoading: sessionPeriodsLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/plan/session/time`, axios_config),
+    queryKey: AllQueryKeys.GetAllSessionTimes,
+  });
+
   const {
     register,
     handleSubmit,
@@ -52,352 +56,428 @@ export const Subscriptions = ({
   } = useForm<SubscriptionsFormData>({
     resolver: yupResolver(subscriptionsSchema),
     defaultValues: {
-      subscription_plan: "",
-      subscription_type: "",
-      subscription_price: "",
-      sell_price: "",
-      number_of_lessons: "",
-      lesson_duration: "",
-      lessons_days: [],
-      repeated_table: "",
+      subscriptions: [
+        {
+          localizedFields: locales.reduce(
+            (acc, locale) => ({
+              ...acc,
+              [locale]: { title: "", label: "", description: "" },
+            }),
+            {} as any
+          ),
+          subscription_plan: "",
+          subscription_type: "",
+          subscription_price: "",
+          sell_price: "",
+          number_of_lessons: "",
+          lesson_duration: "",
+        },
+      ],
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "subscriptions",
+  });
+
   const onSubmit = async (data: SubscriptionsFormData) => {
-    try {
-      console.log("Subscriptions Data:", data);
-      console.log("Program ID:", programId);
-
-      // Here you would typically send the data to your API
-      // const response = await updateProgramSubscriptions(programId, data);
-
-      // If successful, move to next step
-      setActiveStep((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error saving subscriptions:", error);
-      // Handle error (show toast, etc.)
-    }
+    addSubscriptionToProgram.mutate(data);
   };
 
   const handleCancel = () => {
     reset();
   };
 
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
+  const addNewSubscription = () => {
+    append({
+      localizedFields: locales.reduce(
+        (acc, locale) => ({
+          ...acc,
+          [locale]: { title: "", label: "", description: "" },
+        }),
+        {} as any
+      ),
+      subscription_plan: "",
+      subscription_type: "",
+      subscription_price: "",
+      sell_price: "",
+      number_of_lessons: "",
+      lesson_duration: "",
+      is_special_plan: "false",
+    });
   };
+
+  const addSubscriptionToProgram = useMutation({
+    mutationFn: (submitData: SubscriptionsFormData) => {
+      const myHeaders = new Headers();
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formData = {
+        plans: submitData?.subscriptions?.map((item) => ({
+          program_id: programId,
+          ...item.localizedFields,
+          subscription_plan: item?.subscription_plan,
+          price: item?.sell_price,
+          discount_price: item.subscription_price,
+          duration: item.lesson_duration,
+          number_of_session_per_week: item.number_of_lessons,
+          type: item.subscription_type,
+          is_special_plan: false,
+        })),
+      };
+
+      return postData(
+        "client/program/plan/store",
+        JSON.stringify(formData),
+        myHeaders
+      );
+    },
+    onSuccess: (data: any) => {
+      if (data.status !== 200 && data.status !== 201) {
+        addToast({
+          title: `Error Adding Subscription Plan: ${data.message}`,
+          color: "danger",
+        });
+      } else {
+        setActiveStep(3);
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Error creating program:", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-5">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-5 border border-stroke rounded-xl">
-        <Controller
-          name="subscription_plan"
-          control={control}
-          render={({ field }) => (
-            <RadioGroup
-              {...field}
-              value={field.value}
-              onChange={(key) => field.onChange(key)}
-              isInvalid={!!errors.subscription_plan?.message}
-              errorMessage={errors.subscription_plan?.message}
-              label="خطة الإشتراك"
-              classNames={{
-                wrapper: "flex-row",
-                label: "text-[#272727] font-bold text-sm",
-                base: "mb-4",
-              }}
-            >
-              <Radio
-                value="per_month"
-                classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "data-[selected=true]:border-primary"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}
-              >
-                شهري
-              </Radio>
-              <Radio
-                value="3_months"
-                classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "data-[selected=true]:border-primary"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}
-              >
-                3 شهور
-              </Radio>
-              <Radio
-                value="6_month"
-                classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "data-[selected=true]:border-primary"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}
-              >
-                6 شهور
-              </Radio>
-              <Radio
-                value="year"
-                classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "data-[selected=true]:border-primary"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}
-              >
-                سنوي
-              </Radio>
-            </RadioGroup>
-          )}
-        />
+      {fields.map((field, index) => (
+        <Accordion key={field.id} variant="splitted" className="mb-6">
+          <AccordionItem
+            aria-label={`Subscription ${index + 1}`}
+            title={
+              <div className="flex">
+                <span>الاشتراك {index + 1}</span>
+              </div>
+            }
+            classNames={{ base: "shadow-none border border-stroke" }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-5">
+              <LocalizedField
+                control={control}
+                name={`subscriptions.${index}.localizedFields`}
+                fieldName="title"
+                label="Title"
+              />
 
-        <Controller
-          name="subscription_type"
-          control={control}
-          render={({ field }) => (
-            <RadioGroup
-              {...field}
-              value={field.value}
-              onChange={(key) => field.onChange(key)}
-              isInvalid={!!errors.subscription_type?.message}
-              errorMessage={errors.subscription_type?.message}
-              label="نوع الإشتراك"
-              classNames={{
-                wrapper: "flex-row",
-                label: "text-[#272727] font-bold text-sm",
-                base: "mb-4",
-              }}
-            >
-              <Radio
-                value="single"
-                classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "data-[selected=true]:border-primary"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}
-              >
-                فردي
-              </Radio>
-              <Radio
-                value="group"
-                classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "data-[selected=true]:border-primary"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}
-              >
-                مجموعة
-              </Radio>
-              <Radio
-                value="family"
-                classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "data-[selected=true]:border-primary"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}
-              >
-                عائلة
-              </Radio>
-            </RadioGroup>
-          )}
-        />
+              <LocalizedField
+                control={control}
+                name={`subscriptions.${index}.localizedFields`}
+                fieldName="label"
+                label="Label"
+              />
 
-        <Input
-          label="سعر الإشتراك"
-          placeholder="أكتب السعر المناسب"
-          type="text"
-          {...register("subscription_price")}
-          isInvalid={!!errors.subscription_price?.message}
-          errorMessage={errors.subscription_price?.message}
-          labelPlacement="outside"
-          classNames={{
-            label: "text-[#272727] font-bold text-sm",
-            inputWrapper: "shadow-none",
-            base: "mb-4",
-          }}
-          endContent={
-            <span className="text-black-text font-bold text-sm">ج.م</span>
-          }
-        />
+              <LocalizedTextArea
+                control={control}
+                name={`subscriptions.${index}.localizedFields`}
+                fieldName="description"
+                label="Description"
+                className=""
+              />
 
-        <Input
-          label="سعر البيع"
-          placeholder="أكتب السعر المناسب"
-          type="text"
-          {...register("sell_price")}
-          isInvalid={!!errors.sell_price?.message}
-          errorMessage={errors.sell_price?.message}
-          labelPlacement="outside"
-          classNames={{
-            label: "text-[#272727] font-bold text-sm",
-            inputWrapper: "shadow-none",
-            base: "mb-4",
-          }}
-          endContent={
-            <span className="text-black-text font-bold text-sm">ج.م</span>
-          }
-        />
-
-        <Input
-          label="عدد حصص البرنامج"
-          placeholder="نص الكتابه"
-          type="text"
-          {...register("number_of_lessons")}
-          isInvalid={!!errors.number_of_lessons?.message}
-          errorMessage={errors.number_of_lessons?.message}
-          labelPlacement="outside"
-          classNames={{
-            label: "text-[#272727] font-bold text-sm",
-            inputWrapper: "shadow-none",
-            base: "mb-4",
-          }}
-          endContent={
-            <span className="text-black-text font-bold text-sm">حصه</span>
-          }
-        />
-
-        <Controller
-          name="lesson_duration"
-          control={control}
-          render={({ field }) => (
-            <HeroSelect
-              {...field}
-              selectedKeys={field.value ? [field.value] : [""]}
-              onSelectionChange={(keys) => {
-                field.onChange(Array.from(keys)[0]);
-              }}
-              label="مدة المحاضره"
-              labelPlacement="outside"
-              placeholder="اختر مدة المحاضرة"
-              isInvalid={!!errors.lesson_duration?.message}
-              errorMessage={errors.lesson_duration?.message}
-              classNames={{
-                label: "text-[#272727] font-bold text-sm",
-                base: "mb-4",
-                value: "text-[#87878C] text-sm",
-              }}
-            >
-              {lessonDurationOptions.map((item) => (
-                <SelectItem key={item.key}>{item.label}</SelectItem>
-              ))}
-            </HeroSelect>
-          )}
-        />
-
-        <Controller
-          name="lessons_days"
-          control={control}
-          render={({ field }) => (
-            <div className="flex flex-col gap-1">
-              <label className="text-[#272727] font-bold text-sm mb-1">
-                أيام الأسبوع
-              </label>
-              <Select
-                {...field}
-                id="lessons_days"
-                placeholder="أختر الأيام المناسبة"
-                options={options}
-                isMulti={true}
-                styles={customStyles}
-                isClearable
-                value={options.filter((opt) =>
-                  field.value?.includes(opt.value)
+              <Controller
+                name={`subscriptions.${index}.subscription_plan`}
+                control={control}
+                render={({ field }) => (
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={(value) => field.onChange(value)}
+                    isInvalid={
+                      !!errors.subscriptions?.[index]?.subscription_plan
+                        ?.message
+                    }
+                    errorMessage={
+                      errors.subscriptions?.[index]?.subscription_plan?.message
+                    }
+                    label="خطة الإشتراك"
+                    classNames={{
+                      wrapper: "flex-row",
+                      label: "text-[#272727] font-bold text-sm",
+                      base: "mb-4",
+                    }}
+                  >
+                    {subscriptionPeriods?.data?.map((period: any) => (
+                      <Radio
+                        key={period.id}
+                        value={period.id}
+                        classNames={{
+                          base: cn(
+                            "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                            "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                            "data-[selected=true]:border-primary"
+                          ),
+                          label:
+                            "text-xs group-data-[selected=true]:text-primary",
+                        }}
+                      >
+                        {period.title}
+                      </Radio>
+                    ))}
+                  </RadioGroup>
                 )}
-                onChange={(selected) =>
-                  field.onChange(
-                    (selected as Option[])?.map((opt) => opt.value) || []
-                  )
+              />
+
+              <Controller
+                name={`subscriptions.${index}.subscription_type`}
+                control={control}
+                render={({ field }) => (
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={(value) => field.onChange(value)}
+                    isInvalid={
+                      !!errors.subscriptions?.[index]?.subscription_type
+                        ?.message
+                    }
+                    errorMessage={
+                      errors.subscriptions?.[index]?.subscription_type?.message
+                    }
+                    label="نوع الإشتراك"
+                    classNames={{
+                      wrapper: "flex-row",
+                      label: "text-[#272727] font-bold text-sm",
+                      base: "mb-4",
+                    }}
+                  >
+                    <Radio
+                      value="single"
+                      classNames={{
+                        base: cn(
+                          "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                          "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                          "data-[selected=true]:border-primary"
+                        ),
+                        label:
+                          "text-xs group-data-[selected=true]:text-primary",
+                      }}
+                    >
+                      فردي
+                    </Radio>
+
+                    <Radio
+                      value="family"
+                      classNames={{
+                        base: cn(
+                          "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                          "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                          "data-[selected=true]:border-primary"
+                        ),
+                        label:
+                          "text-xs group-data-[selected=true]:text-primary",
+                      }}
+                    >
+                      عائلة
+                    </Radio>
+                  </RadioGroup>
+                )}
+              />
+
+              <Input
+                label="سعر الإشتراك"
+                placeholder="أكتب السعر المناسب"
+                type="text"
+                {...register(`subscriptions.${index}.subscription_price`)}
+                isInvalid={
+                  !!errors.subscriptions?.[index]?.subscription_price?.message
+                }
+                errorMessage={
+                  errors.subscriptions?.[index]?.subscription_price?.message
+                }
+                labelPlacement="outside"
+                classNames={{
+                  label: "text-[#272727] font-bold text-sm",
+                  inputWrapper: "shadow-none",
+                  base: "mb-4",
+                }}
+                endContent={
+                  <span className="text-black-text font-bold text-sm">ج.م</span>
                 }
               />
-              {errors?.lessons_days?.message && (
-                <p className="text-xs text-danger">
-                  {errors.lessons_days.message}
-                </p>
+
+              <Input
+                label="سعر البيع"
+                placeholder="أكتب السعر المناسب"
+                type="text"
+                {...register(`subscriptions.${index}.sell_price`)}
+                isInvalid={!!errors.subscriptions?.[index]?.sell_price?.message}
+                errorMessage={
+                  errors.subscriptions?.[index]?.sell_price?.message
+                }
+                labelPlacement="outside"
+                classNames={{
+                  label: "text-[#272727] font-bold text-sm",
+                  inputWrapper: "shadow-none",
+                  base: "mb-4",
+                }}
+                endContent={
+                  <span className="text-black-text font-bold text-sm">ج.م</span>
+                }
+              />
+
+              <Input
+                label="عدد حصص البرنامج"
+                placeholder="نص الكتابه"
+                type="text"
+                {...register(`subscriptions.${index}.number_of_lessons`)}
+                isInvalid={
+                  !!errors.subscriptions?.[index]?.number_of_lessons?.message
+                }
+                errorMessage={
+                  errors.subscriptions?.[index]?.number_of_lessons?.message
+                }
+                labelPlacement="outside"
+                classNames={{
+                  label: "text-[#272727] font-bold text-sm",
+                  inputWrapper: "shadow-none",
+                  base: "mb-4",
+                }}
+                endContent={
+                  <span className="text-black-text font-bold text-sm">حصه</span>
+                }
+              />
+
+              <Controller
+                name={`subscriptions.${index}.lesson_duration`}
+                control={control}
+                render={({ field }) => (
+                  <HeroSelect
+                    selectedKeys={
+                      field.value ? new Set([field.value]) : new Set()
+                    }
+                    onSelectionChange={(keys) => {
+                      const selectedValue = Array.from(keys)[0] as string;
+                      field.onChange(selectedValue);
+                    }}
+                    label="مدة المحاضره"
+                    labelPlacement="outside"
+                    placeholder="اختر مدة المحاضرة"
+                    isInvalid={
+                      !!errors.subscriptions?.[index]?.lesson_duration?.message
+                    }
+                    errorMessage={
+                      errors.subscriptions?.[index]?.lesson_duration?.message
+                    }
+                    classNames={{
+                      label: "text-[#272727] font-bold text-sm",
+                      base: "mb-4",
+                      value: "text-[#87878C] text-sm",
+                    }}
+                  >
+                    {sessionPeriods?.data.map(
+                      (item: { id: string; time: string; title: string }) => (
+                        <SelectItem key={item.id}>
+                          {item.time} {item?.title}
+                        </SelectItem>
+                      )
+                    )}
+                  </HeroSelect>
+                )}
+              />
+
+              <Controller
+                name={`subscriptions.${index}.is_special_plan`}
+                control={control}
+                render={({ field }) => (
+                  <RadioGroup
+                    {...field}
+                    value={field.value}
+                    onValueChange={(value) => field.onChange(value)}
+                    isInvalid={!!errors.subscriptions?.[index]?.message}
+                    errorMessage={errors.subscriptions?.[index]?.message}
+                    label="خطة مميزه"
+                    classNames={{
+                      wrapper: "flex-row",
+                      label: "text-[#272727] font-bold text-sm",
+                      base: "mb-4",
+                    }}
+                  >
+                    <Radio
+                      value={"true"}
+                      classNames={{
+                        base: cn(
+                          "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-center font-bold flex-1",
+                          "flex-row-reverse max-w-[200px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-1 border-stroke",
+                          "data-[selected=true]:border-primary data-[selected=true]:bg-primary/20"
+                        ),
+                        control: "hidden outline-none",
+                        wrapper: "hidden",
+                        label:
+                          "text-xs group-data-[selected=true]:text-primary",
+                      }}
+                    >
+                      نعم
+                    </Radio>
+                    <Radio
+                      value={"false"}
+                      classNames={{
+                        base: cn(
+                          "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-center font-bold flex-1",
+                          "flex-row-reverse max-w-[200px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-1 border-stroke",
+                          "data-[selected=true]:border-primary data-[selected=true]:bg-primary/20"
+                        ),
+                        control: "hidden outline-none",
+                        wrapper: "hidden",
+                        label:
+                          "text-xs group-data-[selected=true]:text-primary",
+                      }}
+                    >
+                      لا
+                    </Radio>
+                  </RadioGroup>
+                )}
+              />
+            </div>
+            <div className="col-span-2 flex items-center justify-end mb-5 me-5">
+              {fields.length > 1 && (
+                <Button
+                  type="button"
+                  size="md"
+                  color="danger"
+                  variant="bordered"
+                  onPress={() => remove(index)}
+                  className=""
+                >
+                  <span>حذف</span>
+                  <CloseCircle size={20} />
+                </Button>
               )}
             </div>
-          )}
-        />
+          </AccordionItem>
+        </Accordion>
+      ))}
 
-        <Controller
-          name="repeated_table"
-          control={control}
-          render={({ field }) => (
-            <RadioGroup
-              {...field}
-              value={field.value}
-              onChange={(key) => field.onChange(key)}
-              isInvalid={!!errors.repeated_table?.message}
-              errorMessage={errors.repeated_table?.message}
-              label="جدول متكرر"
-              classNames={{
-                wrapper: "flex-row",
-                label: "text-[#272727] font-bold text-sm",
-                base: "mb-4",
-              }}
-            >
-              <Radio
-                value="single"
-                classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-center font-bold flex-1",
-                    "flex-row-reverse max-w-[200px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-1 border-stroke",
-                    "data-[selected=true]:border-primary data-[selected=true]:bg-primary/20"
-                  ),
-                  control: "hidden outline-none",
-                  wrapper: "hidden",
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}
-              >
-                نعم
-              </Radio>
-              <Radio
-                value="group"
-                classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-center font-bold flex-1",
-                    "flex-row-reverse max-w-[200px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-1 border-stroke",
-                    "data-[selected=true]:border-primary data-[selected=true]:bg-primary/20"
-                  ),
-                  control: "hidden outline-none",
-                  wrapper: "hidden",
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}
-              >
-                لا
-              </Radio>
-            </RadioGroup>
-          )}
-        />
+      <div className="flex items-center justify-center my-10">
+        <Button variant="light" color="primary" onPress={addNewSubscription}>
+          <AddSquare />
+          <span className="font-bold">إضافه إشتراك جديد</span>
+        </Button>
       </div>
 
       <div className="flex items-center justify-end gap-4 mt-8">
         <Button
           type="button"
           onPress={handleCancel}
-          variant="solid"
-          color="default"
-          className="text-white bg-gray-500"
+          variant="bordered"
+          color="primary"
+          isDisabled={addSubscriptionToProgram.isPending}
         >
           إلغاء
         </Button>
@@ -406,6 +486,7 @@ export const Subscriptions = ({
           variant="solid"
           color="primary"
           className="text-white"
+          isLoading={addSubscriptionToProgram.isPending}
         >
           التالي
         </Button>

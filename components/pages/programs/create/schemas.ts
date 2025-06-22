@@ -9,6 +9,12 @@ const localizedStringSchema = yup.object().shape({
   content: yup.string().required("Content is required"),
 });
 
+const localizedSubscriptionSchema = yup.object().shape({
+  title: yup.string().required("Title is required"),
+  label: yup.string().required("Label is required"),
+  description: yup.string().required("Description is required"),
+});
+
 export const informationFormSchema = yup.object({
   localizedFields: yup
     .object()
@@ -61,39 +67,53 @@ export const paymentMethodsSchema = yup.object().shape({
 });
 
 export const subscriptionsSchema = yup.object().shape({
-  subscription_plan: yup
-    .string()
-    .required("يجب اختيار خطة الإشتراك")
-    .oneOf(["per_month", "3_months", "6_month", "year"], "خطة الإشتراك غير صحيحة"),
-  subscription_type: yup
-    .string()
-    .required("يجب اختيار نوع الإشتراك")
-    .oneOf(["single", "group", "family"], "نوع الإشتراك غير صحيح"),
-  subscription_price: yup
-    .string()
-    .required("يجب إدخال سعر الإشتراك")
-    .matches(/^\d+(\.\d{1,2})?$/, "سعر الإشتراك يجب أن يكون رقماً صحيحاً"),
-  sell_price: yup
-    .string()
-    .required("يجب إدخال سعر البيع")
-    .matches(/^\d+(\.\d{1,2})?$/, "سعر البيع يجب أن يكون رقماً صحيحاً"),
-  number_of_lessons: yup
-    .string()
-    .required("يجب إدخال عدد حصص البرنامج")
-    .matches(/^\d+$/, "عدد الحصص يجب أن يكون رقماً صحيحاً"),
-  lesson_duration: yup
-    .string()
-    .required("يجب اختيار مدة المحاضرة")
-    .oneOf(["1", "2", "3", "4"], "مدة المحاضرة غير صحيحة"),
-  lessons_days: yup
+  subscriptions: yup
     .array()
-    .of(yup.string())
-    .min(1, "يجب اختيار يوم واحد على الأقل")
-    .required("يجب اختيار أيام الأسبوع"),
-  repeated_table: yup
-    .string()
-    .required("يجب اختيار نوع الجدول المتكرر")
-    .oneOf(["single", "group"], "نوع الجدول المتكرر غير صحيح"),
+    .of(
+      yup.object().shape({
+        localizedFields: yup
+          .object()
+          .shape({
+            ar: localizedSubscriptionSchema,
+            en: localizedSubscriptionSchema,
+          })
+          .required("Localized fields are required"),
+        subscription_plan: yup
+          .string()
+          .required("يجب اختيار خطة الإشتراك"),
+        subscription_type: yup
+          .string()
+          .required("يجب اختيار نوع الإشتراك")
+          .oneOf(["single", "family"], "نوع الإشتراك غير صحيح"),
+        subscription_price: yup
+          .string()
+          .required("يجب إدخال سعر الإشتراك")
+          .matches(/^\d+(\.\d{1,2})?$/, "سعر الإشتراك يجب أن يكون رقماً صحيحاً")
+          .test(
+            'price-comparison',
+            'سعر الإشتراك يجب أن يكون أقل من أو يساوي سعر البيع',
+            function (value) {
+              const { sell_price } = this.parent;
+              if (!value || !sell_price) return true;
+              return parseFloat(value) <= parseFloat(sell_price);
+            }
+          ),
+        sell_price: yup
+          .string()
+          .required("يجب إدخال سعر البيع")
+          .matches(/^\d+(\.\d{1,2})?$/, "سعر البيع يجب أن يكون رقماً صحيحاً"),
+        number_of_lessons: yup
+          .string()
+          .required("يجب إدخال عدد حصص البرنامج")
+          .matches(/^\d+$/, "عدد الحصص يجب أن يكون رقماً صحيحاً"),
+        lesson_duration: yup
+          .string()
+          .required("يجب اختيار مدة المحاضرة"),
+        is_special_plan: yup.string().default("false"),
+      })
+    )
+    .min(1, "يجب إضافة اشتراك واحد على الأقل")
+    .required("يجب إضافة الاشتراكات"),
 });
 
 export type InformationFormData = yup.InferType<typeof informationFormSchema>;
