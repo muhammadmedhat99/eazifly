@@ -10,6 +10,7 @@ interface JoditInputProps {
   onChange: (value: string) => void;
   label?: string;
   error?: string;
+  className?: string;
 }
 
 export const JoditInput: React.FC<JoditInputProps> = ({
@@ -17,11 +18,12 @@ export const JoditInput: React.FC<JoditInputProps> = ({
   onChange,
   label,
   error,
+  className = "col-span-3 mb-4",
 }) => {
   const editor = useRef(null);
 
   return (
-    <div className="col-span-3 mb-4">
+    <div className={className}>
       {label && (
         <label className="text-[#272727] font-bold text-sm mb-2 block">
           {label}
@@ -41,9 +43,7 @@ export const JoditInput: React.FC<JoditInputProps> = ({
           onBlur={(newContent) => onChange(newContent)}
         />
       </div>
-      {error && (
-        <p className="text-danger text-sm font-semibold mt-1">{error}</p>
-      )}
+      {error && <p className="text-danger text-xs mt-1">{error}</p>}
     </div>
   );
 };
