@@ -78,10 +78,10 @@ export default function TableComponent({
         return (
           <div className="flex items-center gap-2">
             <span
-              className={`size-2 rounded-full bg-${item?.subscription_status?.color}`}
+              className={`size-2 rounded-full bg-${item?.request_type?.color}`}
             ></span>
             <span
-              className={`text-${item?.subscription_status?.color} font-bold`}
+              className={`text-${item?.request_type?.color} font-bold`}
             >
               {item?.request_type?.name}
             </span>
