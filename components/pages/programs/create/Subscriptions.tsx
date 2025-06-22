@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Controller, useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 
@@ -36,6 +36,11 @@ export const Subscriptions = ({
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   programId: string;
 }) => {
+  // Changed to store selected values for each subscription index
+  const [selectedValues, setSelectedValues] = useState<{
+    [key: number]: Set<string>;
+  }>({});
+
   const { data: subscriptionPeriods, isLoading } = useQuery({
     queryFn: async () =>
       await fetchClient(`client/plan/subscription/period`, axios_config),
@@ -53,6 +58,7 @@ export const Subscriptions = ({
     formState: { errors },
     reset,
     control,
+    watch,
   } = useForm<SubscriptionsFormData>({
     resolver: yupResolver(subscriptionsSchema),
     defaultValues: {
@@ -81,12 +87,29 @@ export const Subscriptions = ({
     name: "subscriptions",
   });
 
+  // Helper function to get selected value for a specific index
+  const getSelectedValue = (index: number) => {
+    const currentValue = watch(`subscriptions.${index}.lesson_duration`);
+    return currentValue
+      ? new Set([currentValue])
+      : selectedValues[index] || new Set();
+  };
+
+  // Helper function to update selected value for a specific index
+  const updateSelectedValue = (index: number, keys: Set<string>) => {
+    setSelectedValues((prev) => ({
+      ...prev,
+      [index]: keys,
+    }));
+  };
+
   const onSubmit = async (data: SubscriptionsFormData) => {
     addSubscriptionToProgram.mutate(data);
   };
 
   const handleCancel = () => {
     reset();
+    setSelectedValues({}); // Reset selected values
   };
 
   const addNewSubscription = () => {
@@ -119,7 +142,7 @@ export const Subscriptions = ({
         plans: submitData?.subscriptions?.map((item) => ({
           program_id: programId,
           ...item.localizedFields,
-          subscription_plan: item?.subscription_plan,
+          subscripe_days: item?.subscription_plan,
           price: item?.sell_price,
           discount_price: item.subscription_price,
           duration: item.lesson_duration,
@@ -160,9 +183,14 @@ export const Subscriptions = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-5">
-      {fields.map((field, index) => (
-        <Accordion key={field.id} variant="splitted" className="mb-6">
+      <Accordion
+        defaultExpandedKeys={[0, 1]}
+        variant="splitted"
+        className="mb-6"
+      >
+        {fields.map((item, index) => (
           <AccordionItem
+            key={index}
             aria-label={`Subscription ${index + 1}`}
             title={
               <div className="flex">
@@ -217,8 +245,8 @@ export const Subscriptions = ({
                   >
                     {subscriptionPeriods?.data?.map((period: any) => (
                       <Radio
-                        key={period.id}
-                        value={period.id}
+                        key={period.days}
+                        value={period.days}
                         classNames={{
                           base: cn(
                             "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
@@ -360,11 +388,11 @@ export const Subscriptions = ({
                 render={({ field }) => (
                   <HeroSelect
                     selectedKeys={
-                      field.value ? new Set([field.value]) : new Set()
+                      field.value ? new Set([String(field.value)]) : new Set()
                     }
-                    onSelectionChange={(keys) => {
-                      const selectedValue = Array.from(keys)[0] as string;
-                      field.onChange(selectedValue);
+                    onSelectionChange={(keys: any) => {
+                      const selectedVal = Array.from(keys)[0] as string;
+                      field.onChange(selectedVal || "");
                     }}
                     label="مدة المحاضره"
                     labelPlacement="outside"
@@ -380,11 +408,23 @@ export const Subscriptions = ({
                       base: "mb-4",
                       value: "text-[#87878C] text-sm",
                     }}
+                    renderValue={(selectedItems) => {
+                      // selectedItems is an array of the selected item objects
+                      if (!selectedItems.length) return "اختر مدة المحاضرة";
+                      const selected = selectedItems[0];
+                      return (
+                        <div className="flex items-center">
+                          <span>{selected?.props?.children[1]}</span>
+                          <span>{selected?.props?.children[0]}</span>
+                        </div>
+                      );
+                    }}
                   >
                     {sessionPeriods?.data.map(
                       (item: { id: string; time: string; title: string }) => (
                         <SelectItem key={item.id}>
-                          {item.time} {item?.title}
+                          {item.time}
+                          {item.title}
                         </SelectItem>
                       )
                     )}
@@ -452,7 +492,15 @@ export const Subscriptions = ({
                   size="md"
                   color="danger"
                   variant="bordered"
-                  onPress={() => remove(index)}
+                  onPress={() => {
+                    // Clean up selected value when removing subscription
+                    setSelectedValues((prev) => {
+                      const newValues = { ...prev };
+                      delete newValues[index];
+                      return newValues;
+                    });
+                    remove(index);
+                  }}
                   className=""
                 >
                   <span>حذف</span>
@@ -461,8 +509,8 @@ export const Subscriptions = ({
               )}
             </div>
           </AccordionItem>
-        </Accordion>
-      ))}
+        ))}
+      </Accordion>
 
       <div className="flex items-center justify-center my-10">
         <Button variant="light" color="primary" onPress={addNewSubscription}>
