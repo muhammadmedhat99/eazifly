@@ -165,7 +165,7 @@ export const Subscriptions = ({
           color: "danger",
         });
       } else {
-        setActiveStep(3);
+        setActiveStep(4);
         addToast({
           title: data?.message,
           color: "success",
