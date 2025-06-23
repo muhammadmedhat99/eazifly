@@ -23,6 +23,7 @@ import { Loader } from "@/components/global/Loader";
 import { formatDate } from "@/lib/helper";
 
 const columns = [
+  { name: "", uid: "avatar" },
   { name: "إسم الطالب", uid: "name" },
   { name: "رقم الهاتف", uid: "phone" },
   { name: "البريد الإلكتروني", uid: "email" },
