@@ -53,6 +53,7 @@ type StudentDetailsProps = {
       program: string;
       price: number;
       instructor: {
+        id: number;
         name: string;
         image: string;
       },
