@@ -18,6 +18,36 @@ interface TimelineProps {
   items: TimelineItem[];
 }
 
+type StudentDetailsProps = {
+  actionsData: {
+    data: {
+      id: number;
+      title: string,
+      description: string,
+      created_at: string,
+      instructor: {
+        id: number;
+        name_ar: string;
+        name_en: string;
+        image: string;
+      },
+      user: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        image: string;
+      },
+      client: {
+        id: number;
+        name: string;
+        image: string;
+      },
+      
+    }[];
+  }
+  
+}
+
 // Main Timeline Component
 export default function Timeline({ items = [] }: TimelineProps) {
   // Check if items exists and is an array before spreading
@@ -113,84 +143,42 @@ function TimelineEntry({ item }: { item: TimelineItem }) {
 }
 
 // Render the Timeline with sample data
-function TimelineDemo() {
-  // Sample data for demonstration
-  const sampleItems: TimelineItem[] = [
-    {
-      id: "1",
-      timestamp: "2025-04-22T10:32:00",
-      type: "new_employee",
-      title: "أضاف موظف جديد",
-      content: 'تم إضافة "سارة عبد الله" كـ "محاسبة"',
-      author: {
-        name: "عبدالرحمن محمود الجندي",
-        avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-      },
-    },
-    {
-      id: "2",
-      timestamp: "2025-04-22T10:32:00",
-      type: "new_employee",
-      title: "أضاف موظف جديد",
-      content: 'تم إضافة "سارة عبد الله" كـ "محاسبة"',
-      author: {
-        name: "الإدارة",
-        avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-      },
-    },
-    {
-      id: "3",
-      timestamp: "2025-04-22T10:32:00",
+function TimelineDemo({ actionsData }: StudentDetailsProps) {
+  const items: TimelineItem[] = actionsData.data.map((item) => {
+    const hasInstructor = !!item.instructor;
+    const hasClient = !!item.client;
+
+    let authorName = "";
+    let authorRole = "";
+    let authorAvatar = "";
+
+    if (hasInstructor) {
+      authorName = item.instructor.name_ar || "غير معروف";
+      authorRole = "المعلم";
+      authorAvatar = item.instructor.image;
+    } else if (hasClient) {
+      authorName = item.client.name || "غير معروف";
+      authorRole ="الإدارة";
+      authorAvatar = item.client.image;
+    }
+
+    return {
+      id: item.id.toString(),
+      timestamp: item.created_at,
       type: "note",
-      title: "سجل ملاحظة داخل ملف معلم",
-      content:
-        "حققت المنصة نموًا مذهلاً في المبيعات بنسبة 120% خلال الأشهر الستة الأولى من الإطلاق. ساعد هذا النمو المرتفع في تعزيز الإيرادات بشكل ملحوظ، إلى جانب توسيع قاعدة العملاء.",
+      title: item.title,
+      content: item.description,
       author: {
-        name: "الطالب",
-        avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
+        name: authorName,
+        role: authorRole,
+        avatar: authorAvatar || "https://via.placeholder.com/150",
       },
-    },
-    {
-      id: "4",
-      timestamp: "2025-04-22T10:32:00",
-      type: "note",
-      title: "سجل ملاحظة داخل ملف معلم",
-      content:
-        "حققت المنصة نموًا مذهلاً في المبيعات بنسبة 120% خلال الأشهر الستة الأولى من الإطلاق. ساعد هذا النمو المرتفع في تعزيز الإيرادات بشكل ملحوظ، إلى جانب توسيع قاعدة العملاء.",
-      author: {
-        name: "الطالب",
-        avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-      },
-    },
-    {
-      id: "5",
-      timestamp: "2025-04-22T10:32:00",
-      type: "note",
-      title: "سجل ملاحظة داخل ملف معلم",
-      content:
-        "حققت المنصة نموًا مذهلاً في المبيعات بنسبة 120% خلال الأشهر الستة الأولى من الإطلاق. ساعد هذا النمو المرتفع في تعزيز الإيرادات بشكل ملحوظ، إلى جانب توسيع قاعدة العملاء.",
-      author: {
-        name: "الطالب",
-        avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-      },
-    },
-    {
-      id: "6",
-      timestamp: "2025-04-22T10:32:00",
-      type: "note",
-      title: "سجل ملاحظة داخل ملف معلم",
-      content:
-        "حققت المنصة نموًا مذهلاً في المبيعات بنسبة 120% خلال الأشهر الستة الأولى من الإطلاق. ساعد هذا النمو المرتفع في تعزيز الإيرادات بشكل ملحوظ، إلى جانب توسيع قاعدة العملاء.",
-      author: {
-        name: "الطالب",
-        avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-      },
-    },
-  ];
+    };
+  });
 
   return (
-    <div className=" mx-auto my-8 px-4" dir="rtl">
-      <Timeline items={sampleItems} />
+    <div className="mx-auto my-8 px-4" dir="rtl">
+      <Timeline items={items} />
     </div>
   );
 }

@@ -64,10 +64,37 @@ type StudentDetailsProps = {
       missed_sessions: number;
       completed_sessions: number;
     }[];
+  };
+  actionsData: {
+    data: {
+      id: number;
+      title: string,
+      description: string,
+      created_at: string,
+      instructor: {
+        id: number;
+        name_ar: string;
+        name_en: string;
+        image: string;
+      },
+      user: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        image: string;
+      },
+      client: {
+        id: number;
+        name: string;
+        image: string;
+      },
+      
+    }[];
   }
+  
 };
 
-export const StudentDetails = ({ data, subscriptionsData }: StudentDetailsProps) => {
+export const StudentDetails = ({ data, subscriptionsData, actionsData }: StudentDetailsProps) => {
 const [studentData, setStudentData] = useState(data.data);
   return (
     <div className="flex w-full flex-col">
@@ -88,7 +115,7 @@ const [studentData, setStudentData] = useState(data.data);
           <Programs subscriptionsData={subscriptionsData} />
         </Tab>
         <Tab key="actions" title="الإجراءات السابقة">
-          <TimelineDemo />
+          <TimelineDemo actionsData={actionsData} />
         </Tab>
         <Tab key="other" title="الطلاب التابعين">
           <RelatedStudents data={data} />
