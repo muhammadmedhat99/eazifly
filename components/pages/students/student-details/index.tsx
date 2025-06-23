@@ -6,11 +6,14 @@ import { Information } from "./tabs/Information";
 import { TimelineDemo } from "./tabs/Timeline";
 import { Programs } from "./tabs/Programs";
 import { RelatedStudents } from "./tabs/RelatedStudents";
+import { useState } from "react";
 
 type StudentDetailsProps = {
   data: {
     data: {
       id: number;
+      age:string;
+      gender:string;
       first_name: string;
       last_name: string;
       user_name: string;
@@ -64,6 +67,7 @@ type StudentDetailsProps = {
 };
 
 export const StudentDetails = ({ data, subscriptionsData }: StudentDetailsProps) => {
+const [studentData, setStudentData] = useState(data.data);
   return (
     <div className="flex w-full flex-col">
       <Tabs
@@ -77,7 +81,7 @@ export const StudentDetails = ({ data, subscriptionsData }: StudentDetailsProps)
         }}
       >
         <Tab key="info" title="البيانات الشخصية">
-          <Information data={data} />
+          <Information data={{ data: studentData }} onUpdated={setStudentData} />
         </Tab>
         <Tab key="programs" title="البرامج و اللإشتراكات">
           <Programs subscriptionsData={subscriptionsData} />
