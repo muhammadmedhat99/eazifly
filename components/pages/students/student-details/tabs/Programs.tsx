@@ -1,8 +1,10 @@
 "use client";
 
 import { Options } from "@/components/global/Icons";
+import { Loader } from "@/components/global/Loader";
 import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
+import { formatDate } from "@/lib/helper";
 import { fetchClient, postData } from "@/lib/utils";
 import { addToast, Avatar, Button, Card, CardBody, Progress, Select, SelectItem, Tab, Tabs } from "@heroui/react";
 import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
@@ -109,9 +111,27 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
     setEditModeIndex(null);
   };
 
+  const reportsResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["programReports", subscription.id],
+      queryFn: async () =>
+        await fetchClient("client/user/program/reports", {
+          ...axios_config,
+          params: {
+            user_id: 3,
+            program_id: subscription.program_id,
+          },
+        }),
+    })),
+  });
+
   return (
   <div className="grid grid-cols-1 gap-8">
     {subscriptionsData?.data?.map((subscription, index) => {
+      const reportResult = reportsResults[index];
+      const reportData = reportResult?.data;
+      const isLoadingReport = reportResult?.isLoading;
+
       const instructorsData = instructorsResults[index]?.data?.data ?? [];
       const isLoadingInstructors = instructorsResults[index]?.isLoading;
 
@@ -283,21 +303,32 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
               </Tab>
 
               <Tab key="reports" title="التقارير" className="w-full">
-                <div className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke mb-3">
-                  <div className="flex flex-col gap-4 w-full">
-                    <div className="flex items-center justify-between">
-                      <span className="text-black-text text-sm font-bold">
-                        إسم البرنامج
-                      </span>
-                      <span className="text-black-text text-sm font-bold">
-                        12-4-2026
-                      </span>
+                {isLoadingReport ? (
+                  <Loader/>
+                ) : reportData.data && reportData.data.length > 0 ? (
+                  reportData.data.map((report: any, reportIndex: number) => (
+                    <div
+                      key={reportIndex}
+                      className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke mb-3"
+                    >
+                      <div className="flex flex-col gap-4 w-full">
+                        <div className="flex items-center justify-between">
+                          <span className="text-black-text text-sm font-bold">
+                            {report.report_question}
+                          </span>
+                          <span className="text-black-text text-sm font-bold">
+                            {formatDate(report.created_at)}
+                          </span>
+                        </div>
+                        <div className="text-title font-bold text-sm">
+                          {report.report_question_answer}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-title font-bold text-sm">
-                      مثال :هذا النص هو جزء من عملية تحسين تجربة المستخدم من خلال النص.
-                    </div>
-                  </div>
-                </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-500 text-center">لا توجد تقارير</div>
+                )}
               </Tab>
             </Tabs>
           </div>
