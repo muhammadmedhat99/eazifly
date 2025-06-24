@@ -1,5 +1,6 @@
-import React from "react";
+"use client";
 
+import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -11,11 +12,15 @@ import {
   RadioGroup,
   Select as HeroSelect,
   SelectItem,
+  addToast,
 } from "@heroui/react";
 import { DropzoneField } from "@/components/global/DropZoneField";
 
 import Select from "@/components/global/ClientOnlySelect";
-import { customStyles } from "@/lib/const";
+import { axios_config, customStyles } from "@/lib/const";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
+import { getCookie } from "cookies-next";
 
 type Option = {
   value: string;
@@ -56,35 +61,22 @@ const schema = yup
       .integer("الرجاء ادخال رقم صحيح")
       .required("الرجاء ادخال عدد الحصص"),
     lesson_duration: yup.string().required("اختر مدة الحصة"),
-    payment_methods: yup
-      .array()
-      .of(yup.string())
-      .min(1, "اختر وسيلة دفع")
-      .required("اختر وسيلة دفع"),
-    payment_amount: yup
-      .number()
-      .typeError("الرجاء ادخال رقم صحيح")
-      .positive("الرجاء ادخال رقم صحيح")
-      .required("الرجاء ادخال المبلغ المدفوع"),
     payment_plan: yup.string().required("اختر خطة الدفع"),
-    recept: yup
-      .mixed<FileList>()
-      .test(
-        "fileType",
-        "الرجاء تحميل ملف صحيح",
-        (value) => value && value.length > 0
-      )
-      .required("الرجاء تحميل ملف"),
   })
   .required();
 
 type FormData = yup.InferType<typeof schema>;
 
 export const ProgramForm = ({
-  setActiveStep,
+  setActiveStep, setStudentCount, setProgramId, setPlanData,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  setStudentCount: (count: string) => void;
+  setProgramId: (count: string) => void;
+  setPlanData: (count: string) => void;
 }) => {
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -93,12 +85,65 @@ export const ProgramForm = ({
     control,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
-    defaultValues: {
-      payment_methods: [],
+    defaultValues: {},
+  });
+
+  const onSubmit = (data: FormData) => CreateProgram.mutate(data);
+
+  const CreateProgram = useMutation({
+    mutationFn: (submitData: FormData) => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      var formdata = new FormData();
+      formdata.append("subscripe_days", submitData.payment_plan.toString());
+      formdata.append("program_id", submitData.program);
+      formdata.append("number_of_session_per_week", submitData.number_of_lessons.toString());
+      formdata.append("duration", submitData.lesson_duration);
+
+      return postData("client/program/plan", formdata, myHeaders);
+    },
+    onSuccess: (data, variables) => {
+      if (data.message !== "success") {
+        addToast({
+          title: data?.message,
+          color: "warning",
+        });
+      } else {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+        setPlanData(data?.data);
+        setStudentCount(variables.number_of_students.toString());
+        setProgramId(variables.program.toString());
+        reset();
+        setActiveStep(2);
+      }
+    },
+    onError: (error) => {
+      console.log(" error ===>>", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
     },
   });
 
-  const onSubmit = (data: FormData) => console.log(data);
+  const { data: programData, isLoading: isProgramDataLoading } = useQuery({
+    queryKey: ['programs'],
+    queryFn: async () => await fetchClient(`client/program`, axios_config),
+  });
+
+  const { data: planData, isLoading: isPlanDataLoading } = useQuery({
+    queryKey: ['plans', selectedProgramId],
+    queryFn: async () => await fetchClient(`client/plans/${selectedProgramId}`, axios_config),
+    enabled: !!selectedProgramId,
+  });
+
+  const months = planData?.data?.subscripe_months || [];
+  const days = planData?.data?.subscripe_days || [];
 
   return (
     <form
@@ -113,7 +158,9 @@ export const ProgramForm = ({
             {...field}
             selectedKeys={field.value ? [field.value] : [""]}
             onSelectionChange={(keys) => {
-              field.onChange(Array.from(keys)[0]);
+              const id = Array.from(keys)[0];
+              field.onChange(id);
+              setSelectedProgramId(id);
             }}
             label="البرنامج"
             labelPlacement="outside"
@@ -126,29 +173,8 @@ export const ProgramForm = ({
               value: "text-[#87878C] text-sm",
             }}
           >
-            {[
-              {
-                key: "1",
-                label: "برنامج الدراسات الإجتماعيه للصف السادس الإبتدائي",
-              },
-              {
-                key: "2",
-                label: "برنامج الرياضيات العامة للصف الثالث الإعدادي",
-              },
-              {
-                key: "3",
-                label: "برنامج الرياضيات العامة للصف الثاني الإعدادي",
-              },
-              {
-                key: "4",
-                label: "برنامج الرياضيات العامة للصف الأول الإعدادي",
-              },
-              {
-                key: "5",
-                label: "برنامج الرياضيات العامة للصف الأول الثانوي",
-              },
-            ].map((item) => (
-              <SelectItem key={item.key}>{item.label}</SelectItem>
+            {programData?.data?.map((item: any) => (
+              <SelectItem key={`${item.id}`}>{item.title}</SelectItem>
             ))}
           </HeroSelect>
         )}
@@ -161,9 +187,7 @@ export const ProgramForm = ({
           <RadioGroup
             {...field}
             value={field.value}
-            onChange={(key) => {
-              field.onChange(key);
-            }}
+            onChange={(key) => field.onChange(key)}
             isInvalid={!!errors.payment_plan?.message}
             errorMessage={errors.payment_plan?.message}
             label="خطة الإشتراك"
@@ -173,79 +197,102 @@ export const ProgramForm = ({
               base: "mb-4",
             }}
           >
-            <Radio
-              value="per_month"
-              classNames={{
-                base: cn(
-                  "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                  "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                  "data-[selected=true]:border-primary"
-                ),
-                label: "text-xs group-data-[selected=true]:text-primary",
-              }}
-            >
-              شهري
-            </Radio>
-            <Radio
-              value="3_months"
-              classNames={{
-                base: cn(
-                  "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                  "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                  "data-[selected=true]:border-primary"
-                ),
-                label: "text-xs group-data-[selected=true]:text-primary",
-              }}
-            >
-              3 شهور
-            </Radio>
-            <Radio
-              value="6_month"
-              classNames={{
-                base: cn(
-                  "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                  "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                  "data-[selected=true]:border-primary"
-                ),
-                label: "text-xs group-data-[selected=true]:text-primary",
-              }}
-            >
-              6 شهور
-            </Radio>
-            <Radio
-              value="year"
-              classNames={{
-                base: cn(
-                  "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                  "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                  "data-[selected=true]:border-primary"
-                ),
-                label: "text-xs group-data-[selected=true]:text-primary",
-              }}
-            >
-              سنوي
-            </Radio>
+            {months.length && days.length ? (
+              // ✅ لو عندك داتا من الـ API (dynamic)
+              months.map((monthLabel, index) => (
+                <Radio
+                  key={days[index]} // value from subscripe_days
+                  value={days[index]}
+                  classNames={{
+                    base: cn(
+                      "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                      "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                      "data-[selected=true]:border-primary"
+                    ),
+                    label: "text-xs group-data-[selected=true]:text-primary",
+                  }}
+                >
+                  {monthLabel}
+                </Radio>
+              ))
+            ) : (
+              <>
+                <Radio value="per_month" isDisabled classNames={{
+                  base: cn(
+                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                    "cursor-not-allowed opacity-50"
+                  ),
+                  label: "text-xs group-data-[selected=true]:text-primary",
+                }}>
+                  شهري
+                </Radio>
+                <Radio value="3_months" isDisabled classNames={{
+                  base: cn(
+                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                    "cursor-not-allowed opacity-50"
+                  ),
+                  label: "text-xs group-data-[selected=true]:text-primary",
+                }}>
+                  3 شهور
+                </Radio>
+                <Radio value="6_month" isDisabled classNames={{
+                  base: cn(
+                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                    "cursor-not-allowed opacity-50"
+                  ),
+                  label: "text-xs group-data-[selected=true]:text-primary",
+                }}>
+                  6 شهور
+                </Radio>
+                <Radio value="year" isDisabled classNames={{
+                  base: cn(
+                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                    "cursor-not-allowed opacity-50"
+                  ),
+                  label: "text-xs group-data-[selected=true]:text-primary",
+                }}>
+                  سنوي
+                </Radio>
+              </>
+            )}
           </RadioGroup>
         )}
       />
 
-      <Input
-        label="عدد حصص البرنامج"
-        placeholder="نص الكتابه"
-        type="text"
-        {...register("number_of_lessons")}
-        isInvalid={!!errors.number_of_lessons?.message}
-        errorMessage={errors.number_of_lessons?.message}
-        labelPlacement="outside"
-        classNames={{
-          label: "text-[#272727] font-bold text-sm",
-          inputWrapper: "shadow-none",
-          base: "mb-4",
-        }}
-        endContent={
-          <span className="text-black-text font-bold text-sm">حصه</span>
-        }
+      <Controller
+        name="number_of_lessons"
+        control={control}
+        render={({ field }) => (
+          <HeroSelect
+            {...field}
+            isDisabled={!planData?.data?.number_of_session_per_week?.length}
+            selectedKeys={field.value ? [field.value] : [""]}
+            onSelectionChange={(keys) => field.onChange(Array.from(keys)[0])}
+            label="عدد حصص البرنامج"
+            labelPlacement="outside"
+            placeholder="اختر عدد الحصص"
+            isInvalid={!!errors.number_of_lessons?.message}
+            errorMessage={errors.number_of_lessons?.message}
+            classNames={{
+              label: "text-[#272727] font-bold text-sm",
+              base: "mb-4",
+              value: "text-[#87878C] text-sm",
+            }}
+            endContent={
+              <span className="text-black-text font-bold text-sm">حصه</span>
+            }
+          >
+            {(planData?.data?.number_of_session_per_week ?? []).map((num) => (
+              <SelectItem key={num}>{num}</SelectItem>
+            ))}
+          </HeroSelect>
+        )}
       />
+
 
       <Controller
         name="lesson_duration"
@@ -253,13 +300,14 @@ export const ProgramForm = ({
         render={({ field }) => (
           <HeroSelect
             {...field}
+            isDisabled={!planData?.data?.duration?.length} // 👈 يتفتح بس لما توصل الداتا
             selectedKeys={field.value ? [field.value] : [""]}
             onSelectionChange={(keys) => {
               field.onChange(Array.from(keys)[0]);
             }}
             label="مدة المحاضره"
             labelPlacement="outside"
-            placeholder="اختر البرنامج"
+            placeholder="اختر مدة المحاضرة"
             isInvalid={!!errors.lesson_duration?.message}
             errorMessage={errors.lesson_duration?.message}
             classNames={{
@@ -268,56 +316,13 @@ export const ProgramForm = ({
               value: "text-[#87878C] text-sm",
             }}
           >
-            {[
-              {
-                key: "1",
-                label: "30 دقيقه",
-              },
-              {
-                key: "2",
-                label: "60 دقيقه",
-              },
-              {
-                key: "3",
-                label: "90 دقيقه",
-              },
-              {
-                key: "4",
-                label: "120 دقيقه",
-              },
-            ].map((item) => (
-              <SelectItem key={item.key}>{item.label}</SelectItem>
+            {(planData?.data?.duration ?? []).map((duration: string) => (
+              <SelectItem key={duration}>{`${duration} دقيقة`}</SelectItem>
             ))}
           </HeroSelect>
         )}
       />
-      <Controller
-        name="payment_methods"
-        control={control}
-        render={({ field }) => (
-          <div className="flex flex-col gap-1">
-            <label className="text-[#272727] font-bold text-sm">
-              طرق الدفع
-            </label>
-            <Select
-              {...field}
-              id="payment_methods"
-              placeholder="اختر طرق الدفع"
-              options={options}
-              isMulti={true}
-              styles={customStyles}
-              isClearable
-              value={options.filter((opt) => field.value?.includes(opt.value))}
-              onChange={(selected) =>
-                field.onChange((selected as Option[]).map((opt) => opt.value))
-              }
-            />
-            <p className="text-xs text-danger">
-              {errors?.payment_methods?.message}
-            </p>
-          </div>
-        )}
-      />
+
 
       <Input
         label="عدد الطلاب"
@@ -332,35 +337,7 @@ export const ProgramForm = ({
           inputWrapper: "shadow-none",
           base: "mb-4",
         }}
-      />
-      <Input
-        label="المبلغ المدفوع"
-        placeholder="نص الكتابه"
-        type="text"
-        {...register("payment_amount")}
-        isInvalid={!!errors.payment_amount?.message}
-        errorMessage={errors.payment_amount?.message}
-        labelPlacement="outside"
-        classNames={{
-          label: "text-[#272727] font-bold text-sm",
-          inputWrapper: "shadow-none",
-          base: "mb-4",
-        }}
-        endContent={
-          <span className="text-black-text font-bold text-sm">ج.م</span>
-        }
-      />
-      <Controller
-        name="recept"
-        control={control}
-        render={({ field, fieldState }) => (
-          <DropzoneField
-            label="إيصال الدفع"
-            value={(field.value as any) || []}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-          />
-        )}
+        disabled={!selectedProgramId}
       />
 
       <div className="flex items-center justify-end gap-4 mt-8 col-span-2">
