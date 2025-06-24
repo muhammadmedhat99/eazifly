@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function TableComponent({
   columns,
@@ -24,29 +25,30 @@ export default function TableComponent({
   selectable = false,
 }: any) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const renderCell = React.useCallback((item: any, columnKey: any) => {
     const cellValue: string = item[columnKey];
 
     switch (columnKey) {
-      case "name":
-        const content = (
+      case "avatar":
+        return (
           <User
             avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
-            description={
-              item.renew_date ||
-              (item?.created_at && (
-                <span className="text-[#5E5E5E] font-semibold text-start">
-                  تاريخ الإنشاء : {item.renew_date || item?.created_at}
-                </span>
-              ))
-            }
-            name={cellValue}
+            name={''}
           />
         );
 
-        return typeof handleRowClick === "function" ? content : (
-          <Link href={`${pathname}/${item?.id}`}>{content}</Link>
+      case "name":
+        return (
+          <div className="flex flex-col">
+            <span className="text-small font-semibold text-start">
+              {cellValue}
+            </span>
+            <span className="text-tiny font-semibold text-start">
+              تاريخ الإنشاء : {item.renew_date || item?.created_at}
+            </span>
+          </div>
         );
 
       case "status":
@@ -78,10 +80,10 @@ export default function TableComponent({
         return (
           <div className="flex items-center gap-2">
             <span
-              className={`size-2 rounded-full bg-${item?.subscription_status?.color}`}
+              className={`size-2 rounded-full bg-${item?.request_type?.color}`}
             ></span>
             <span
-              className={`text-${item?.subscription_status?.color} font-bold`}
+              className={`text-${item?.request_type?.color} font-bold`}
             >
               {item?.request_type?.name}
             </span>
@@ -157,8 +159,8 @@ export default function TableComponent({
         {(column: any) => (
           <TableColumn
             key={column.uid}
-            align="center" 
-            className="text-center"
+            align="start" 
+            className="text-start"
           >
             {column.name}
           </TableColumn>
@@ -168,8 +170,8 @@ export default function TableComponent({
         {(item: any) => (
           <TableRow 
           key={item.id} 
-          onClick={() => typeof handleRowClick === "function" && handleRowClick(item)} 
-          className={typeof handleRowClick === "function" ? "cursor-pointer" : ""}>
+          onClick={() => typeof handleRowClick === "function" ? handleRowClick(item) : router.push(`${pathname}/${item?.id}`)} 
+          className={"cursor-pointer"}>
             {(columnKey) => (
               <TableCell className="text-sm font-semibold text-light">
                 {renderCell(item, columnKey)}

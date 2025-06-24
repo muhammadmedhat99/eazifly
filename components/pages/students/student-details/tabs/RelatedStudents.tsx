@@ -1,7 +1,10 @@
+"use client";
+
 import { Options } from "@/components/global/Icons";
 import { Avatar, Button } from "@heroui/react";
 import { Add } from "iconsax-reactjs";
-import React from "react";
+import React, { useState } from "react";
+import AddStudentModal from "../AddStudentModal";
 
 type StudentDetailsProps = {
   data: {
@@ -42,10 +45,22 @@ type StudentDetailsProps = {
 };
 
 export const RelatedStudents = ({ data }: StudentDetailsProps) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [studentDetails, setStudentDetails] = useState<any>(null)
+
+  const handleRowClick = (student: any) => {
+    setModalOpen(true);
+  }
+
   return (
     <div className="bg-main p-5 border border-stroke rounded-lg">
+      <AddStudentModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        student={studentDetails}
+      />
       <div className="flex justify-end mb-5">
-        <Button variant="flat" className="text-primary font-bold bg-white">
+        <Button onPress={handleRowClick} variant="flat" className="text-primary font-bold bg-white">
           <Add />
           إضافة طالب جديد
         </Button>
