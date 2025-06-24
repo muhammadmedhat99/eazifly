@@ -11,6 +11,12 @@ import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import Link from "next/link";
 import React, { useState } from "react";
+import { Reports } from "./ProgramTabs/reports";
+import { Appointments } from "./ProgramTabs/appointments";
+import { Assignments } from "./ProgramTabs/assignments";
+import { Feedbacks } from "./ProgramTabs/feedbacks";
+import { useParams } from 'next/navigation';
+
 
 type StudentDetailsProps = {
   subscriptionsData: {
@@ -35,6 +41,9 @@ type StudentDetailsProps = {
 };
 
 export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
+  const params = useParams();
+  const user_id = params.id;
+
   const [editModeIndex, setEditModeIndex] = useState<number | null>(null);
   const [selectedInstructors, setSelectedInstructors] = useState<Record<number, any>>({});
 
@@ -118,7 +127,46 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
         await fetchClient("client/user/program/reports", {
           ...axios_config,
           params: {
-            user_id: 3,
+            user_id: user_id,
+            program_id: subscription.program_id,
+          },
+        }),
+    })),
+  });
+
+  const appointmentsResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["programappointments", subscription.id],
+      queryFn: async () =>
+        await fetchClient(`client/user/appointments/${3}`, {
+          ...axios_config,
+          params: {
+            program_id: subscription.program_id,
+          },
+        }),
+    })),
+  });
+
+  const assignmentsResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["programassignments", subscription.id],
+      queryFn: async () =>
+        await fetchClient(`client/user/assignment/${user_id}`, {
+          ...axios_config,
+          params: {
+            program_id: subscription.program_id,
+          },
+        }),
+    })),
+  });
+
+  const feedbacksResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["programfeedbacks", subscription.id],
+      queryFn: async () =>
+        await fetchClient(`client/user/feedback/${user_id}`, {
+          ...axios_config,
+          params: {
             program_id: subscription.program_id,
           },
         }),
@@ -131,6 +179,18 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
       const reportResult = reportsResults[index];
       const reportData = reportResult?.data;
       const isLoadingReport = reportResult?.isLoading;
+
+      const appointmentResult = appointmentsResults[index];
+      const appointmentData = appointmentResult?.data;
+      const isLoadingappointment = appointmentResult?.isLoading;
+
+      const assignmentResult = assignmentsResults[index];
+      const assignmentData = assignmentResult?.data;
+      const isLoadingassignment = assignmentResult?.isLoading;
+
+      const feedbackResult = feedbacksResults[index];
+      const feedbackData = feedbackResult?.data;
+      const isLoadingfeedback = feedbackResult?.isLoading;
 
       const instructorsData = instructorsResults[index]?.data?.data ?? [];
       const isLoadingInstructors = instructorsResults[index]?.isLoading;
@@ -250,7 +310,7 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
                 tabList: "bg-[#EAF0FD]",
               }}
             >
-              <Tab
+              {subscriptionsData?.data?.length > 0 && <Tab
                 key="subscription-details"
                 title="تفاصيل الإشتراك و التجديد"
                 className="w-full"
@@ -300,36 +360,24 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
                   </div>
                   <Options />
                 </div>
-              </Tab>
+              </Tab>}
 
-              <Tab key="reports" title="التقارير" className="w-full">
-                {isLoadingReport ? (
-                  <Loader/>
-                ) : reportData.data && reportData.data.length > 0 ? (
-                  reportData.data.map((report: any, reportIndex: number) => (
-                    <div
-                      key={reportIndex}
-                      className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke mb-3"
-                    >
-                      <div className="flex flex-col gap-4 w-full">
-                        <div className="flex items-center justify-between">
-                          <span className="text-black-text text-sm font-bold">
-                            {report.report_question}
-                          </span>
-                          <span className="text-black-text text-sm font-bold">
-                            {formatDate(report.created_at)}
-                          </span>
-                        </div>
-                        <div className="text-title font-bold text-sm">
-                          {report.report_question_answer}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-gray-500 text-center">لا توجد تقارير</div>
-                )}
-              </Tab>
+              {appointmentData?.data?.length > 0 && <Tab className="w-full" key="appointments" title="المواعيد">
+                <Appointments appointmentData={appointmentData} isLoadingappointment={isLoadingappointment} />
+              </Tab>}
+
+              {assignmentData?.data?.length > 0 && <Tab className="w-full" key="assignments" title="التسليمات">
+                <Assignments isLoadingassignment={isLoadingassignment} assignmentData={assignmentData} />
+              </Tab>}
+
+              {reportData?.data?.length > 0 && <Tab className="w-full" key="reports" title="التقارير">
+                <Reports isLoadingReport={isLoadingReport} reportData={reportData} />
+              </Tab>}
+
+              {feedbackData?.data?.length > 0 && <Tab className="w-full" key="feedbacks" title="الملاحظات">
+                <Feedbacks isLoadingfeedback={isLoadingfeedback} feedbackData={feedbackData} />
+              </Tab>}
+
             </Tabs>
           </div>
         </div>
