@@ -70,10 +70,10 @@ export const AllStudentsSubscriptions = () => {
       num: item.id,
       name: `${item.first_name} ${item.last_name}`,
       request_type: {
-        name: item?.type,
-        color: item?.type === "new" ? "primary" : "warning",
+        name: item?.type.label,
+        color: item?.type.color === "New" ? "primary" : "warning",
       },
-      type: item?.type || "N/A",
+      type: item?.subscription_type || "N/A",
       courses: item.order_details[0]?.program || "N/A",
       price: `${item.total_after_discount} ${item.currency}`,
       date: item?.created_at || "N/A",

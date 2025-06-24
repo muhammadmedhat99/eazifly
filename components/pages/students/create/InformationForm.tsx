@@ -66,8 +66,10 @@ type FormData = yup.InferType<typeof schema>;
 
 export const InformationForm = ({
   setActiveStep,
+  setUserId,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  setUserId: (count: string) => void;
 }) => {
   const {
     register,
@@ -119,6 +121,7 @@ export const InformationForm = ({
           title: data?.message,
           color: "success",
         });
+        setUserId(data?.data?.id);
         reset();
         setActiveStep(1);
       }

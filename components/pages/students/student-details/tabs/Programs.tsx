@@ -1,7 +1,22 @@
+"use client";
+
 import { Options } from "@/components/global/Icons";
-import { Avatar, Card, CardBody, Progress, Tab, Tabs } from "@heroui/react";
+import { Loader } from "@/components/global/Loader";
+import { AllQueryKeys } from "@/keys";
+import { axios_config } from "@/lib/const";
+import { formatDate } from "@/lib/helper";
+import { fetchClient, postData } from "@/lib/utils";
+import { addToast, Avatar, Button, Card, CardBody, Progress, Select, SelectItem, Tab, Tabs } from "@heroui/react";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
+import { getCookie } from "cookies-next";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
+import { Reports } from "./ProgramTabs/reports";
+import { Appointments } from "./ProgramTabs/appointments";
+import { Assignments } from "./ProgramTabs/assignments";
+import { Feedbacks } from "./ProgramTabs/feedbacks";
+import { useParams } from 'next/navigation';
+
 
 type StudentDetailsProps = {
   subscriptionsData: {
@@ -11,6 +26,7 @@ type StudentDetailsProps = {
       program: string;
       price: number;
       instructor: {
+        id: number;
         name: string;
         image: string;
       },
@@ -25,9 +41,160 @@ type StudentDetailsProps = {
 };
 
 export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
+  const params = useParams();
+  const user_id = params.id;
+
+  const [editModeIndex, setEditModeIndex] = useState<number | null>(null);
+  const [selectedInstructors, setSelectedInstructors] = useState<Record<number, any>>({});
+
+  const instructorsResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["instructors", subscription.id],
+      queryFn: async () =>
+        await fetchClient("client/program/instructors", {
+          ...axios_config,
+          params: {
+            instructor_id: subscription.instructor.id,
+            program_id: subscription.program_id,
+            user_id: subscription.student_number,
+          },
+        }),
+    })),
+  });
+
+  const changeInstructor = useMutation({
+    mutationFn: (submitData: FormData) => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formData = new FormData();
+      formData.append("user_id", submitData.get("user_id") as string);
+      formData.append("instructor_id", submitData.get("instructor_id") as string);
+      formData.append("program_id", submitData.get("program_id") as string);
+
+      return postData("client/change/instructor", formData, myHeaders);
+    },
+
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({
+          title: "حدث خطأ أثناء التغيير",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: "تم تغيير المعلم بنجاح",
+          color: "success",
+        });
+      }
+    },
+
+    onError: (error) => {
+      console.log("error ===>>", error);
+      addToast({
+        title: "عذراً، حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
+  const onSubmit = (subscription: any) => {
+    const selected = selectedInstructors[subscription.id];
+    
+    if (!selected) {
+      addToast({
+        title: "من فضلك اختر معلم أولاً",
+        color: "warning",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("user_id", subscription.student_number.toString());
+    formData.append("instructor_id", selected.id.toString());
+    formData.append("program_id", subscription.program_id.toString());
+
+    changeInstructor.mutate(formData);
+    setEditModeIndex(null);
+  };
+
+  const reportsResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["programReports", subscription.id],
+      queryFn: async () =>
+        await fetchClient("client/user/program/reports", {
+          ...axios_config,
+          params: {
+            user_id: user_id,
+            program_id: subscription.program_id,
+          },
+        }),
+    })),
+  });
+
+  const appointmentsResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["programappointments", subscription.id],
+      queryFn: async () =>
+        await fetchClient(`client/user/appointments/${3}`, {
+          ...axios_config,
+          params: {
+            program_id: subscription.program_id,
+          },
+        }),
+    })),
+  });
+
+  const assignmentsResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["programassignments", subscription.id],
+      queryFn: async () =>
+        await fetchClient(`client/user/assignment/${user_id}`, {
+          ...axios_config,
+          params: {
+            program_id: subscription.program_id,
+          },
+        }),
+    })),
+  });
+
+  const feedbacksResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["programfeedbacks", subscription.id],
+      queryFn: async () =>
+        await fetchClient(`client/user/feedback/${user_id}`, {
+          ...axios_config,
+          params: {
+            program_id: subscription.program_id,
+          },
+        }),
+    })),
+  });
+
   return (
   <div className="grid grid-cols-1 gap-8">
     {subscriptionsData?.data?.map((subscription, index) => {
+      const reportResult = reportsResults[index];
+      const reportData = reportResult?.data;
+      const isLoadingReport = reportResult?.isLoading;
+
+      const appointmentResult = appointmentsResults[index];
+      const appointmentData = appointmentResult?.data;
+      const isLoadingappointment = appointmentResult?.isLoading;
+
+      const assignmentResult = assignmentsResults[index];
+      const assignmentData = assignmentResult?.data;
+      const isLoadingassignment = assignmentResult?.isLoading;
+
+      const feedbackResult = feedbacksResults[index];
+      const feedbackData = feedbackResult?.data;
+      const isLoadingfeedback = feedbackResult?.isLoading;
+
+      const instructorsData = instructorsResults[index]?.data?.data ?? [];
+      const isLoadingInstructors = instructorsResults[index]?.isLoading;
+
       const subscriptionDate = subscription.subscription_date;
       const expireDate = subscription.expire_date;
       const daysToExpire = subscription.DaysToExpire;
@@ -68,20 +235,71 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
             </div>
 
             <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background col-span-2">
-              <div className="flex flex-col gap-4">
-                <span className="text-primary text-sm font-bold">الإسم</span>
-                <div className="flex items-center gap-2">
-                  <Avatar size="sm" src={subscription.instructor?.image} />
-                  <span className="text-black-text font-bold text-[15px]">
-                    {subscription.instructor?.name}
-                  </span>
+                <div className="flex flex-col gap-4 w-1/2">
+                  <span className="text-primary text-sm font-bold">الإسم</span>
+                  {editModeIndex === index ? (
+                  <Select
+                    selectedKeys={
+                      selectedInstructors[subscription.id]?.id
+                        ? [String(selectedInstructors[subscription.id].id)]
+                        : []
+                    }
+                    label="اختر المعلم"
+                    onSelectionChange={(keys) => {
+                      const selectedId = Number(Array.from(keys)[0]);
+                      const selected = instructorsData.find((i :any) => i.id === selectedId);
+
+                      setSelectedInstructors((prev) => ({
+                        ...prev,
+                        [subscription.id]: selected,
+                      }));
+                    }}
+                  >
+                    {instructorsData.map((inst: any) => (
+                      <SelectItem key={inst.id.toString()}>{inst.name_en}</SelectItem>
+                    ))}
+                  </Select>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Avatar
+                        size="sm"
+                        src={
+                          selectedInstructors[subscription.id]?.image ||
+                          subscription.instructor?.image
+                        }
+                      />
+                      <span className="text-black-text font-bold text-[15px]">
+                        {selectedInstructors[subscription.id]?.name_en ||
+                          subscription.instructor?.name}
+                      </span>
+                    </div>
+                  )}
                 </div>
+              {editModeIndex === index ?
+                <Button
+                  size="sm"
+                  color="primary"
+                  variant="solid"
+                  className="text-white mt-2"
+                  type="button"
+                  onPress={() => onSubmit(subscription)}
+                  isLoading={changeInstructor.isPending}
+                >
+                  حفظ
+                </Button> : (
+                  <Link
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setEditModeIndex(index);
+                    }}
+                    className="flex items-center gap-1"
+                  >
+                    <span className="text-sm font-bold text-primary">تغير المعلم</span>
+                  </Link>
+                )}
               </div>
-              <Link href="#" className="flex items-center gap-1">
-                <span className="text-sm font-bold text-primary">تغير المعلم</span>
-              </Link>
             </div>
-          </div>
 
           <div className="flex items-center justify-center flex-col">
             <Tabs
@@ -92,7 +310,7 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
                 tabList: "bg-[#EAF0FD]",
               }}
             >
-              <Tab
+              {subscriptionsData?.data?.length > 0 && <Tab
                 key="subscription-details"
                 title="تفاصيل الإشتراك و التجديد"
                 className="w-full"
@@ -142,25 +360,24 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
                   </div>
                   <Options />
                 </div>
-              </Tab>
+              </Tab>}
 
-              <Tab key="reports" title="التقارير" className="w-full">
-                <div className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke mb-3">
-                  <div className="flex flex-col gap-4 w-full">
-                    <div className="flex items-center justify-between">
-                      <span className="text-black-text text-sm font-bold">
-                        إسم البرنامج
-                      </span>
-                      <span className="text-black-text text-sm font-bold">
-                        12-4-2026
-                      </span>
-                    </div>
-                    <div className="text-title font-bold text-sm">
-                      مثال :هذا النص هو جزء من عملية تحسين تجربة المستخدم من خلال النص.
-                    </div>
-                  </div>
-                </div>
-              </Tab>
+              {appointmentData?.data?.length > 0 && <Tab className="w-full" key="appointments" title="المواعيد">
+                <Appointments appointmentData={appointmentData} isLoadingappointment={isLoadingappointment} />
+              </Tab>}
+
+              {assignmentData?.data?.length > 0 && <Tab className="w-full" key="assignments" title="التسليمات">
+                <Assignments isLoadingassignment={isLoadingassignment} assignmentData={assignmentData} />
+              </Tab>}
+
+              {reportData?.data?.length > 0 && <Tab className="w-full" key="reports" title="التقارير">
+                <Reports isLoadingReport={isLoadingReport} reportData={reportData} />
+              </Tab>}
+
+              {feedbackData?.data?.length > 0 && <Tab className="w-full" key="feedbacks" title="الملاحظات">
+                <Feedbacks isLoadingfeedback={isLoadingfeedback} feedbackData={feedbackData} />
+              </Tab>}
+
             </Tabs>
           </div>
         </div>

@@ -6,11 +6,14 @@ import { Information } from "./tabs/Information";
 import { TimelineDemo } from "./tabs/Timeline";
 import { Programs } from "./tabs/Programs";
 import { RelatedStudents } from "./tabs/RelatedStudents";
+import { useState } from "react";
 
 type StudentDetailsProps = {
   data: {
     data: {
       id: number;
+      age:string;
+      gender:string;
       first_name: string;
       last_name: string;
       user_name: string;
@@ -50,6 +53,7 @@ type StudentDetailsProps = {
       program: string;
       price: number;
       instructor: {
+        id: number;
         name: string;
         image: string;
       },
@@ -60,10 +64,38 @@ type StudentDetailsProps = {
       missed_sessions: number;
       completed_sessions: number;
     }[];
+  };
+  actionsData: {
+    data: {
+      id: number;
+      title: string,
+      description: string,
+      created_at: string,
+      instructor: {
+        id: number;
+        name_ar: string;
+        name_en: string;
+        image: string;
+      },
+      user: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        image: string;
+      },
+      client: {
+        id: number;
+        name: string;
+        image: string;
+      },
+      
+    }[];
   }
+  
 };
 
-export const StudentDetails = ({ data, subscriptionsData }: StudentDetailsProps) => {
+export const StudentDetails = ({ data, subscriptionsData, actionsData }: StudentDetailsProps) => {
+const [studentData, setStudentData] = useState(data.data);
   return (
     <div className="flex w-full flex-col">
       <Tabs
@@ -77,13 +109,13 @@ export const StudentDetails = ({ data, subscriptionsData }: StudentDetailsProps)
         }}
       >
         <Tab key="info" title="البيانات الشخصية">
-          <Information data={data} />
+          <Information data={{ data: studentData }} onUpdated={setStudentData} />
         </Tab>
         <Tab key="programs" title="البرامج و اللإشتراكات">
           <Programs subscriptionsData={subscriptionsData} />
         </Tab>
         <Tab key="actions" title="الإجراءات السابقة">
-          <TimelineDemo />
+          <TimelineDemo actionsData={actionsData} />
         </Tab>
         <Tab key="other" title="الطلاب التابعين">
           <RelatedStudents data={data} />
