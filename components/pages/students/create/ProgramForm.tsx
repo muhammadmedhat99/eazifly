@@ -68,14 +68,17 @@ const schema = yup
 type FormData = yup.InferType<typeof schema>;
 
 export const ProgramForm = ({
-  setActiveStep, setStudentCount, setProgramId, setPlanData,
+  setActiveStep,
+  setStudentCount,
+  setProgramId,
+  setPlanData,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   setStudentCount: (count: string) => void;
   setProgramId: (count: string) => void;
   setPlanData: (count: string) => void;
 }) => {
-  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [selectedProgramId, setSelectedProgramId] = useState<any>(null);
 
   const {
     register,
@@ -99,7 +102,10 @@ export const ProgramForm = ({
       var formdata = new FormData();
       formdata.append("subscripe_days", submitData.payment_plan.toString());
       formdata.append("program_id", submitData.program);
-      formdata.append("number_of_session_per_week", submitData.number_of_lessons.toString());
+      formdata.append(
+        "number_of_session_per_week",
+        submitData.number_of_lessons.toString()
+      );
       formdata.append("duration", submitData.lesson_duration);
 
       return postData("client/program/plan", formdata, myHeaders);
@@ -132,13 +138,14 @@ export const ProgramForm = ({
   });
 
   const { data: programData, isLoading: isProgramDataLoading } = useQuery({
-    queryKey: ['programs'],
+    queryKey: ["programs"],
     queryFn: async () => await fetchClient(`client/program`, axios_config),
   });
 
   const { data: planData, isLoading: isPlanDataLoading } = useQuery({
-    queryKey: ['plans', selectedProgramId],
-    queryFn: async () => await fetchClient(`client/plans/${selectedProgramId}`, axios_config),
+    queryKey: ["plans", selectedProgramId],
+    queryFn: async () =>
+      await fetchClient(`client/plans/${selectedProgramId}`, axios_config),
     enabled: !!selectedProgramId,
   });
 
@@ -199,7 +206,7 @@ export const ProgramForm = ({
           >
             {months.length && days.length ? (
               // ✅ لو عندك داتا من الـ API (dynamic)
-              months.map((monthLabel, index) => (
+              months.map((monthLabel: string, index: number) => (
                 <Radio
                   key={days[index]} // value from subscripe_days
                   value={days[index]}
@@ -217,44 +224,60 @@ export const ProgramForm = ({
               ))
             ) : (
               <>
-                <Radio value="per_month" isDisabled classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "cursor-not-allowed opacity-50"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}>
+                <Radio
+                  value="per_month"
+                  isDisabled
+                  classNames={{
+                    base: cn(
+                      "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                      "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                      "cursor-not-allowed opacity-50"
+                    ),
+                    label: "text-xs group-data-[selected=true]:text-primary",
+                  }}
+                >
                   شهري
                 </Radio>
-                <Radio value="3_months" isDisabled classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "cursor-not-allowed opacity-50"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}>
+                <Radio
+                  value="3_months"
+                  isDisabled
+                  classNames={{
+                    base: cn(
+                      "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                      "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                      "cursor-not-allowed opacity-50"
+                    ),
+                    label: "text-xs group-data-[selected=true]:text-primary",
+                  }}
+                >
                   3 شهور
                 </Radio>
-                <Radio value="6_month" isDisabled classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "cursor-not-allowed opacity-50"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}>
+                <Radio
+                  value="6_month"
+                  isDisabled
+                  classNames={{
+                    base: cn(
+                      "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                      "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                      "cursor-not-allowed opacity-50"
+                    ),
+                    label: "text-xs group-data-[selected=true]:text-primary",
+                  }}
+                >
                   6 شهور
                 </Radio>
-                <Radio value="year" isDisabled classNames={{
-                  base: cn(
-                    "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                    "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                    "cursor-not-allowed opacity-50"
-                  ),
-                  label: "text-xs group-data-[selected=true]:text-primary",
-                }}>
+                <Radio
+                  value="year"
+                  isDisabled
+                  classNames={{
+                    base: cn(
+                      "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
+                      "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
+                      "cursor-not-allowed opacity-50"
+                    ),
+                    label: "text-xs group-data-[selected=true]:text-primary",
+                  }}
+                >
                   سنوي
                 </Radio>
               </>
@@ -286,13 +309,14 @@ export const ProgramForm = ({
               <span className="text-black-text font-bold text-sm">حصه</span>
             }
           >
-            {(planData?.data?.number_of_session_per_week ?? []).map((num) => (
-              <SelectItem key={num}>{num}</SelectItem>
-            ))}
+            {(planData?.data?.number_of_session_per_week ?? []).map(
+              (num: string) => (
+                <SelectItem key={num}>{num}</SelectItem>
+              )
+            )}
           </HeroSelect>
         )}
       />
-
 
       <Controller
         name="lesson_duration"
@@ -322,7 +346,6 @@ export const ProgramForm = ({
           </HeroSelect>
         )}
       />
-
 
       <Input
         label="عدد الطلاب"

@@ -33,7 +33,7 @@ type StudentDetailsProps = {
       };
     };
   };
-  onUpdated?: (newData: StudentDetailsProps["data"]["data"]) => void;
+  onUpdated?: any;
 };
 
 const schema = yup
@@ -65,7 +65,7 @@ const schema = yup
     age: yup.string().required("ادخل العمر"),
     country: yup.string().required("إختر الدولة"),
     image: yup
-      .mixed<FileList>()
+      .mixed<File[]>()
       .test(
         "fileType",
         "الرجاء تحميل ملف صحيح",
@@ -81,12 +81,12 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
   const [editField, setEditField] = useState<string | null>(null);
   const { control, handleSubmit, watch } = useForm<FormData>({
     defaultValues: {
-    first_name: data?.data?.first_name || "",
-    last_name: data?.data?.last_name || "",
-    email: data?.data?.email || "",      
-    phone: data?.data?.phone || "", 
-  }
-});
+      first_name: data?.data?.first_name || "",
+      last_name: data?.data?.last_name || "",
+      email: data?.data?.email || "",
+      phone: data?.data?.phone || "",
+    },
+  });
 
   const onSubmit = (data: FormData) => UpdateStudent.mutate(data);
 
@@ -97,20 +97,23 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
       myHeaders.append("Accept", "application/json");
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
       var formdata = new FormData();
-      console.log('submitData',submitData)
       formdata.append("first_name", submitData.first_name);
       formdata.append("last_name", submitData.last_name);
       formdata.append("user_name", submitData.user_name);
       formdata.append("email", submitData.email);
       formdata.append("phone", submitData.phone);
-      formdata.append("whats_app", data.data.whats_app);    
+      formdata.append("whats_app", data.data.whats_app);
       formdata.append("gender", data.data.gender);
       formdata.append("age", data.data.age);
       {
         submitData.image && formdata.append("image", submitData.image[0]);
       }
 
-      return postData(`client/user/update/${data.data.id}`, formdata, myHeaders);
+      return postData(
+        `client/user/update/${data.data.id}`,
+        formdata,
+        myHeaders
+      );
     },
     onSuccess: (data) => {
       if (data.message !== "success") {
@@ -151,7 +154,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
                 control={control}
                 render={({ field }) => (
                   <DropzoneField
-                    value={field.value || []}
+                    value={field.value}
                     onChange={field.onChange}
                     description="تحميل صورة جديدة"
                   />
@@ -191,7 +194,13 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         </div>
 
         {editField === "name" ? (
-          <Button size="sm" color="primary" variant="solid" className="text-white" type="submit">
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            type="submit"
+          >
             حفظ
           </Button>
         ) : (
@@ -208,7 +217,9 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
 
       <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
-          <span className="text-[#5E5E5E] text-sm font-bold">البريد الإلكتروني</span>
+          <span className="text-[#5E5E5E] text-sm font-bold">
+            البريد الإلكتروني
+          </span>
           {editField === "email" ? (
             <Controller
               name="email"
@@ -225,7 +236,13 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         </div>
 
         {editField === "email" ? (
-          <Button size="sm" color="primary" variant="solid" className="text-white" type="submit">
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            type="submit"
+          >
             حفظ
           </Button>
         ) : (
@@ -242,7 +259,9 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
 
       <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
-          <span className="text-[#5E5E5E] text-sm font-bold">تاريخ الإنشاء</span>
+          <span className="text-[#5E5E5E] text-sm font-bold">
+            تاريخ الإنشاء
+          </span>
           <span className="text-black-text font-bold text-[15px]">
             {formatDate(data?.data?.created_at)}
           </span>
@@ -268,7 +287,13 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         </div>
 
         {editField === "phone" ? (
-          <Button size="sm" color="primary" variant="solid" className="text-white" type="submit">
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            type="submit"
+          >
             حفظ
           </Button>
         ) : (
