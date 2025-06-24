@@ -24,6 +24,7 @@ import { fetchClient, postData } from "@/lib/utils";
 import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
 import { DropzoneField } from "@/components/global/DropZoneField";
+import { useParams } from 'next/navigation';
 
 interface StudentModalProps {
   isOpen: boolean;
@@ -77,6 +78,9 @@ export default function AddStudentModal({
   onClose,
   student,
 }: StudentModalProps) {
+  const params = useParams();
+  const user_id = params.id;
+
   const [scrollBehavior, setScrollBehavior] = useState<"inside" | "normal" | "outside">("inside");
 
   const {
@@ -98,7 +102,9 @@ export default function AddStudentModal({
       myHeaders.append("Accept", "application/json");
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
       var formdata = new FormData();
-      formdata.append("parent_id", '3');
+      if (typeof user_id === 'string') {
+        formdata.append("parent_id", user_id);
+      } 
       formdata.append("first_name", submitData.first_name);
       formdata.append("last_name", submitData.last_name);
       formdata.append("user_name", submitData.user_name);
