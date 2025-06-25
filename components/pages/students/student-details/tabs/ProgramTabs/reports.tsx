@@ -22,14 +22,15 @@ export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => {
                         <div className="flex flex-col gap-4 w-full">
                             <div className="flex items-center justify-between">
                                 <span className="text-black-text text-sm font-bold">
-                                    {report.report_question}
+                                    {report.report_maker_type === "instructor"
+                                        ? `تقرير للطالب (${report.report_for_name}) من المعلم (${report.report_maker_name})`
+                                        : report.report_maker_type === "client"
+                                            ? `تقرير للطالب (${report.report_for_name}) من الإدارة (${report.report_maker_name})`
+                                            : null}
                                 </span>
                                 <span className="text-black-text text-sm font-bold">
                                     {formatDate(report.created_at)}
                                 </span>
-                            </div>
-                            <div className="text-title font-bold text-sm">
-                                {report.report_question_answer}
                             </div>
                         </div>
                     </div>
