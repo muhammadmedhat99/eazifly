@@ -39,9 +39,10 @@ type StudentDetailsProps = {
       completed_sessions: number;
     }[];
   }
+  client_id: number;
 };
 
-export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
+export const Programs = ({ subscriptionsData, client_id}: StudentDetailsProps) => {
   const params = useParams();
   const user_id = params.id;
 
@@ -393,7 +394,7 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
               </Tab>}
 
               {feedbackData?.data?.length > 0 && <Tab className="w-full" key="feedbacks" title="الملاحظات">
-                <Feedbacks isLoadingfeedback={isLoadingfeedback} feedbackData={feedbackData} />
+                <Feedbacks isLoadingfeedback={isLoadingfeedback} feedbackData={feedbackData} client_id={client_id} />
               </Tab>}
 
               {subaccountData?.data?.length > 0 && <Tab className="w-full" key="subaccounts" title="الحسابات الفرعية">
