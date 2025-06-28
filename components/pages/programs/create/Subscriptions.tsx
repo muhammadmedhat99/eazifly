@@ -4,15 +4,14 @@ import { yupResolver } from "@hookform/resolvers/yup";
 
 import {
   Button,
-  cn,
   Input,
-  Radio,
-  RadioGroup,
-  Select as HeroSelect,
   SelectItem,
-  Accordion,
   AccordionItem,
   addToast,
+  Select,
+  useDisclosure,
+  Modal,
+  ModalContent,
 } from "@heroui/react";
 
 import { subscriptionsSchema, SubscriptionsFormData } from "./schemas";
@@ -24,7 +23,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
-import { AddSquare, CloseCircle } from "iconsax-reactjs";
+import { AddSquare, Trash } from "iconsax-reactjs";
 import { getCookie } from "cookies-next";
 
 const locales = ["ar", "en"] as const;
@@ -36,7 +35,8 @@ export const Subscriptions = ({
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   programId: string;
 }) => {
-  // Changed to store selected values for each subscription index
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
   const [selectedValues, setSelectedValues] = useState<{
     [key: number]: Set<string>;
   }>({});
@@ -58,7 +58,6 @@ export const Subscriptions = ({
     formState: { errors },
     reset,
     control,
-    watch,
   } = useForm<SubscriptionsFormData>({
     resolver: yupResolver(subscriptionsSchema),
     defaultValues: {
@@ -87,29 +86,13 @@ export const Subscriptions = ({
     name: "subscriptions",
   });
 
-  // Helper function to get selected value for a specific index
-  const getSelectedValue = (index: number) => {
-    const currentValue = watch(`subscriptions.${index}.lesson_duration`);
-    return currentValue
-      ? new Set([currentValue])
-      : selectedValues[index] || new Set();
-  };
-
-  // Helper function to update selected value for a specific index
-  const updateSelectedValue = (index: number, keys: Set<string>) => {
-    setSelectedValues((prev) => ({
-      ...prev,
-      [index]: keys,
-    }));
-  };
-
   const onSubmit = async (data: SubscriptionsFormData) => {
     addSubscriptionToProgram.mutate(data);
   };
 
   const handleCancel = () => {
     reset();
-    setSelectedValues({}); // Reset selected values
+    setSelectedValues({});
   };
 
   const addNewSubscription = () => {
@@ -141,14 +124,14 @@ export const Subscriptions = ({
       const formData = {
         plans: submitData?.subscriptions?.map((item) => ({
           program_id: programId,
-          ...item.localizedFields,
           subscripe_days: item?.subscription_plan,
           price: item?.sell_price,
           discount_price: item.subscription_price,
           duration: item.lesson_duration,
           number_of_session_per_week: item.number_of_lessons,
           type: item.subscription_type,
-          is_special_plan: false,
+          is_special_plan: item?.is_special_plan,
+          ...(item?.is_special_plan === "true" ? item.localizedFields : {}),
         })),
       };
 
@@ -183,52 +166,30 @@ export const Subscriptions = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-5">
-      <Accordion
-        defaultExpandedKeys={[0, 1]}
-        variant="splitted"
-        className="mb-6"
-      >
+      <div className="flex flex-col">
+        <div className="flex items-center *:bg-primary/15  *:flex-1 *:px-4 *:py-5 *:border *:border-primary *:text-primary *:text-xs *:font-semibold">
+          <div>خطة الإشتراك</div>
+          <div>نوع الإشتراك</div>
+          <div>سعر الإشتراك</div>
+          <div>سعر البيع </div>
+          <div>عدد الحصص </div>
+          <div>مدة المحاضرة </div>
+          <div>خطة مميزه؟ </div>
+          {fields.length > 1 && <div>الإجراءات</div>}
+        </div>
         {fields.map((item, index) => (
-          <AccordionItem
-            key={index}
-            aria-label={`Subscription ${index + 1}`}
-            title={
-              <div className="flex">
-                <span>الاشتراك {index + 1}</span>
-              </div>
-            }
-            classNames={{ base: "shadow-none border border-stroke" }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-5">
-              <LocalizedField
-                control={control}
-                name={`subscriptions.${index}.localizedFields`}
-                fieldName="title"
-                label="Title"
-              />
-
-              <LocalizedField
-                control={control}
-                name={`subscriptions.${index}.localizedFields`}
-                fieldName="label"
-                label="Label"
-              />
-
-              <LocalizedTextArea
-                control={control}
-                name={`subscriptions.${index}.localizedFields`}
-                fieldName="description"
-                label="Description"
-                className=""
-              />
-
+          <React.Fragment key={item.id}>
+            <div className="flex items-center *:flex-1 *:px-4 *:py-2 *:border *:border-[#EAF0FD] text-xs font-semibold">
               <Controller
                 name={`subscriptions.${index}.subscription_plan`}
                 control={control}
                 render={({ field }) => (
-                  <RadioGroup
-                    value={field.value}
-                    onValueChange={(value) => field.onChange(value)}
+                  <Select
+                    placeholder="إختر"
+                    selectedKeys={[field.value]}
+                    onSelectionChange={(keys) =>
+                      field.onChange(Array.from(keys)[0])
+                    }
                     isInvalid={
                       !!errors.subscriptions?.[index]?.subscription_plan
                         ?.message
@@ -236,41 +197,28 @@ export const Subscriptions = ({
                     errorMessage={
                       errors.subscriptions?.[index]?.subscription_plan?.message
                     }
-                    label="خطة الإشتراك"
+                    radius="none"
                     classNames={{
-                      wrapper: "flex-row",
-                      label: "text-[#272727] font-bold text-sm",
-                      base: "mb-4",
+                      trigger:
+                        "bg-white shadow-none data-[hover=true]:bg-white",
                     }}
                   >
                     {subscriptionPeriods?.data?.map((period: any) => (
-                      <Radio
-                        key={period.days}
-                        value={period.days}
-                        classNames={{
-                          base: cn(
-                            "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                            "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                            "data-[selected=true]:border-primary"
-                          ),
-                          label:
-                            "text-xs group-data-[selected=true]:text-primary",
-                        }}
-                      >
-                        {period.title}
-                      </Radio>
+                      <SelectItem key={period.days}>{period.title}</SelectItem>
                     ))}
-                  </RadioGroup>
+                  </Select>
                 )}
               />
-
               <Controller
                 name={`subscriptions.${index}.subscription_type`}
                 control={control}
                 render={({ field }) => (
-                  <RadioGroup
-                    value={field.value}
-                    onValueChange={(value) => field.onChange(value)}
+                  <Select
+                    placeholder="إختر"
+                    selectedKeys={[field.value]}
+                    onSelectionChange={(keys) =>
+                      field.onChange(Array.from(keys)[0])
+                    }
                     isInvalid={
                       !!errors.subscriptions?.[index]?.subscription_type
                         ?.message
@@ -278,49 +226,20 @@ export const Subscriptions = ({
                     errorMessage={
                       errors.subscriptions?.[index]?.subscription_type?.message
                     }
-                    label="نوع الإشتراك"
+                    radius="none"
                     classNames={{
-                      wrapper: "flex-row",
-                      label: "text-[#272727] font-bold text-sm",
-                      base: "mb-4",
+                      trigger:
+                        "bg-white shadow-none data-[hover=true]:bg-white",
                     }}
                   >
-                    <Radio
-                      value="single"
-                      classNames={{
-                        base: cn(
-                          "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                          "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                          "data-[selected=true]:border-primary"
-                        ),
-                        label:
-                          "text-xs group-data-[selected=true]:text-primary",
-                      }}
-                    >
-                      فردي
-                    </Radio>
-
-                    <Radio
-                      value="family"
-                      classNames={{
-                        base: cn(
-                          "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-between font-bold flex-1",
-                          "flex-row-reverse max-w-[300px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-2 border-transparent",
-                          "data-[selected=true]:border-primary"
-                        ),
-                        label:
-                          "text-xs group-data-[selected=true]:text-primary",
-                      }}
-                    >
-                      عائلة
-                    </Radio>
-                  </RadioGroup>
+                    <SelectItem key="single">فردي</SelectItem>
+                    <SelectItem key="family">عائلة</SelectItem>
+                  </Select>
                 )}
               />
 
               <Input
-                label="سعر الإشتراك"
-                placeholder="أكتب السعر المناسب"
+                placeholder="أكتب هنا"
                 type="text"
                 {...register(`subscriptions.${index}.subscription_price`)}
                 isInvalid={
@@ -329,40 +248,36 @@ export const Subscriptions = ({
                 errorMessage={
                   errors.subscriptions?.[index]?.subscription_price?.message
                 }
-                labelPlacement="outside"
                 classNames={{
-                  label: "text-[#272727] font-bold text-sm",
-                  inputWrapper: "shadow-none",
-                  base: "mb-4",
+                  inputWrapper:
+                    "bg-white shadow-none data-[hover=true]:bg-white",
                 }}
                 endContent={
                   <span className="text-black-text font-bold text-sm">ج.م</span>
                 }
+                radius="none"
               />
 
               <Input
-                label="سعر البيع"
-                placeholder="أكتب السعر المناسب"
+                placeholder="أكتب هنا"
                 type="text"
                 {...register(`subscriptions.${index}.sell_price`)}
                 isInvalid={!!errors.subscriptions?.[index]?.sell_price?.message}
                 errorMessage={
                   errors.subscriptions?.[index]?.sell_price?.message
                 }
-                labelPlacement="outside"
                 classNames={{
-                  label: "text-[#272727] font-bold text-sm",
-                  inputWrapper: "shadow-none",
-                  base: "mb-4",
+                  inputWrapper:
+                    "bg-white shadow-none data-[hover=true]:bg-white",
                 }}
                 endContent={
                   <span className="text-black-text font-bold text-sm">ج.م</span>
                 }
+                radius="none"
               />
 
               <Input
-                label="عدد حصص البرنامج"
-                placeholder="نص الكتابه"
+                placeholder="أكتب هنا"
                 type="text"
                 {...register(`subscriptions.${index}.number_of_lessons`)}
                 isInvalid={
@@ -371,12 +286,11 @@ export const Subscriptions = ({
                 errorMessage={
                   errors.subscriptions?.[index]?.number_of_lessons?.message
                 }
-                labelPlacement="outside"
                 classNames={{
-                  label: "text-[#272727] font-bold text-sm",
-                  inputWrapper: "shadow-none",
-                  base: "mb-4",
+                  inputWrapper:
+                    "bg-white shadow-none data-[hover=true]:bg-white",
                 }}
+                radius="none"
                 endContent={
                   <span className="text-black-text font-bold text-sm">حصه</span>
                 }
@@ -386,7 +300,7 @@ export const Subscriptions = ({
                 name={`subscriptions.${index}.lesson_duration`}
                 control={control}
                 render={({ field }) => (
-                  <HeroSelect
+                  <Select
                     selectedKeys={
                       field.value ? new Set([String(field.value)]) : new Set()
                     }
@@ -394,9 +308,7 @@ export const Subscriptions = ({
                       const selectedVal = Array.from(keys)[0] as string;
                       field.onChange(selectedVal || "");
                     }}
-                    label="مدة المحاضره"
-                    labelPlacement="outside"
-                    placeholder="اختر مدة المحاضرة"
+                    placeholder="اختر"
                     isInvalid={
                       !!errors.subscriptions?.[index]?.lesson_duration?.message
                     }
@@ -404,12 +316,11 @@ export const Subscriptions = ({
                       errors.subscriptions?.[index]?.lesson_duration?.message
                     }
                     classNames={{
-                      label: "text-[#272727] font-bold text-sm",
-                      base: "mb-4",
-                      value: "text-[#87878C] text-sm",
+                      trigger:
+                        "bg-white shadow-none data-[hover=true]:bg-white",
                     }}
+                    radius="none"
                     renderValue={(selectedItems) => {
-                      // selectedItems is an array of the selected item objects
                       if (!selectedItems.length) return "اختر مدة المحاضرة";
                       const selected = selectedItems[0];
                       return (
@@ -428,7 +339,7 @@ export const Subscriptions = ({
                         </SelectItem>
                       )
                     )}
-                  </HeroSelect>
+                  </Select>
                 )}
               />
 
@@ -436,81 +347,90 @@ export const Subscriptions = ({
                 name={`subscriptions.${index}.is_special_plan`}
                 control={control}
                 render={({ field }) => (
-                  <RadioGroup
-                    {...field}
-                    value={field.value}
-                    onValueChange={(value) => field.onChange(value)}
-                    isInvalid={!!errors.subscriptions?.[index]?.message}
-                    errorMessage={errors.subscriptions?.[index]?.message}
-                    label="خطة مميزه"
+                  <Select
+                    placeholder="إختر"
+                    selectedKeys={[field.value]}
+                    onSelectionChange={(keys) => {
+                      field.onChange(Array.from(keys)[0]);
+                      keys?.currentKey === "true" && onOpen();
+                    }}
+                    isInvalid={
+                      !!errors.subscriptions?.[index]?.is_special_plan?.message
+                    }
+                    errorMessage={
+                      errors.subscriptions?.[index]?.is_special_plan?.message
+                    }
+                    radius="none"
                     classNames={{
-                      wrapper: "flex-row",
-                      label: "text-[#272727] font-bold text-sm",
-                      base: "mb-4",
+                      trigger:
+                        "bg-white shadow-none data-[hover=true]:bg-white",
                     }}
                   >
-                    <Radio
-                      value={"true"}
-                      classNames={{
-                        base: cn(
-                          "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-center font-bold flex-1",
-                          "flex-row-reverse max-w-[200px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-1 border-stroke",
-                          "data-[selected=true]:border-primary data-[selected=true]:bg-primary/20"
-                        ),
-                        control: "hidden outline-none",
-                        wrapper: "hidden",
-                        label:
-                          "text-xs group-data-[selected=true]:text-primary",
-                      }}
-                    >
-                      نعم
-                    </Radio>
-                    <Radio
-                      value={"false"}
-                      classNames={{
-                        base: cn(
-                          "inline-flex m-0 bg-background hover:bg-primary/20 items-center justify-center font-bold flex-1",
-                          "flex-row-reverse max-w-[200px] cursor-pointer rounded-lg gap-4 px-4 py-2 border-1 border-stroke",
-                          "data-[selected=true]:border-primary data-[selected=true]:bg-primary/20"
-                        ),
-                        control: "hidden outline-none",
-                        wrapper: "hidden",
-                        label:
-                          "text-xs group-data-[selected=true]:text-primary",
-                      }}
-                    >
-                      لا
-                    </Radio>
-                  </RadioGroup>
+                    <SelectItem key="true">نعم</SelectItem>
+                    <SelectItem key="false">لا</SelectItem>
+                  </Select>
                 )}
               />
-            </div>
-            <div className="col-span-2 flex items-center justify-end mb-5 me-5">
+
+              <Modal
+                isOpen={isOpen}
+                onOpenChange={onOpenChange}
+                backdrop="blur"
+                size="4xl"
+              >
+                <ModalContent>
+                  {(onClose) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-5">
+                      <LocalizedField
+                        control={control}
+                        name={`subscriptions.${index}.localizedFields`}
+                        fieldName="title"
+                        label="Title"
+                      />
+
+                      <LocalizedField
+                        control={control}
+                        name={`subscriptions.${index}.localizedFields`}
+                        fieldName="label"
+                        label="Label"
+                      />
+
+                      <LocalizedTextArea
+                        control={control}
+                        name={`subscriptions.${index}.localizedFields`}
+                        fieldName="description"
+                        label="Description"
+                        className=""
+                      />
+                    </div>
+                  )}
+                </ModalContent>
+              </Modal>
+
               {fields.length > 1 && (
-                <Button
-                  type="button"
-                  size="md"
-                  color="danger"
-                  variant="bordered"
-                  onPress={() => {
-                    // Clean up selected value when removing subscription
-                    setSelectedValues((prev) => {
-                      const newValues = { ...prev };
-                      delete newValues[index];
-                      return newValues;
-                    });
-                    remove(index);
-                  }}
-                  className=""
-                >
-                  <span>حذف</span>
-                  <CloseCircle size={20} />
-                </Button>
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    color="danger"
+                    variant="light"
+                    onPress={() => {
+                      setSelectedValues((prev) => {
+                        const newValues = { ...prev };
+                        delete newValues[index];
+                        return newValues;
+                      });
+                      remove(index);
+                    }}
+                    className="border-none data-[hover=true]:bg-white/10"
+                  >
+                    <Trash size={20} />
+                  </Button>
+                </div>
               )}
             </div>
-          </AccordionItem>
+          </React.Fragment>
         ))}
-      </Accordion>
+      </div>
 
       <div className="flex items-center justify-center my-10">
         <Button variant="light" color="primary" onPress={addNewSubscription}>
