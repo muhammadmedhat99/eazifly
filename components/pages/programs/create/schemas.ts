@@ -10,9 +10,9 @@ const localizedStringSchema = yup.object().shape({
 });
 
 const localizedSubscriptionSchema = yup.object().shape({
-  title: yup.string().required("Title is required"),
-  label: yup.string().required("Label is required"),
-  description: yup.string().required("Description is required"),
+  title: yup.string().notRequired(),
+  label: yup.string().notRequired(),
+  description: yup.string().notRequired(),
 });
 
 export const informationFormSchema = yup.object({
@@ -77,7 +77,7 @@ export const subscriptionsSchema = yup.object().shape({
             ar: localizedSubscriptionSchema,
             en: localizedSubscriptionSchema,
           })
-          .required("Localized fields are required"),
+          .notRequired(),
         subscription_plan: yup
           .string()
           .required("يجب اختيار خطة الإشتراك"),

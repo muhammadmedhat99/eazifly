@@ -10,6 +10,7 @@ import { Appointments } from "./appointments";
 import { Assignments } from "./assignments";
 import { Feedbacks } from "./feedbacks";
 import { Reports } from "./reports";
+import { getCookie } from "cookies-next";
 
 type appointmentsProps = {
   subaccountData?: any;
@@ -17,9 +18,15 @@ type appointmentsProps = {
   program_id: number;
 };
 
-export const Subaccounts = ({ subaccountData, isLoadingsubaccount, program_id }: appointmentsProps) => {
+export const Subaccounts = ({
+  subaccountData,
+  isLoadingsubaccount,
+  program_id,
+}: appointmentsProps) => {
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const ClientId = getCookie("client_id") as string;
 
   const students = subaccountData?.data || [];
 
@@ -33,66 +40,54 @@ export const Subaccounts = ({ subaccountData, isLoadingsubaccount, program_id }:
 
   const currentStudent = students[currentIndex];
 
-  const {
-    data: appointmentData,
-    isLoading: isLoadingappointment,
-    } = useQuery({
+  const { data: appointmentData, isLoading: isLoadingappointment } = useQuery({
     queryKey: ["subaccountAppointments", currentStudent.id, program_id],
     queryFn: async () =>
-        await fetchClient(`client/user/appointments/${currentStudent.id}`, {
+      await fetchClient(`client/user/appointments/${currentStudent.id}`, {
         ...axios_config,
         params: {
-            program_id: program_id,
+          program_id: program_id,
         },
-        }),
+      }),
     enabled: selectedTab === "appointments" && !!currentStudent?.id,
-    });
+  });
 
-    const {
-    data: reportData,
-    isLoading: isLoadingReport,
-    } = useQuery({
+  const { data: reportData, isLoading: isLoadingReport } = useQuery({
     queryKey: ["subaccountReports", currentStudent.id, program_id],
     queryFn: async () =>
-        await fetchClient(`client/user/program/reports`, {
+      await fetchClient(`client/user/program/reports`, {
         ...axios_config,
         params: {
-            user_id: currentStudent.id,
-            program_id: program_id,
+          user_id: currentStudent.id,
+          program_id: program_id,
         },
-        }),
+      }),
     enabled: selectedTab === "reports" && !!currentStudent?.id,
-    });
+  });
 
-    const {
-    data: assignmentData,
-    isLoading: isLoadingassignment,
-    } = useQuery({
+  const { data: assignmentData, isLoading: isLoadingassignment } = useQuery({
     queryKey: ["subaccountssignments", currentStudent.id, program_id],
     queryFn: async () =>
-        await fetchClient(`client/user/assignment/${currentStudent.id}`, {
+      await fetchClient(`client/user/assignment/${currentStudent.id}`, {
         ...axios_config,
         params: {
-            program_id: program_id,
+          program_id: program_id,
         },
-        }),
-     enabled: selectedTab === "assignments" && !!currentStudent?.id,
-    });
+      }),
+    enabled: selectedTab === "assignments" && !!currentStudent?.id,
+  });
 
-    const {
-    data: feedbackData,
-    isLoading: isLoadingfeedback,
-    } = useQuery({
+  const { data: feedbackData, isLoading: isLoadingfeedback } = useQuery({
     queryKey: ["subaccountfeedbacks", currentStudent.id, program_id],
     queryFn: async () =>
-        await fetchClient(`client/user/feedback/${currentStudent.id}`, {
+      await fetchClient(`client/user/feedback/${currentStudent.id}`, {
         ...axios_config,
         params: {
-            program_id: program_id,
+          program_id: program_id,
         },
-        }),
-     enabled: selectedTab === "feedbacks" && !!currentStudent?.id,
-    });
+      }),
+    enabled: selectedTab === "feedbacks" && !!currentStudent?.id,
+  });
 
   return (
     <div className="flex flex-col gap-2">
@@ -110,15 +105,26 @@ export const Subaccounts = ({ subaccountData, isLoadingsubaccount, program_id }:
                   <ArrowRight2
                     size="24"
                     variant="Bold"
-                    className={currentIndex === 0 ? "opacity-30 cursor-not-allowed" : ""}
+                    className={
+                      currentIndex === 0 ? "opacity-30 cursor-not-allowed" : ""
+                    }
                   />
                 </button>
-                <span>{currentIndex + 1} / {students.length}</span>
-                <button onClick={handleNext} disabled={currentIndex === students.length - 1}>
+                <span>
+                  {currentIndex + 1} / {students.length}
+                </span>
+                <button
+                  onClick={handleNext}
+                  disabled={currentIndex === students.length - 1}
+                >
                   <ArrowLeft2
                     size="24"
                     variant="Bold"
-                    className={currentIndex === students.length - 1 ? "opacity-30 cursor-not-allowed" : ""}
+                    className={
+                      currentIndex === students.length - 1
+                        ? "opacity-30 cursor-not-allowed"
+                        : ""
+                    }
                   />
                 </button>
               </div>
@@ -126,7 +132,9 @@ export const Subaccounts = ({ subaccountData, isLoadingsubaccount, program_id }:
 
             {/* Student Info */}
             <div className="flex flex-col gap-3 items-start">
-              <span className="text-[#5E5E5E] text-sm font-bold">إسم الطالب</span>
+              <span className="text-[#5E5E5E] text-sm font-bold">
+                إسم الطالب
+              </span>
               <div className="flex items-center gap-4">
                 <span className="text-sm font-bold">
                   {currentStudent.first_name} {currentStudent.last_name}
@@ -147,7 +155,8 @@ export const Subaccounts = ({ subaccountData, isLoadingsubaccount, program_id }:
                   cursor: "bg-primary",
                   tabContent:
                     "text-black-text text-sm font-bold group-data-[selected=true]:text-white",
-                  tabList: "bg-[#EAF0FD] p-1.5 border border-primary border-opacity-50",
+                  tabList:
+                    "bg-[#EAF0FD] p-1.5 border border-primary border-opacity-50",
                 }}
               >
                 <Tab key="appointments" title="المواعيد" />
@@ -160,30 +169,31 @@ export const Subaccounts = ({ subaccountData, isLoadingsubaccount, program_id }:
 
           {/* Tab Content */}
           <div className="p-5">
-                {selectedTab === "appointments" && (
-                    <Appointments
-                        appointmentData={appointmentData}
-                        isLoadingappointment={isLoadingappointment}
-                    />
-                )}
-                {selectedTab === "assignments" && (
-                    <Assignments
-                        assignmentData={assignmentData} 
-                        isLoadingassignment={isLoadingassignment}
-                    />
-                )}
-                {selectedTab === "reports" && (
-                    <Reports
-                        reportData={reportData} 
-                        isLoadingReport={isLoadingReport}
-                    />
-                )}
-                {selectedTab === "feedbacks" && (
-                    <Feedbacks
-                        feedbackData={feedbackData} 
-                        isLoadingfeedback={isLoadingfeedback}
-                    />
-                )}
+            {selectedTab === "appointments" && (
+              <Appointments
+                appointmentData={appointmentData}
+                isLoadingappointment={isLoadingappointment}
+              />
+            )}
+            {selectedTab === "assignments" && (
+              <Assignments
+                assignmentData={assignmentData}
+                isLoadingassignment={isLoadingassignment}
+              />
+            )}
+            {selectedTab === "reports" && (
+              <Reports
+                reportData={reportData}
+                isLoadingReport={isLoadingReport}
+              />
+            )}
+            {selectedTab === "feedbacks" && (
+              <Feedbacks
+                feedbackData={feedbackData}
+                isLoadingfeedback={isLoadingfeedback}
+                client_id={+ClientId}
+              />
+            )}
           </div>
         </div>
       ) : (

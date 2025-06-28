@@ -1,6 +1,5 @@
 "use client";
 import { Edit2 } from "iconsax-reactjs";
-import Link from "next/link";
 
 import { Avatar, Input, Button, image, addToast } from "@heroui/react";
 import { formatDate } from "@/lib/helper";
@@ -10,7 +9,6 @@ import { DropzoneField } from "@/components/global/DropZoneField";
 import { useMutation } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import { postData } from "@/lib/utils";
-import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 type StudentDetailsProps = {
