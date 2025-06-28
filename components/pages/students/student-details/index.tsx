@@ -91,10 +91,11 @@ type StudentDetailsProps = {
       
     }[];
   }
+  client_id: number;
   
 };
 
-export const StudentDetails = ({ data, subscriptionsData, actionsData }: StudentDetailsProps) => {
+export const StudentDetails = ({ data, subscriptionsData, actionsData , client_id }: StudentDetailsProps) => {
 const [studentData, setStudentData] = useState(data.data);
   return (
     <div className="flex w-full flex-col">
@@ -112,7 +113,7 @@ const [studentData, setStudentData] = useState(data.data);
           <Information data={{ data: studentData }} onUpdated={setStudentData} />
         </Tab>
         <Tab key="programs" title="البرامج و اللإشتراكات">
-          <Programs subscriptionsData={subscriptionsData} />
+          <Programs subscriptionsData={subscriptionsData} client_id={client_id}/>
         </Tab>
         <Tab key="actions" title="الإجراءات السابقة">
           <TimelineDemo actionsData={actionsData} />

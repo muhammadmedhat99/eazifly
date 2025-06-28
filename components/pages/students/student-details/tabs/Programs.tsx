@@ -16,6 +16,7 @@ import { Appointments } from "./ProgramTabs/appointments";
 import { Assignments } from "./ProgramTabs/assignments";
 import { Feedbacks } from "./ProgramTabs/feedbacks";
 import { useParams } from 'next/navigation';
+import { Subaccounts } from "./ProgramTabs/Subaccounts";
 
 
 type StudentDetailsProps = {
@@ -38,9 +39,10 @@ type StudentDetailsProps = {
       completed_sessions: number;
     }[];
   }
+  client_id: number;
 };
 
-export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
+export const Programs = ({ subscriptionsData, client_id}: StudentDetailsProps) => {
   const params = useParams();
   const user_id = params.id;
 
@@ -138,7 +140,7 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
     queries: subscriptionsData.data.map((subscription) => ({
       queryKey: ["programappointments", subscription.id],
       queryFn: async () =>
-        await fetchClient(`client/user/appointments/${3}`, {
+        await fetchClient(`client/user/appointments/${user_id}`, {
           ...axios_config,
           params: {
             program_id: subscription.program_id,
@@ -173,6 +175,19 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
     })),
   });
 
+  const subaccountsResults = useQueries({
+    queries: subscriptionsData.data.map((subscription) => ({
+      queryKey: ["programsubaccounts", subscription.id],
+      queryFn: async () =>
+        await fetchClient(`client/children/users/${user_id}`, {
+          ...axios_config,
+          params: {
+            program_id: subscription.program_id,
+          },
+        }),
+    })),
+  });
+
   return (
   <div className="grid grid-cols-1 gap-8">
     {subscriptionsData?.data?.map((subscription, index) => {
@@ -191,6 +206,10 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
       const feedbackResult = feedbacksResults[index];
       const feedbackData = feedbackResult?.data;
       const isLoadingfeedback = feedbackResult?.isLoading;
+
+      const subaccountResult = subaccountsResults[index];
+      const subaccountData = subaccountResult?.data;
+      const isLoadingsubaccount = subaccountResult?.isLoading;
 
       const instructorsData = instructorsResults[index]?.data?.data ?? [];
       const isLoadingInstructors = instructorsResults[index]?.isLoading;
@@ -375,7 +394,12 @@ export const Programs = ({ subscriptionsData }: StudentDetailsProps) => {
               </Tab>}
 
               {feedbackData?.data?.length > 0 && <Tab className="w-full" key="feedbacks" title="الملاحظات">
-                <Feedbacks isLoadingfeedback={isLoadingfeedback} feedbackData={feedbackData} />
+                <Feedbacks isLoadingfeedback={isLoadingfeedback} feedbackData={feedbackData} client_id={client_id} />
+              </Tab>}
+
+              {subaccountData?.data?.length > 0 && <Tab className="w-full" key="subaccounts" title="الحسابات الفرعية">
+                <Subaccounts subaccountData={subaccountData} isLoadingsubaccount={isLoadingsubaccount}
+                 program_id={subscription?.program_id}/>
               </Tab>}
 
             </Tabs>

@@ -13,8 +13,50 @@ import {
   Textarea,
 } from "@heroui/react";
 import { ArrowLeft2 } from "iconsax-reactjs";
+import { formatDate } from "@/lib/helper";
 
-export const StudentsSubscriptionDetails = () => {
+type OrderDetailsProps = {
+  data: {
+    data: {
+      id: number;
+      user: {
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
+        image: string;
+      };
+      type: {
+        label: string;
+        color: string;
+      };
+      subscription_type: string;
+      created_at: string;
+      payment_method: string;
+      image: string;
+      order_details: {
+        id: number;
+        title: string;
+        program: string;
+        label: string;
+        description: string;
+        currency: string;
+        price: string;
+        discount_price: string;
+        subscripe_days: string;
+        duration: string;
+        number_of_session_per_week: string;
+        is_special_plan: boolean;
+        type: string;
+        plan_title: string;
+      }[];
+    };
+  };
+};
+
+export const StudentsSubscriptionDetails = ({ data }: OrderDetailsProps) => {
+
+  
   return (
     <>
       <div className="p-8">
@@ -36,11 +78,11 @@ export const StudentsSubscriptionDetails = () => {
                 <div className="flex items-center gap-2">
                   <Avatar
                     size="sm"
-                    src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
+                    src={data?.data.user.image}
                   />
 
                   <span className="text-black-text font-bold text-[15px]">
-                    عبدالرحمن محمود الجندي
+                    {data?.data.user.name}
                   </span>
                 </div>
               </div>
@@ -50,7 +92,7 @@ export const StudentsSubscriptionDetails = () => {
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  Ahmed.ali12@gmail.com
+                  {data?.data.user.email}
                 </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
@@ -59,7 +101,7 @@ export const StudentsSubscriptionDetails = () => {
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  +201004443303
+                  {data?.data.user.phone}
                 </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
@@ -68,7 +110,7 @@ export const StudentsSubscriptionDetails = () => {
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  12-4-2023
+                  {formatDate(data?.data.created_at)}
                 </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
@@ -76,9 +118,9 @@ export const StudentsSubscriptionDetails = () => {
                   نوع الطلب
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-primary"></span>
-                  <span className="text-primary font-bold text-[15px]">
-                    تجديد الإشتراك
+                  <span className={`size-2 rounded-full bg-${data?.data.type.color}`}></span>
+                  <span className={`text-${data?.data.type.color} font-bold text-[15px]`}>
+                    {data?.data.type.label}
                   </span>
                 </div>
               </div>
@@ -101,7 +143,7 @@ export const StudentsSubscriptionDetails = () => {
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  أنستا باي
+                  {data?.data.payment_method}
                 </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
@@ -110,7 +152,7 @@ export const StudentsSubscriptionDetails = () => {
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  6 أشهر
+                  {data?.data.order_details[0].plan_title}
                 </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
@@ -119,7 +161,7 @@ export const StudentsSubscriptionDetails = () => {
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  30 دقيقة
+                  {data?.data.order_details[0].duration} دقيقة
                 </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
@@ -127,7 +169,7 @@ export const StudentsSubscriptionDetails = () => {
                   عدد الحصص الأسبوعية
                 </span>
 
-                <span className="text-black-text font-bold text-[15px]">4</span>
+                <span className="text-black-text font-bold text-[15px]">{data?.data.order_details[0].number_of_session_per_week}</span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
                 <span className="text-[#5E5E5E] text-sm font-bold">
@@ -135,7 +177,7 @@ export const StudentsSubscriptionDetails = () => {
                 </span>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-primary font-bold text-[15px]">
-                    3500
+                    {data?.data.order_details[0].discount_price}
                   </span>
                   <span className="text-primary font-bold text-[15px]">
                     ج.م
@@ -147,14 +189,16 @@ export const StudentsSubscriptionDetails = () => {
                 <span className="text-primary font-bold text-sm">
                   صورة التحويل
                 </span>
-                <div className="h-[337px] overflow-hidden rounded-lg">
-                  <Image
-                    src="/img/static/8d842570ac254505049a2bcf71f03b5af009cdba.png"
-                    alt="bill image"
-                    width={1024}
-                    height={337}
-                    className="object-cover"
-                  />
+                <div className="overflow-hidden rounded-lg">
+                  {data?.data.image ? (
+                    <Image
+                      src={data.data.image}
+                      alt="bill image"
+                      width={1024}
+                      height={337}
+                      className="object-cover"
+                    />
+                  ) : null}
                 </div>
               </div>
             </div>

@@ -80,6 +80,7 @@ export const LoginForm = () => {
         });
         reset({ phone: "", password: "" });
         document.cookie = `token=${data?.data?.token}; path=/;`;
+        document.cookie = `client_id=${data?.data?.id}; path=/;`;
         window.location.href = "/";
       }
     },
