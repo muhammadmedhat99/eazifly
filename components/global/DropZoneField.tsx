@@ -67,9 +67,9 @@ export const DropzoneField = ({
           </div>
         ) : value?.length ? (
           <div className="flex items-center flex-col gap-2">
-            {value.map((file, index) => {
+            {previewUrls.map((url, index) => {
+              const file = value[index];
               const isImage = file.type.startsWith("image/");
-              const url = URL.createObjectURL(file);
               return (
                 <div key={index} className="w-full">
                   {isImage ? (
@@ -105,3 +105,4 @@ export const DropzoneField = ({
     </div>
   );
 };
+

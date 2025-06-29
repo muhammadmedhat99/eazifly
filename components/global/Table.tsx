@@ -11,6 +11,7 @@ import {
   TableCell,
   User,
   Chip,
+  Avatar,
 } from "@heroui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -33,9 +34,11 @@ export default function TableComponent({
     switch (columnKey) {
       case "avatar":
         return (
-          <User
-            avatarProps={{ radius: "full", src: item.avatar, size: "sm" }}
-            name={''}
+          <Avatar
+            alt="user avatar"
+            radius="full"
+            size="sm"
+            src={item.avatar}
           />
         );
 
