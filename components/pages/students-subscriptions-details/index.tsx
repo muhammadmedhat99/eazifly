@@ -14,6 +14,7 @@ import {
 } from "@heroui/react";
 import { ArrowLeft2 } from "iconsax-reactjs";
 import { formatDate } from "@/lib/helper";
+import { User } from "@heroui/react";
 
 type OrderDetailsProps = {
   data: {
@@ -49,6 +50,18 @@ type OrderDetailsProps = {
         is_special_plan: boolean;
         type: string;
         plan_title: string;
+      }[];
+      order_notes: {
+        id: number;
+        type: string;
+        maker: {
+          name: string;
+          image: string;
+        };
+        title: string;
+        description: string;
+        image: string;
+        created_at: string;
       }[];
     };
   };
@@ -201,6 +214,46 @@ export const StudentsSubscriptionDetails = ({ data }: OrderDetailsProps) => {
                   ) : null}
                 </div>
               </div>
+            </div>
+          </AccordionItem>
+          <AccordionItem
+            key="3"
+            aria-label="إجراءات الطلب السابقة"
+            title="إجراءات الطلب السابقة"
+            classNames={{
+              title: "font-bold text-black-text text-[15px]",
+              base: "shadow-none border border-stroke",
+            }}
+            indicator={<ArrowLeft2 variant="Bold" color="#2563EB" />}
+          >
+            <div className="py-5 flex flex-col gap-2">
+              {data.data.order_notes.map((note, noteIndex) => (
+                <div
+                key={noteIndex}
+                className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke"
+              >
+                <div className="flex flex-col gap-4">
+
+                  <span className="text-black-text font-bold text-[15px]">
+                    {note.title}
+                  </span>
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    {note.description}
+                  </span>
+                </div>
+                <div className="flex flex-col justify-between items-end">
+                  <span className="text-sm font-bold text-primary">
+                    {formatDate(note.created_at)}
+                  </span>
+                    <User
+                      avatarProps={{ radius: "full", src: note.maker.image, size: "sm" }}
+                      name={
+                        <span className="text-sm font-bold text-[#272727]">{note.maker.name}</span>
+                      }
+                    ></User>
+                </div>
+              </div>
+              ))}
             </div>
           </AccordionItem>
         </Accordion>
