@@ -11,6 +11,11 @@ import {
   Avatar,
   Button,
   Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Textarea,
 } from "@heroui/react";
 import { ArrowLeft2 } from "iconsax-reactjs";
@@ -70,9 +75,13 @@ type OrderDetailsProps = {
       }[];
     };
   };
+  client_id: number;
 };
 
-export const StudentsSubscriptionDetails = ({ data }: OrderDetailsProps) => {
+export const StudentsSubscriptionDetails = ({ data, client_id }: OrderDetailsProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [paidValue, setPaidValue] = useState("");
   const params = useParams();
   const order_id = params.id;
@@ -106,6 +115,45 @@ export const StudentsSubscriptionDetails = ({ data }: OrderDetailsProps) => {
           color: "success",
         });
         setPaidValue('')
+      }
+    },
+    onError: (error) => {
+      console.log(" error ===>>", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
+   const AddFeedback = useMutation({
+    mutationFn: (submitData: { title: string; description: string }) => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      var formdata = new FormData();
+      formdata.append("title", submitData.title);
+      formdata.append("description", submitData.description);
+      formdata.append("order_id", order_id ? order_id.toString() : "");
+      formdata.append("client_id", client_id.toString());
+
+      return postData("client/order/add/note", formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+        setIsModalOpen(false);
+        setTitle("");
+        setDescription("")
       }
     },
     onError: (error) => {
@@ -354,11 +402,75 @@ export const StudentsSubscriptionDetails = ({ data }: OrderDetailsProps) => {
             }}>
             الموافقة علي الطلب
           </Button>
-          <Button variant="solid" color="primary" className="text-white">
+          <Button
+            variant="solid"
+            color="primary"
+            className="text-white"
+            onPress={() => {
+              setIsModalOpen(true);
+            }}
+          >
            إضافة ملاحظة
           </Button>
         </div>
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        scrollBehavior="inside"
+        size="4xl"
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsModalOpen(false);
+          }
+        }}
+      >
+        <ModalContent>
+          {(closeModal) => (
+            <>
+              <ModalHeader className="text-lg font-bold text-[#272727] flex justify-center">
+                أضافة ملاحظة
+              </ModalHeader>
+              <ModalBody>
+                <div className="flex flex-col gap-2">
+                  <Input
+                    type="text"
+                    label="أدخل العنوان"
+                    labelPlacement="outside"
+                    placeholder="نص الكتابة"
+                    classNames={{ label: "text-black-text font-semibold text-sm" }}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                  <label className="text-sm font-medium">الوصف</label>
+                  <textarea
+                    className="w-full rounded-xl p-3 min-h-[120px] focus:outline-none bg-default-100"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="أدخل الوصف هنا"
+                  />
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <div className="flex items-center justify-center gap-4 mt-8">
+                  <Button
+                    type="submit"
+                    variant="solid"
+                    color="primary"
+                    className="text-white"
+                    onPress={() => AddFeedback.mutate({
+                      title: title,
+                      description: description,
+                    })}
+                  >
+                    حفظ
+                  </Button>
+                </div>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 };
