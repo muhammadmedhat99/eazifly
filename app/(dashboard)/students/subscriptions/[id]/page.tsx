@@ -36,6 +36,7 @@ export default async function page({
   const cookieStore = await cookies();  
   const token = cookieStore.get("token");
   const data = await fetchData(`client/order/show/${id}`, token?.value);
+  const client_id = cookieStore.get("client_id");
   
   return (
     <>
@@ -50,7 +51,7 @@ export default async function page({
         </div>
       </BreadCrumb>
 
-      <StudentsSubscriptionDetails data={data}/>
+      <StudentsSubscriptionDetails data={data} client_id={ Number(client_id?.value)}/>
     </>
   );
 }
