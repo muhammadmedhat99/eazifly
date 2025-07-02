@@ -26,7 +26,8 @@ export default function SubscriptionActionModal({
     const { handleSubmit, control, reset } = useForm({
         defaultValues: {
             paid: "",
-            image: []
+            image: [],
+            days: ""
         },
     });
 
@@ -72,26 +73,54 @@ export default function SubscriptionActionModal({
                 );
             case "Pause":
                 return (
-                    <div className="space-y-4">
-                        <Input label="مدة الإيقاف (بالأيام)" placeholder="مثلاً 30" />
+                    <div className="flex flex-col gap-3">
+                        <Controller
+                            name="days"
+                            control={control}
+                            render={({ field }) => (
+                                <Input
+                                    {...field}
+                                    type="number"
+                                    max={30}
+                                    label="مدة الإيقاف"
+                                    placeholder="نص الكتابة"
+                                    labelPlacement="outside"
+                                    classNames={{
+                                        label: "text-[#272727] font-bold text-sm",
+                                        inputWrapper: "shadow-none",
+                                    }}
+                                />
+                            )}
+                        />
                     </div>
                 );
             case "extend":
                 return (
-                    <div className="space-y-4">
-                        <Input label="عدد الأيام" placeholder="مثلاً 15" />
+                    <div className="flex flex-col gap-3">
+                        <Controller
+                            name="days"
+                            control={control}
+                            render={({ field }) => (
+                                <Input
+                                    {...field}
+                                    type="number"
+                                    max={30}
+                                    label="مدة التمديد"
+                                    placeholder="نص الكتابة"
+                                    labelPlacement="outside"
+                                    classNames={{
+                                        label: "text-[#272727] font-bold text-sm",
+                                        inputWrapper: "shadow-none",
+                                    }}
+                                />
+                            )}
+                        />
                     </div>
                 );
             case "change":
                 return (
-                    <div className="space-y-4">
+                    <div className="flex flex-col gap-3">
                         <Input label="نوع الاشتراك الجديد" placeholder="أدخل النوع" />
-                    </div>
-                );
-            case "cancel":
-                return (
-                    <div className="space-y-4">
-                        <Input label="سبب الإنهاء" placeholder="أدخل السبب" />
                     </div>
                 );
             default:
@@ -99,22 +128,71 @@ export default function SubscriptionActionModal({
         }
     };
 
-    const onSubmit = (data: any) => handleAction.mutate(data);
+    const actionsMap: Record<
+        string,
+        {
+            endpoint: string;
+            buildFormData: (data: any, subscriptionId: number, userId: string) => FormData;
+        }
+    > = {
+        renew: {
+            endpoint: "client/order/renew",
+            buildFormData: (data, subscriptionId, userId) => {
+                const formdata = new FormData();
+                formdata.append("paid", data.paid);
+                if (data.image?.[0]) {
+                    formdata.append("image", data.image[0]);
+                }
+                formdata.append("program_id", subscriptionId.toString());
+                formdata.append("user_id", userId);
+                return formdata;
+            },
+        },
+
+        Pause: {
+            endpoint: "client/subscription/freeze",
+            buildFormData: (data, subscriptionId, userId) => {
+                const formdata = new FormData();
+                formdata.append("days", data.days);
+                formdata.append("program_id", subscriptionId.toString());
+                formdata.append("user_id", userId);
+                return formdata;
+            },
+        },
+
+        extend: {
+            endpoint: "client/subscription/extension",
+            buildFormData: (data, subscriptionId, userId) => {
+                const formdata = new FormData();
+                formdata.append("days", data.days);
+                formdata.append("program_id", subscriptionId.toString());
+                formdata.append("user_id", userId);
+                return formdata;
+            },
+        },
+
+    };
 
     const handleAction = useMutation({
         mutationFn: (submitData: any) => {
-            var myHeaders = new Headers();
+            if (!action || !subscriptionId) return Promise.reject("Missing data");
+
+            const config = actionsMap[action];
+
+            if (!config) return Promise.reject("Unknown action");
+
+            const myHeaders = new Headers();
             myHeaders.append("local", "ar");
             myHeaders.append("Accept", "application/json");
             myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
-            var formdata = new FormData();
-            formdata.append("paid", submitData.paid);
-            if (submitData.image?.[0]) {
-                formdata.append("image", submitData.image[0]);
-            }
-            formdata.append("program_id", subscriptionId ? subscriptionId.toString() : "");
-            formdata.append("user_id", user_id);
-            return postData(`client/order/renew`, formdata, myHeaders);
+
+            const formdata = config.buildFormData(
+                submitData,
+                subscriptionId,
+                user_id
+            );
+
+            return postData(config.endpoint, formdata, myHeaders);
         },
         onSuccess: (data) => {
             if (data.message !== "success") {
@@ -139,6 +217,9 @@ export default function SubscriptionActionModal({
             });
         },
     });
+
+
+    const onSubmit = (data: any) => handleAction.mutate(data);
 
     const [scrollBehavior, setScrollBehavior] = useState<"inside" | "normal" | "outside">("inside");
 

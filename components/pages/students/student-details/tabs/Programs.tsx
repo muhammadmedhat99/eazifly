@@ -33,6 +33,7 @@ import { Feedbacks } from "./ProgramTabs/feedbacks";
 import { useParams } from "next/navigation";
 import { Subaccounts } from "./ProgramTabs/Subaccounts";
 import SubscriptionActionModal from "./SubscriptionActionModal";
+import ConfirmModal from "@/components/global/ConfirmModal";
 
 type StudentDetailsProps = {
   subscriptionsData: {
@@ -60,10 +61,54 @@ type StudentDetailsProps = {
 const ActionsComponent = ({ id, user_id }: { id: number, user_id: any }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleActionClick = (actionKey: string) => {
-    setSelectedAction(actionKey);
-    setModalOpen(true);
+    if (actionKey === "cancel") {
+      setShowConfirm(true);
+    } else {
+      setSelectedAction(actionKey);
+      setModalOpen(true);
+    }
+  };
+
+  const handleCancel = useMutation({
+    mutationFn: () => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      var formdata = new FormData();
+      formdata.append("program_id", id.toString());
+      formdata.append("user_id", user_id);
+
+      return postData("client/order/cancel", formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+      }
+    },
+    onError: (error) => {
+      console.log(" error ===>>", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
+  const handleCancelAction = () => {
+    handleCancel.mutate();
   };
 
   return (
@@ -99,6 +144,17 @@ const ActionsComponent = ({ id, user_id }: { id: number, user_id: any }) => {
         action={selectedAction}
         subscriptionId={id}
         user_id={user_id}
+      />
+
+      <ConfirmModal
+        open={showConfirm}
+        title="إنهاء الاشتراك"
+        message="هل أنت متأكد أنك تريد إنهاء الاشتراك؟"
+        onConfirm={() => {
+          handleCancelAction();
+          setShowConfirm(false);
+        }}
+        onCancel={() => setShowConfirm(false)}
       />
     </>
   );
