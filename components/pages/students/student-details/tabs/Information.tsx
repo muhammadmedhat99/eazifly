@@ -83,6 +83,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
       last_name: data?.data?.last_name || "",
       email: data?.data?.email || "",
       phone: data?.data?.phone || "",
+      image: []
     },
   });
 
@@ -97,14 +98,14 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
       var formdata = new FormData();
       formdata.append("first_name", submitData.first_name);
       formdata.append("last_name", submitData.last_name);
-      formdata.append("user_name", submitData.user_name);
+      formdata.append("user_name", data.data.user_name);
       formdata.append("email", submitData.email);
       formdata.append("phone", submitData.phone);
       formdata.append("whats_app", data.data.whats_app);
       formdata.append("gender", data.data.gender);
       formdata.append("age", data.data.age);
-      {
-        submitData.image && formdata.append("image", submitData.image[0]);
+      if (submitData.image?.[0]) {
+        formdata.append("image", submitData.image[0]);
       }
 
       return postData(

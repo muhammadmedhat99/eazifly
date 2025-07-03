@@ -12,6 +12,10 @@ import {
   Button,
   Card,
   CardBody,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
   Progress,
   Select,
   SelectItem,
@@ -28,6 +32,7 @@ import { Assignments } from "./ProgramTabs/assignments";
 import { Feedbacks } from "./ProgramTabs/feedbacks";
 import { useParams } from "next/navigation";
 import { Subaccounts } from "./ProgramTabs/Subaccounts";
+import SubscriptionActionModal from "./SubscriptionActionModal";
 
 type StudentDetailsProps = {
   subscriptionsData: {
@@ -50,6 +55,53 @@ type StudentDetailsProps = {
     }[];
   };
   client_id: number;
+};
+
+const ActionsComponent = ({ id, user_id }: { id: number, user_id: any }) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+
+  const handleActionClick = (actionKey: string) => {
+    setSelectedAction(actionKey);
+    setModalOpen(true);
+  };
+
+  return (
+    <>
+      <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
+        <DropdownTrigger>
+          <button>
+            <Options />
+          </button>
+        </DropdownTrigger>
+        <DropdownMenu aria-label="Static Actions">
+          <DropdownItem key="renew" onClick={() => handleActionClick("renew")}>
+            تجديد
+          </DropdownItem>
+          <DropdownItem key="Pause" onClick={() => handleActionClick("Pause")}>
+            إيقاف مؤقت
+          </DropdownItem>
+          <DropdownItem key="extend" onClick={() => handleActionClick("extend")}>
+            تمديد الاشتراك
+          </DropdownItem>
+          <DropdownItem key="change" onClick={() => handleActionClick("change")}>
+            تغيير الاشتراك
+          </DropdownItem>
+          <DropdownItem key="cancel" onClick={() => handleActionClick("cancel")}>
+            إنهاء الاشتراك
+          </DropdownItem>
+        </DropdownMenu>
+      </Dropdown>
+
+      <SubscriptionActionModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        action={selectedAction}
+        subscriptionId={id}
+        user_id={user_id}
+      />
+    </>
+  );
 };
 
 export const Programs = ({
@@ -419,7 +471,7 @@ export const Programs = ({
                           </div>
                         </div>
                       </div>
-                      <Options />
+                      <ActionsComponent id={subscription.id} user_id={user_id}/>
                     </div>
                   </Tab>
                 )}
