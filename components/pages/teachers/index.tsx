@@ -21,6 +21,7 @@ import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 
 const columns = [
+    { name: "", uid: "avatar" },
     { name: "إسم المعلم", uid: "name" },
     { name: "رقم الهاتف", uid: "phone" },
     { name: "رقم واتساب", uid: "whats_app" }, 
