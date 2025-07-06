@@ -42,6 +42,7 @@ type StudentDetailsProps = {
       program_id: number;
       program: string;
       price: number;
+      subscription_status: string;
       instructor: {
         id: number;
         name: string;
@@ -71,8 +72,32 @@ type ChildUser = {
   image: string;
 };
 
+interface Subscription {
+  id: number;
+  program_id: number;
+  program: string;
+  price: number;
+  subscription_status: string;
+  instructor: {
+    id: number;
+    name: string;
+    image: string;
+  };
+  DaysToExpire: number;
+  subscription_date: string;
+  expire_date: string;
+  student_number: number;
+  missed_sessions: number;
+  completed_sessions: number;
+  children_users: {
+    user_id: string;
+    name: string;
+    age: string;
+    image: string;
+  }[]
+}
 
-const ActionsComponent = ({ id, user_id, children_users }: { id: number, user_id: any, children_users:  ChildUser[]}) => {
+const ActionsComponent = ({ id, user_id, children_users, refetchSubscriptions }: { id: number, user_id: any, children_users:  ChildUser[], refetchSubscriptions: () => void;}) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -110,6 +135,7 @@ const ActionsComponent = ({ id, user_id, children_users }: { id: number, user_id
           title: data?.message,
           color: "success",
         });
+        refetchSubscriptions()
       }
     },
     onError: (error) => {
@@ -159,6 +185,10 @@ const ActionsComponent = ({ id, user_id, children_users }: { id: number, user_id
         subscriptionId={id}
         user_id={user_id}
         children_users={children_users}
+        onActionSuccess={() => {
+          refetchSubscriptions()
+          setModalOpen(false);
+        }}
       />
 
       <ConfirmModal
@@ -176,7 +206,7 @@ const ActionsComponent = ({ id, user_id, children_users }: { id: number, user_id
 };
 
 export const Programs = ({
-  subscriptionsData,
+  subscriptionsData: initialSubscriptionsData,
   client_id,
 }: StudentDetailsProps) => {
   const params = useParams();
@@ -187,8 +217,18 @@ export const Programs = ({
     Record<number, any>
   >({});
 
+    const { data: subscriptionsData, refetch } = useQuery({
+    queryKey: ["subscriptions", user_id],
+    queryFn: () =>
+      fetchClient(
+        `client/user/subscriptions/${user_id}`,
+        axios_config
+      ),
+    initialData: initialSubscriptionsData,
+  });
+
   const instructorsResults = useQueries({
-    queries: subscriptionsData.data.map((subscription) => ({
+    queries: subscriptionsData.data.map((subscription: Subscription) => ({
       queryKey: ["instructors", subscription.id],
       queryFn: async () =>
         await fetchClient("client/program/instructors", {
@@ -264,7 +304,7 @@ export const Programs = ({
   };
 
   const reportsResults = useQueries({
-    queries: subscriptionsData.data.map((subscription) => ({
+    queries: subscriptionsData.data.map((subscription: Subscription) => ({
       queryKey: ["programReports", subscription.id],
       queryFn: async () =>
         await fetchClient("client/user/program/reports", {
@@ -278,7 +318,7 @@ export const Programs = ({
   });
 
   const appointmentsResults = useQueries({
-    queries: subscriptionsData.data.map((subscription) => ({
+    queries: subscriptionsData.data.map((subscription: Subscription) => ({
       queryKey: ["programappointments", subscription.id],
       queryFn: async () =>
         await fetchClient(`client/user/appointments/${user_id}`, {
@@ -291,7 +331,7 @@ export const Programs = ({
   });
 
   const assignmentsResults = useQueries({
-    queries: subscriptionsData.data.map((subscription) => ({
+    queries: subscriptionsData.data.map((subscription: Subscription) => ({
       queryKey: ["programassignments", subscription.id],
       queryFn: async () =>
         await fetchClient(`client/user/assignment/${user_id}`, {
@@ -304,7 +344,7 @@ export const Programs = ({
   });
 
   const feedbacksResults = useQueries({
-    queries: subscriptionsData.data.map((subscription) => ({
+    queries: subscriptionsData.data.map((subscription: Subscription) => ({
       queryKey: ["programfeedbacks", subscription.id],
       queryFn: async () =>
         await fetchClient(`client/user/feedback/${user_id}`, {
@@ -317,7 +357,7 @@ export const Programs = ({
   });
 
   const subaccountsResults = useQueries({
-    queries: subscriptionsData.data.map((subscription) => ({
+    queries: subscriptionsData.data.map((subscription: Subscription) => ({
       queryKey: ["programsubaccounts", subscription.id],
       queryFn: async () =>
         await fetchClient(`client/children/users/${user_id}`, {
@@ -331,7 +371,7 @@ export const Programs = ({
 
   return (
     <div className="grid grid-cols-1 gap-8">
-      {subscriptionsData?.data?.map((subscription, index) => {
+      {subscriptionsData?.data?.map((subscription: Subscription, index:number) => {
         const reportResult = reportsResults[index];
         const reportData = reportResult?.data;
         const isLoadingReport = reportResult?.isLoading;
@@ -403,7 +443,7 @@ export const Programs = ({
                 </Link>
               </div>
 
-              <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background col-span-2">
+              <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background">
                 <div className="flex flex-col gap-4 w-1/2">
                   <span className="text-primary text-sm font-bold">الإسم</span>
                   {editModeIndex === index ? (
@@ -475,6 +515,17 @@ export const Programs = ({
                   </Link>
                 )}
               </div>
+
+              <div className="flex items-end justify-between bg-background p-5 rounded-2xl border border-stroke">
+                <div className="flex flex-col gap-4">
+                  <span className="text-primary text-sm font-bold">
+                    حالة الإشتراك
+                  </span>
+                  <div className="text-black-text font-bold text-[15px]">
+                    {subscription.subscription_status}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-center flex-col">
@@ -542,7 +593,7 @@ export const Programs = ({
                           </div>
                         </div>
                       </div>
-                      <ActionsComponent id={subscription.program_id} user_id={user_id} children_users={subscription.children_users}/>
+                      <ActionsComponent id={subscription.program_id} user_id={user_id} children_users={subscription.children_users} refetchSubscriptions={refetch}/>
                     </div>
                   </Tab>
                 )}

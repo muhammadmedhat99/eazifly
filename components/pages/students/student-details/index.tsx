@@ -52,6 +52,7 @@ type StudentDetailsProps = {
       program_id: number;
       program: string;
       price: number;
+      subscription_status: string;
       instructor: {
         id: number;
         name: string;
