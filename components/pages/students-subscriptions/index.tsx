@@ -21,6 +21,7 @@ import { fetchClient } from "@/lib/utils";
 import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
+import { formatDate } from "@/lib/helper";
 
 const columns = [
   { name: "رقم الطلب", uid: "num" },
@@ -29,7 +30,7 @@ const columns = [
   { name: "نوع الإشتراك", uid: "type" },
   { name: "إسم البرنامج", uid: "courses" },
   { name: "قيمة الإشتراك", uid: "price" },
-  { name: "تاريخ الطلب", uid: "date" },
+  { name: "تاريخ الطلب", uid: "created_at" },
   { name: "حالة الطلب", uid: "order_status" },
   { name: <Options />, uid: "actions" },
 ];
@@ -57,32 +58,63 @@ const OptionsComponent = ({ id }: { id: number }) => {
 export const AllStudentsSubscriptions = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+
+  const params = new URLSearchParams();
+
+  if (debouncedSearch) {
+    params.append("search", debouncedSearch);
+  }
+  if (selectedType) {
+    params.append("type", selectedType);
+  }
+  if (selectedStatus) {
+    params.append("status", selectedStatus);
+  }
+
+  const queryString = params.toString();
 
   const { data: studentsSubscriptions, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/order?search=${debouncedSearch}`, axios_config),
-    queryKey: AllQueryKeys.GetAllStudentSubscriptions(debouncedSearch),
+      await fetchClient(
+        `client/order?${queryString}`,
+        axios_config
+      ),
+    queryKey: AllQueryKeys.GetAllStudentSubscriptions(
+      debouncedSearch,
+      selectedType,
+      selectedStatus
+    ),
   });
 
   const formattedData =
-    studentsSubscriptions?.data?.map((item: any) => ({
+  studentsSubscriptions?.data
+    ?.filter((item: any) => {
+      if (selectedStatus === "approved") {
+        return true;
+      }
+      return item.status?.key !== "approved";
+    })
+    .map((item: any) => ({
       id: item.id,
       num: item.id,
       name: `${item.first_name} ${item.last_name}`,
       request_type: {
         name: item?.type.label,
-        color: item?.type.color === "New" ? "primary" : "warning",
+        color: item?.type.color === "primary" ? "primary" : "success",
       },
       type: item?.subscription_type || "N/A",
       courses: item.order_details[0]?.program || "N/A",
       price: `${item.total_after_discount} ${item.currency}`,
-      date: item?.created_at || "N/A",
+      created_at: formatDate(item?.created_at) || "N/A",
       order_status: {
-        name: item.order_details[0]?.status || "N/A",
-        color: item.order_details[0]?.status === "new" ? "primary" : "warning",
+        name: item.status.label || "N/A",
+        color: item.status.color,
       },
       avatar: item.image || "N/A",
     })) || [];
+
   return (
     <div>
       <div className="p-4 flex items-center justify-between flex-wrap">
@@ -136,12 +168,16 @@ export const AllStudentsSubscriptions = () => {
                 <ArrowDown2 size={14} />
               </Button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              <DropdownItem key="show">جديد</DropdownItem>
-              <DropdownItem key="edit">تجديد الإشتراك</DropdownItem>
-              <DropdownItem key="add-to-course">إلغاء الإشتراك</DropdownItem>
+            <DropdownMenu
+              aria-label="Static type"
+              onAction={(key) => setSelectedType(key as string)}
+            >
+              <DropdownItem key="new">جديد</DropdownItem>
+              <DropdownItem key="renew">تجديد</DropdownItem>
+              <DropdownItem key="upgrade">ترقية</DropdownItem>
             </DropdownMenu>
           </Dropdown>
+
           <Dropdown classNames={{ content: "min-w-36" }} showArrow>
             <DropdownTrigger>
               <Button variant="flat" className="font-semibold" radius="sm">
@@ -149,11 +185,13 @@ export const AllStudentsSubscriptions = () => {
                 <ArrowDown2 size={14} />
               </Button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              <DropdownItem key="show">جديد</DropdownItem>
-              <DropdownItem key="edit">معلق</DropdownItem>
-              <DropdownItem key="add-to-course">تم الإشتراك</DropdownItem>
-              <DropdownItem key="change-password">مرفوض</DropdownItem>
+            <DropdownMenu
+              aria-label="Static Actions"
+              onAction={(key) => setSelectedStatus(key as string)}
+            >
+              <DropdownItem key="approved">موافق عليه</DropdownItem>
+              <DropdownItem key="new">جديد</DropdownItem>
+              <DropdownItem key="canceled">ملغي</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
