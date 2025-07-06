@@ -53,12 +53,26 @@ type StudentDetailsProps = {
       student_number: number;
       missed_sessions: number;
       completed_sessions: number;
+      children_users: {
+        user_id: string;
+        name: string;
+        age: string;
+        image: string;
+      }[]
     }[];
   };
   client_id: number;
 };
 
-const ActionsComponent = ({ id, user_id }: { id: number, user_id: any }) => {
+type ChildUser = {
+  user_id: string;
+  name: string;
+  age: string;
+  image: string;
+};
+
+
+const ActionsComponent = ({ id, user_id, children_users }: { id: number, user_id: any, children_users:  ChildUser[]}) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -144,6 +158,7 @@ const ActionsComponent = ({ id, user_id }: { id: number, user_id: any }) => {
         action={selectedAction}
         subscriptionId={id}
         user_id={user_id}
+        children_users={children_users}
       />
 
       <ConfirmModal
@@ -527,7 +542,7 @@ export const Programs = ({
                           </div>
                         </div>
                       </div>
-                      <ActionsComponent id={subscription.id} user_id={user_id}/>
+                      <ActionsComponent id={subscription.program_id} user_id={user_id} children_users={subscription.children_users}/>
                     </div>
                   </Tab>
                 )}

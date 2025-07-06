@@ -63,6 +63,12 @@ type StudentDetailsProps = {
       student_number: number;
       missed_sessions: number;
       completed_sessions: number;
+      children_users: {
+        user_id: string;
+        name: string;
+        age: string;
+        image: string;
+      }[]
     }[];
   };
   actionsData: {

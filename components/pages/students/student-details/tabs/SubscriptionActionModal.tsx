@@ -1,12 +1,14 @@
 "use client";
 
 import { DropzoneField } from "@/components/global/DropZoneField";
-import { postData } from "@/lib/utils";
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, ModalContent, addToast } from "@heroui/react";
-import { useMutation } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, ModalContent, addToast, Tabs, Tab, Checkbox } from "@heroui/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { axios_config } from "@/lib/const";
+import ProgramChangeComponent from "./ProgramChangeComponent";
 
 interface SubscriptionActionModalProps {
     isOpen: boolean;
@@ -14,6 +16,12 @@ interface SubscriptionActionModalProps {
     action: string | null;
     subscriptionId: number | null;
     user_id: string;
+    children_users: {
+        user_id: string;
+        name: string;
+        age: string;
+        image: string;
+    }[]
 }
 
 export default function SubscriptionActionModal({
@@ -21,7 +29,8 @@ export default function SubscriptionActionModal({
     onClose,
     action,
     subscriptionId,
-    user_id
+    user_id,
+    children_users
 }: SubscriptionActionModalProps) {
     const { handleSubmit, control, reset } = useForm({
         defaultValues: {
@@ -31,6 +40,15 @@ export default function SubscriptionActionModal({
         },
     });
 
+    const { data, isLoading } = useQuery({
+        queryKey: ["GetProgramData"],
+        queryFn: async () => await fetchClient(`client/plans/${subscriptionId}`, axios_config),
+    });
+    
+    const [selectedTab, setSelectedTab] = useState<string>(
+        data?.data?.subscripe_days?.[0] || ""
+    );
+    
     const renderContent = () => {
         switch (action) {
             case "renew":
@@ -119,9 +137,13 @@ export default function SubscriptionActionModal({
                 );
             case "change":
                 return (
-                    <div className="flex flex-col gap-3">
-                        <Input label="نوع الاشتراك الجديد" placeholder="أدخل النوع" />
-                    </div>
+                    <ProgramChangeComponent
+                        children_users={children_users}
+                        data={data?.data}
+                        control={control}
+                        selectedTab={selectedTab}
+                        setSelectedTab={setSelectedTab}
+                    />
                 );
             default:
                 return null;
@@ -171,8 +193,78 @@ export default function SubscriptionActionModal({
             },
         },
 
+        change: {
+            endpoint: "client/subscription/change",
+            buildFormData: (data, subscriptionId, userId) => {
+                const formdata = new FormData();
+
+                formdata.append("program_id", subscriptionId?.toString() || "");
+                formdata.append("user_id", userId);
+                formdata.append("paid", data.paid || "");
+                formdata.append("student_number", data.student_number || "");
+
+                if (data.image?.[0]) {
+                    formdata.append("image", data.image[0]);
+                }
+
+                if (data.plan_id) {
+                    formdata.append("plan_id", data.plan_id.toString());
+                }
+
+                if (data.users_ids?.length > 0) {
+                    data.users_ids.forEach((id: string, index: number) => {
+                        formdata.append(`users_ids[${index}]`, id);
+                    });
+                }
+
+                return formdata;
+            },
+        },
+
     };
 
+    const createPlanMutation = useMutation({
+        mutationFn: async (payload: any) => {
+            const myHeaders = new Headers();
+            myHeaders.append("local", "ar");
+            myHeaders.append("Accept", "application/json");
+            myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+            const formdata = new FormData();
+            formdata.append("subscripe_days", payload.subscripe_days);
+            formdata.append("program_id", payload.program_id);
+            formdata.append("number_of_session_per_week", payload.number_of_session_per_week);
+            formdata.append("duration", payload.duration);
+
+            return await postData("client/program/plan", formdata, myHeaders);
+        },
+        onSuccess: (data, variables) => {
+            if (data?.status === 404) {
+                addToast({
+                    title: data.message || "الخطة غير موجودة",
+                    color: "warning",
+                });
+                return; 
+            }
+
+            const planId = data?.data?.id;
+
+            const finalFormValues = {
+                ...variables.originalData,
+                plan_id: planId,
+            };
+
+            handleAction.mutate(finalFormValues);
+        },
+        onError: (error) => {
+            console.log("error create plan ===>", error);
+            addToast({
+                title: "عذرا حدث خطأ ما",
+                color: "danger",
+            });
+        },
+    });
+    
     const handleAction = useMutation({
         mutationFn: (submitData: any) => {
             if (!action || !subscriptionId) return Promise.reject("Missing data");
@@ -219,12 +311,24 @@ export default function SubscriptionActionModal({
     });
 
 
-    const onSubmit = (data: any) => handleAction.mutate(data);
+    const onSubmit = (data: any) => {
+        if (action === "change") {
+            createPlanMutation.mutate({
+                subscripe_days: data.subscripe_days,
+                program_id: subscriptionId,
+                number_of_session_per_week: data.number_of_session_per_week,
+                duration: data.duration,
+                originalData: data,
+            });
+        } else {
+            handleAction.mutate(data);
+        }
+    };
 
     const [scrollBehavior, setScrollBehavior] = useState<"inside" | "normal" | "outside">("inside");
 
     return (
-        <Modal isOpen={isOpen} scrollBehavior={scrollBehavior} onOpenChange={(open) => !open && onClose()} size="xl">
+        <Modal isOpen={isOpen} scrollBehavior={scrollBehavior} onOpenChange={(open) => !open && onClose()} size={action === "change" ? "4xl" : "xl"}>
             <ModalContent>
                 <ModalHeader className="text-lg font-bold text-[#272727] flex justify-center">
                     {action ? getActionTitle(action) : "إجراء"}
@@ -252,7 +356,7 @@ function getActionTitle(action: string) {
         case "extend":
             return "تمديد الاشتراك";
         case "change":
-            return "تغيير الاشتراك";
+            return "تغيير إشتراك برنامج";
         case "cancel":
             return "إنهاء الاشتراك";
         default:
