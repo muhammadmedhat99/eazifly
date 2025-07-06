@@ -13,6 +13,7 @@ import ProgramChangeComponent from "./ProgramChangeComponent";
 interface SubscriptionActionModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onActionSuccess?: () => void;
     action: string | null;
     subscriptionId: number | null;
     user_id: string;
@@ -30,7 +31,8 @@ export default function SubscriptionActionModal({
     action,
     subscriptionId,
     user_id,
-    children_users
+    children_users,
+    onActionSuccess
 }: SubscriptionActionModalProps) {
     const { handleSubmit, control, reset } = useForm({
         defaultValues: {
@@ -299,6 +301,7 @@ export default function SubscriptionActionModal({
                 });
                 reset();
                 onClose();
+                onActionSuccess?.();
             }
         },
         onError: (error) => {
