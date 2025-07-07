@@ -97,18 +97,23 @@ interface Subscription {
   }[]
 }
 
-const ActionsComponent = ({ id, user_id, children_users, refetchSubscriptions }: { id: number, user_id: any, children_users:  ChildUser[], refetchSubscriptions: () => void;}) => {
+const ActionsComponent = ({ id, user_id, children_users, subscription_status, refetchSubscriptions }: { id: number, user_id: any, children_users:  ChildUser[], subscription_status: any, refetchSubscriptions: () => void;}) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<string | null>(null);
 
   const handleActionClick = (actionKey: string) => {
-    if (actionKey === "cancel") {
-      setShowConfirm(true);
+    if (["cancel", "resume"].includes(actionKey)) {
+      setConfirmAction(actionKey);
     } else {
       setSelectedAction(actionKey);
       setModalOpen(true);
     }
+  };
+
+  const confirmMessages: Record<string, string> = {
+    cancel: "هل أنت متأكد أنك تريد إنهاء الاشتراك؟",
+    resume: "هل أنت متأكد أنك تريد استئناف الاشتراك؟",
   };
 
   const handleCancel = useMutation({
@@ -147,8 +152,49 @@ const ActionsComponent = ({ id, user_id, children_users, refetchSubscriptions }:
     },
   });
 
-  const handleCancelAction = () => {
-    handleCancel.mutate();
+  const handleResume = useMutation({
+    mutationFn: () => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      var formdata = new FormData();
+      formdata.append("program_id", id.toString());
+      formdata.append("user_id", user_id);
+
+      return postData("client/subscription/resume", formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+        refetchSubscriptions();
+      }
+    },
+    onError: (error) => {
+      console.log(" error ===>>", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
+  const handleConfirmAction = () => {
+    if (confirmAction === "cancel") {
+      handleCancel.mutate();
+    } else if (confirmAction === "resume") {
+      handleResume.mutate();
+    }
+    setConfirmAction(null);
   };
 
   return (
@@ -160,21 +206,37 @@ const ActionsComponent = ({ id, user_id, children_users, refetchSubscriptions }:
           </button>
         </DropdownTrigger>
         <DropdownMenu aria-label="Static Actions">
-          <DropdownItem key="renew" onClick={() => handleActionClick("renew")}>
-            تجديد
-          </DropdownItem>
-          <DropdownItem key="Pause" onClick={() => handleActionClick("Pause")}>
-            إيقاف مؤقت
-          </DropdownItem>
-          <DropdownItem key="extend" onClick={() => handleActionClick("extend")}>
-            تمديد الاشتراك
-          </DropdownItem>
-          <DropdownItem key="change" onClick={() => handleActionClick("change")}>
-            تغيير الاشتراك
-          </DropdownItem>
-          <DropdownItem key="cancel" onClick={() => handleActionClick("cancel")}>
-            إنهاء الاشتراك
-          </DropdownItem>
+          {subscription_status === "cancelled" ? (
+            <>
+              <DropdownItem key="renew" onClick={() => handleActionClick("renew")}>
+                تجديد
+              </DropdownItem>
+              <DropdownItem key="change" onClick={() => handleActionClick("change")}>
+                تغيير الاشتراك
+              </DropdownItem>
+            </>
+          ) : (
+            <>
+              <DropdownItem key="renew" onClick={() => handleActionClick("renew")}>
+                تجديد
+              </DropdownItem>
+              <DropdownItem key="change" onClick={() => handleActionClick("change")}>
+                تغيير الاشتراك
+              </DropdownItem>
+              {subscription_status !== "freeze" && <DropdownItem key="Pause" onClick={() => handleActionClick("Pause")}>
+                إيقاف مؤقت
+              </DropdownItem>}
+              {subscription_status === "freeze" && <DropdownItem key="resume" onClick={() => handleActionClick("resume")}>
+                إستئناف الاشتراك
+              </DropdownItem>}
+              <DropdownItem key="extend" onClick={() => handleActionClick("extend")}>
+                تمديد الاشتراك
+              </DropdownItem>
+              <DropdownItem key="cancel" onClick={() => handleActionClick("cancel")}>
+                إنهاء الاشتراك
+              </DropdownItem>
+            </>
+          )}
         </DropdownMenu>
       </Dropdown>
 
@@ -192,15 +254,17 @@ const ActionsComponent = ({ id, user_id, children_users, refetchSubscriptions }:
       />
 
       <ConfirmModal
-        open={showConfirm}
-        title="إنهاء الاشتراك"
-        message="هل أنت متأكد أنك تريد إنهاء الاشتراك؟"
-        onConfirm={() => {
-          handleCancelAction();
-          setShowConfirm(false);
-        }}
-        onCancel={() => setShowConfirm(false)}
+        open={!!confirmAction}
+        title={
+          confirmAction === "resume"
+            ? "استئناف الاشتراك"
+            : "إنهاء الاشتراك"
+        }
+        message={confirmAction ? confirmMessages[confirmAction] : ""}
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(null)}
       />
+
     </>
   );
 };
@@ -592,8 +656,8 @@ export const Programs = ({
                             {subscription.expire_date}
                           </div>
                         </div>
-                      </div>
-                      <ActionsComponent id={subscription.program_id} user_id={user_id} children_users={subscription.children_users} refetchSubscriptions={refetch}/>
+                      </div> 
+                      <ActionsComponent id={subscription.program_id} user_id={user_id} children_users={subscription.children_users} subscription_status={subscription.subscription_status} refetchSubscriptions={refetch}/>
                     </div>
                   </Tab>
                 )}
