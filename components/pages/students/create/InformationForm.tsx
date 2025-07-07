@@ -42,13 +42,14 @@ const schema = yup
       .email("ادخل بريد إلكتروني صحيح")
       .required("ادخل بريد إلكتروني"),
     phone: yup.string().required("ادخل رقم الهاتف"),
+    country_code: yup.string().required("ادخل كود الدولة"),
     whats_app: yup.string().required("ادخل رقم الواتس آب"),
     password: yup.string().required("ادخل كلمة المرور"),
     password_confirmation: yup
       .string()
       .required("ادخل تأكيد كلمة المرور")
       .oneOf([yup.ref("password")], "كلمة المرور غير متطابقة"),
-    gender: yup.string().required("برجاء اختيار الجنس"),
+    gender: yup.string().required("برجاء اختيار النوع"),
     age: yup.string().required("ادخل العمر"),
     country: yup.string().required("إختر الدولة"),
     image: yup
@@ -95,6 +96,7 @@ export const InformationForm = ({
       formdata.append("user_name", submitData.user_name);
       formdata.append("email", submitData.email);
       formdata.append("phone", submitData.phone);
+      formdata.append("country_code", submitData.country_code);
       formdata.append("whats_app", submitData.whats_app);
       formdata.append("password", submitData.password);
       formdata.append(
@@ -111,7 +113,18 @@ export const InformationForm = ({
       return postData("client/user/store", formdata, myHeaders);
     },
     onSuccess: (data) => {
-      if (data.message !== "success") {
+      if (data.message && typeof data.message === "object" && !Array.isArray(data.message)) {
+        const messagesObj = data.message as Record<string, string[]>;
+
+        Object.entries(messagesObj).forEach(([field, messages]) => {
+          messages.forEach((msg) => {
+            addToast({
+              title: `${field}: ${msg}`,
+              color: "danger",
+            });
+          });
+        });
+      } else if (data.message !== "success") {
         addToast({
           title: "error",
           color: "danger",
@@ -132,7 +145,7 @@ export const InformationForm = ({
         title: "عذرا حدث خطأ ما",
         color: "danger",
       });
-    },
+},
   });
 
   const { data, isLoading } = useQuery({
@@ -202,63 +215,74 @@ export const InformationForm = ({
           inputWrapper: "shadow-none",
           base: "mb-4",
         }}
-      />
-      <Input
-        label="رقم الهاتف"
-        placeholder="نص الكتابه"
-        type="text"
-        {...register("phone")}
-        isInvalid={!!errors.phone?.message}
-        errorMessage={errors.phone?.message}
-        labelPlacement="outside"
-        classNames={{
-          label: "text-[#272727] font-bold text-sm",
-          inputWrapper: "shadow-none",
-          base: "mb-4",
-        }}
-        endContent={
-          data?.data?.length > 0 && (
-            <Select
-              className="max-w-40 -me-3 bg-white"
-              classNames={{
-                trigger: "rounded-s-none border-1 shadow-none",
-                listbox: "w-full",
-                listboxWrapper: "w-full",
-              }}
-              variant="bordered"
-              renderValue={(items) => {
-                return items?.map((item: any) => (
-                  <div key={item.id} className="flex items-center gap-2">
-                    <Avatar
-                      alt="country flag"
-                      className="flex-shrink-0 w-8 h-6"
-                      radius="none"
-                      src={item.image}
-                    />
-                  </div>
-                ));
-              }}
-            >
-              {data?.data?.map((country: any) => (
-                <SelectItem
-                  key={country.id}
-                  startContent={
-                    <Avatar
-                      className="w-6 h-4"
-                      radius="none"
-                      src={country?.image}
-                      alt="country flag"
-                    />
-                  }
-                  className="w-full"
-                >
-                  {country.phone_code}
-                </SelectItem>
-              ))}
-            </Select>
-          )
-        }
-      />
+        />
+        <Input
+          label="رقم الهاتف"
+          placeholder="نص الكتابه"
+          type="text"
+          {...register("phone")}
+          isInvalid={!!errors.phone?.message}
+          errorMessage={errors.phone?.message}
+          labelPlacement="outside"
+          classNames={{
+            label: "text-[#272727] font-bold text-sm",
+            inputWrapper: "shadow-none",
+            base: "mb-4",
+          }}
+          endContent={
+            data?.data?.length > 0 && (
+              <Controller
+                name="country_code"
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    selectedKeys={field.value ? [field.value] : []}
+                    onSelectionChange={(keys) => {
+                      const selectedKey = Array.from(keys)[0];
+                      field.onChange(selectedKey);
+                    }}
+                    className="max-w-40 -me-3 bg-white"
+                    isInvalid={!!errors.country_code?.message}
+                    errorMessage={errors.country_code?.message}
+                    classNames={{
+                      trigger: "rounded-s-none border-1 shadow-none",
+                      listbox: "w-full",
+                      listboxWrapper: "w-full",
+                    }}
+                    variant="bordered"
+                    renderValue={(items) =>
+                      items?.map((item: any) => (
+                        <div key={item.key} className="flex items-center gap-2">
+                          {item.props.startContent}
+                          <span>{item.props.children}</span>
+                        </div>
+                      ))
+                    }
+                  >
+                    {data?.data?.map((country: any) => (
+                      <SelectItem
+                        key={country.phone_code}
+                        startContent={
+                          <Avatar
+                            className="w-6 h-4"
+                            radius="none"
+                            src={country?.image}
+                            alt="country flag"
+                          />
+                        }
+                        className="w-full"
+                      >
+                        {country.phone_code}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                )}
+              />
+            )
+          }
+        />
       <Input
         label="رقم الواتس آب"
         placeholder="نص الكتابه"
@@ -326,9 +350,9 @@ export const InformationForm = ({
               field.onChange(Array.from(keys)[0]);
               console.log(Array.from(keys)[0]);
             }}
-            label="الجنس"
+            label="النوع"
             labelPlacement="outside"
-            placeholder="اختر الجنس"
+            placeholder="اختر النوع"
             isInvalid={!!errors.gender?.message}
             errorMessage={errors.gender?.message}
             classNames={{
