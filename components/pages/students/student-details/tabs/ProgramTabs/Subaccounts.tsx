@@ -1,30 +1,34 @@
 "use client";
 import { ArrowLeft2, ArrowRight2, Trash } from "iconsax-reactjs";
 import { Loader } from "@/components/global/Loader";
-import { Tab, Tabs } from "@heroui/react";
+import { addToast, Tab, Tabs } from "@heroui/react";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchClient } from "@/lib/utils";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { Appointments } from "./appointments";
 import { Assignments } from "./assignments";
 import { Feedbacks } from "./feedbacks";
 import { Reports } from "./reports";
 import { getCookie } from "cookies-next";
+import ConfirmModal from "@/components/global/ConfirmModal";
 
 type appointmentsProps = {
   subaccountData?: any;
   isLoadingsubaccount: boolean;
   program_id: number;
+  refetchSubaccounts?: () => void;
 };
 
 export const Subaccounts = ({
   subaccountData,
   isLoadingsubaccount,
   program_id,
+  refetchSubaccounts,
 }: appointmentsProps) => {
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [confirmAction, setConfirmAction] = useState(false);
 
   const ClientId = getCookie("client_id") as string;
 
@@ -39,9 +43,11 @@ export const Subaccounts = ({
   };
 
   const currentStudent = students[currentIndex];
+  const hasCurrentStudent = !!currentStudent?.id;
+
 
   const { data: appointmentData, isLoading: isLoadingappointment } = useQuery({
-    queryKey: ["subaccountAppointments", currentStudent.id, program_id],
+    queryKey: ["subaccountAppointments", currentStudent?.id, program_id],
     queryFn: async () =>
       await fetchClient(`client/user/appointments/${currentStudent.id}`, {
         ...axios_config,
@@ -49,11 +55,11 @@ export const Subaccounts = ({
           program_id: program_id,
         },
       }),
-    enabled: selectedTab === "appointments" && !!currentStudent?.id,
+    enabled: selectedTab === "appointments" && hasCurrentStudent,
   });
 
   const { data: reportData, isLoading: isLoadingReport } = useQuery({
-    queryKey: ["subaccountReports", currentStudent.id, program_id],
+    queryKey: ["subaccountReports", currentStudent?.id, program_id],
     queryFn: async () =>
       await fetchClient(`client/user/program/reports`, {
         ...axios_config,
@@ -62,11 +68,11 @@ export const Subaccounts = ({
           program_id: program_id,
         },
       }),
-    enabled: selectedTab === "reports" && !!currentStudent?.id,
+    enabled: selectedTab === "appointments" && hasCurrentStudent,
   });
 
   const { data: assignmentData, isLoading: isLoadingassignment } = useQuery({
-    queryKey: ["subaccountssignments", currentStudent.id, program_id],
+    queryKey: ["subaccountssignments", currentStudent?.id, program_id],
     queryFn: async () =>
       await fetchClient(`client/user/assignment/${currentStudent.id}`, {
         ...axios_config,
@@ -74,11 +80,11 @@ export const Subaccounts = ({
           program_id: program_id,
         },
       }),
-    enabled: selectedTab === "assignments" && !!currentStudent?.id,
+    enabled: selectedTab === "appointments" && hasCurrentStudent,
   });
 
   const { data: feedbackData, isLoading: isLoadingfeedback } = useQuery({
-    queryKey: ["subaccountfeedbacks", currentStudent.id, program_id],
+    queryKey: ["subaccountfeedbacks", currentStudent?.id, program_id],
     queryFn: async () =>
       await fetchClient(`client/user/feedback/${currentStudent.id}`, {
         ...axios_config,
@@ -86,8 +92,49 @@ export const Subaccounts = ({
           program_id: program_id,
         },
       }),
-    enabled: selectedTab === "feedbacks" && !!currentStudent?.id,
+    enabled: selectedTab === "appointments" && hasCurrentStudent,
   });
+
+   const handleRemove = useMutation({
+    mutationFn: () => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      var formdata = new FormData();
+      formdata.append("program_id", program_id.toString());
+      formdata.append("user_id", currentStudent.id);
+
+      return postData("client/remove/user/from/program", formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+        refetchSubaccounts?.();
+      }
+    },
+    onError: (error) => {
+      console.log(" error ===>>", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
+  const handleConfirmAction = () => {
+    handleRemove.mutate();
+    setConfirmAction(false);
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -139,7 +186,7 @@ export const Subaccounts = ({
                 <span className="text-sm font-bold">
                   {currentStudent.first_name} {currentStudent.last_name}
                 </span>
-                <button>
+                <button onClick={() => setConfirmAction(true)}>
                   <Trash className="text-red-500" />
                 </button>
               </div>
@@ -201,6 +248,13 @@ export const Subaccounts = ({
           لا توجد بيانات حالية للعرض
         </div>
       )}
+      <ConfirmModal
+        open={confirmAction}
+        title={"حذف اشتراك الطالب"}
+        message={"هل أنت متأكد أنك تريد إلغاء الاشتراك؟"}
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(false)}
+      />
     </div>
   );
 };
