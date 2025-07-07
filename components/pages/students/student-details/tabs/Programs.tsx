@@ -695,6 +695,7 @@ export const Programs = ({
                       isLoadingfeedback={isLoadingfeedback}
                       feedbackData={feedbackData}
                       client_id={client_id}
+                      refetchFeedbacks={feedbackResult?.refetch}
                     />
                   </Tab>
                 )}
