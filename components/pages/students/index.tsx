@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
@@ -58,7 +58,8 @@ const OptionsComponent = ({ id }: { id: number }) => {
 export const AllStudents = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
-  const [selectedStatus, setSelectedStatus] = useState("1");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [sortKey, setSortKey] = useState<string | null>(null);
 
   const { data: studentsData, isLoading } = useQuery({
     queryFn: async () =>
@@ -80,12 +81,54 @@ export const AllStudents = () => {
       last_active: item.last_active_at || "N/A",
       status: {
         name: item.status_label?.label || "N/A",
+        key: item.status_label?.key || null,
         color:
           item?.status_label?.color === "info"
             ? "warning"
             : item?.status_label?.color || "danger",
       },
     })) || [];
+
+  const filteredData = useMemo(() => {
+    if (selectedStatus === "all") return formattedData;
+
+    return formattedData.filter((item: any) => {
+      const userStatusKey = item?.status?.key;
+
+      return userStatusKey === selectedStatus;
+    });
+  }, [formattedData, selectedStatus]);
+
+  const sortedData = useMemo(() => {
+    let dataToSort = [...filteredData];
+
+    if (!sortKey) return dataToSort;
+
+    return dataToSort.sort((a, b) => {
+      let aVal = a[sortKey];
+      let bVal = b[sortKey];
+
+      if (sortKey === "status") {
+        aVal = a.status?.name || "";
+        bVal = b.status?.name || "";
+      }
+
+      if (sortKey === "phone") {
+        aVal = aVal || "";
+        bVal = bVal || "";
+        return aVal.localeCompare(bVal, "ar", { numeric: true });
+      }
+
+      if (sortKey === "last_active") {
+        return new Date(bVal).getTime() - new Date(aVal).getTime();
+      }
+
+      return (aVal || "").toString().localeCompare(
+        (bVal || "").toString(),
+        "ar"
+      );
+    });
+  }, [filteredData, sortKey]);
 
   return (
     <>
@@ -120,62 +163,65 @@ export const AllStudents = () => {
                 ترتيب حسب
               </Button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              <DropdownItem key="show">الإسم</DropdownItem>
-              <DropdownItem key="edit">رقم الهاتف</DropdownItem>
-              <DropdownItem key="add-to-course">التقييم</DropdownItem>
-              <DropdownItem key="change-password">
-                تاريخ تجديد الإشتراك
-              </DropdownItem>
-              <DropdownItem key="send-mail">الحالة</DropdownItem>
+            <DropdownMenu
+              aria-label="Static Actions"
+              onAction={(key) => setSortKey(key as string)}
+            >
+              <DropdownItem key="name">الإسم</DropdownItem>
+              <DropdownItem key="phone">رقم الهاتف</DropdownItem>
+              <DropdownItem key="email">البريد الإلكتروني</DropdownItem>
+              <DropdownItem key="last_active">أخر ظهور</DropdownItem>
+              <DropdownItem key="status">الحالة</DropdownItem>
             </DropdownMenu>
           </Dropdown>
+
         </div>
 
         <div className="flex gap-2">
           <Button
-            id="1"
+            id="all"
             variant="flat"
-            color={selectedStatus === "1" ? "primary" : "default"}
+            color={selectedStatus === "all" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
             الكل
           </Button>
           <Button
-            id="2"
+            id="active"
             variant="flat"
-            color={selectedStatus === "2" ? "primary" : "default"}
+            color={selectedStatus === "active" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
             نشط
           </Button>
           <Button
-            id="3"
+            id="inactive"
             variant="flat"
-            color={selectedStatus === "3" ? "primary" : "default"}
+            color={selectedStatus === "inactive" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
             متوقف
           </Button>
           <Button
-            id="4"
+            id="expired"
             variant="flat"
-            color={selectedStatus === "4" ? "primary" : "default"}
+            color={selectedStatus === "expired" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
-            ملغي
+            منتهي
+          </Button>
+          <Button
+            id="no_subscriptions"
+            variant="flat"
+            color={selectedStatus === "no_subscriptions" ? "primary" : "default"}
+            className="font-semibold"
+            onPress={(e) => setSelectedStatus(e.target.id)}
+          >
+            غير مشترك
           </Button>
         </div>
       </div>
@@ -184,7 +230,7 @@ export const AllStudents = () => {
       ) : (
         <TableComponent
           columns={columns}
-          data={formattedData}
+          data={sortedData}
           ActionsComponent={OptionsComponent}
         />
       )}
