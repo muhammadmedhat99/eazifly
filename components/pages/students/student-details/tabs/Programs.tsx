@@ -709,6 +709,7 @@ export const Programs = ({
                       subaccountData={subaccountData}
                       isLoadingsubaccount={isLoadingsubaccount}
                       program_id={subscription?.program_id}
+                      refetchSubaccounts={subaccountResult?.refetch}
                     />
                   </Tab>
                 )}
