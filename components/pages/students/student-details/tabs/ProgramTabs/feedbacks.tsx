@@ -22,12 +22,14 @@ type feedbacksProps = {
   feedbackData?: any;
   isLoadingfeedback: boolean;
   client_id: number;
+  refetchFeedbacks?: () => void;
 };
 
 export const Feedbacks = ({
   feedbackData,
   isLoadingfeedback,
   client_id,
+  refetchFeedbacks
 }: feedbacksProps) => {
   const params = useParams();
   const user_id = params.id;
@@ -62,6 +64,7 @@ export const Feedbacks = ({
         });
         setIsModalOpen(false);
         setFeedback("");
+        refetchFeedbacks?.();
       }
     },
     onError: (error) => {
