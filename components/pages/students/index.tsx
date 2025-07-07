@@ -60,11 +60,12 @@ export const AllStudents = () => {
   const debouncedSearch = useDebounce(search, 500);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [sortKey, setSortKey] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: studentsData, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/user?search=${debouncedSearch}`, axios_config),
-    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch),
+      await fetchClient(`client/user?search=${debouncedSearch}&page=${currentPage}`, axios_config),
+    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch, currentPage),
   });
 
   const formattedData =
@@ -236,7 +237,12 @@ export const AllStudents = () => {
       )}
 
       <div className="my-10 px-6">
-        <CustomPagination />
+        <CustomPagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          last_page={studentsData?.meta?.last_page}
+          total={studentsData?.meta?.total}
+        />
       </div>
     </>
   );
