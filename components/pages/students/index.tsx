@@ -56,17 +56,38 @@ const OptionsComponent = ({ id }: { id: number }) => {
 };
 
 export const AllStudents = () => {
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 500);
+  const [nameSearch, setNameSearch] = useState("");
+  const [phoneSearch, setPhoneSearch] = useState("");
+  const debouncedNameSearch = useDebounce(nameSearch, 500);
+  const debouncedPhoneSearch = useDebounce(phoneSearch, 500);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const params: Record<string, string | number> = {
+    page: currentPage,
+  };
+
+  if (debouncedNameSearch) {
+    params.name = debouncedNameSearch;
+  }
+
+  if (debouncedPhoneSearch) {
+    params.phone = debouncedPhoneSearch;
+  }
+
   const { data: studentsData, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/user?search=${debouncedSearch}&page=${currentPage}`, axios_config),
-    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch, currentPage),
-  });
+      await fetchClient(`client/user`, {
+        ...axios_config,
+        params,
+      }),
+    queryKey: AllQueryKeys.GetAllUsers(
+      debouncedNameSearch,
+      debouncedPhoneSearch,
+      currentPage
+    ),
+});
 
   const formattedData =
     studentsData?.data?.map((item: any) => ({
@@ -135,20 +156,29 @@ export const AllStudents = () => {
     <>
       <div className="p-4 flex items-center justify-between flex-wrap">
         <div className="flex items-center gap-2">
-          <div className="relative min-w-80">
+          <div className="relative w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <SearchNormal1
-                size="18"
-                className="text-gray-400"
-                variant="Outline"
-              />
+              <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
             </div>
             <input
               type="text"
-              placeholder="بحث..."
+              placeholder="بحث بالاسم..."
               className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={nameSearch}
+              onChange={(e) => setNameSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="relative w-48">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
+            </div>
+            <input
+              type="text"
+              placeholder="بحث برقم الهاتف..."
+              className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
+              value={phoneSearch}
+              onChange={(e) => setPhoneSearch(e.target.value)}
             />
           </div>
 
