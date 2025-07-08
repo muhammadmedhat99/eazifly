@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
@@ -58,62 +58,129 @@ const OptionsComponent = ({ id }: { id: number }) => {
 export const AllStudentsSubscriptions = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const params = new URLSearchParams();
+  const params: Record<string, string | number> = {
+    page: currentPage,
+  };
 
   if (debouncedSearch) {
-    params.append("search", debouncedSearch);
+    params.name = debouncedSearch;
   }
-  if (selectedType) {
-    params.append("type", selectedType);
+  if (selectedType && selectedType !== "all") {
+    params.type = selectedType;
   }
-  if (selectedStatus) {
-    params.append("status", selectedStatus);
+  if (selectedStatus && selectedStatus !== "all") {
+    params.status = selectedStatus;
+  }
+  if (currentPage) {
+    params.page = currentPage;
   }
 
-  const queryString = params.toString();
 
   const { data: studentsSubscriptions, isLoading } = useQuery({
     queryFn: async () =>
       await fetchClient(
-        `client/order?${queryString}`,
-        axios_config
-      ),
+        `client/order`, {
+        ...axios_config,
+        params,
+      }),
     queryKey: AllQueryKeys.GetAllStudentSubscriptions(
       debouncedSearch,
       selectedType,
-      selectedStatus
+      selectedStatus,
+      currentPage
     ),
   });
 
   const formattedData =
-  studentsSubscriptions?.data
-    ?.filter((item: any) => {
-      if (selectedStatus === "approved") {
-        return true;
+    studentsSubscriptions?.data
+      .map((item: any) => ({
+        id: item.id,
+        num: item.id,
+        name: item.user.name,
+        request_type: {
+          name: item?.type.label,
+          key: item.type?.key || null,
+          color: item?.type.color === "primary" ? "primary" : "success",
+        },
+        type: item?.subscription_type || "N/A",
+        courses: item.order_details[0]?.program || "N/A",
+        price: `${item.total_after_discount} ${item.currency}`,
+        created_at: formatDate(item?.created_at) || "N/A",
+        order_status: {
+          name: item.status.label || "N/A",
+          key: item.status?.key || null,
+          color: item.status.color,
+        },
+        avatar: item.image || "N/A",
+      })) || [];
+
+  const filteredData = useMemo(() => {
+    return formattedData.filter((item: any) => {
+      let statusMatch = true;
+      let typeMatch = true;
+
+      if (selectedStatus && selectedStatus !== "all") {
+        const userStatusKey = item?.order_status?.key;
+        statusMatch = userStatusKey === selectedStatus;
       }
-      return item.status?.key !== "approved";
-    })
-    .map((item: any) => ({
-      id: item.id,
-      num: item.id,
-      name: `${item.first_name} ${item.last_name}`,
-      request_type: {
-        name: item?.type.label,
-        color: item?.type.color === "primary" ? "primary" : "success",
-      },
-      type: item?.subscription_type || "N/A",
-      courses: item.order_details[0]?.program || "N/A",
-      price: `${item.total_after_discount} ${item.currency}`,
-      created_at: formatDate(item?.created_at) || "N/A",
-      order_status: {
-        name: item.status.label || "N/A",
-        color: item.status.color,
-      },
-      avatar: item.image || "N/A",
-    })) || [];
+
+      if (selectedType && selectedType !== "all") {
+        const userTypeKey = item?.request_type?.key;
+        statusMatch = userTypeKey === selectedType;
+      }
+
+      return statusMatch && typeMatch;
+    });
+  }, [formattedData, selectedStatus, selectedType]);
+
+  const sortedData = useMemo(() => {
+    let dataToSort = [...filteredData];
+
+    if (!sortKey) return dataToSort;
+
+    return dataToSort.sort((a, b) => {
+      let aVal = a[sortKey];
+      let bVal = b[sortKey];
+
+      if (sortKey === "status") {
+        aVal = a.order_status?.name || "";
+        bVal = b.order_status?.name || "";
+        return aVal.localeCompare(bVal, "ar");
+      }
+
+      if (sortKey === "created_at") {
+        return new Date(bVal).getTime() - new Date(aVal).getTime();
+      }
+
+      if (sortKey === "courses") {
+        aVal = a.courses || "";
+        bVal = b.courses || "";
+        return aVal.localeCompare(bVal, "ar");
+      }
+
+      if (sortKey === "price") {
+        const getPriceValue = (priceStr: any) => {
+          if (!priceStr) return 0;
+          const match = priceStr.match(/[\d,.]+/);
+          return match ? parseFloat(match[0].replace(/,/g, "")) : 0;
+        };
+
+        const aPrice = getPriceValue(a.price);
+        const bPrice = getPriceValue(b.price);
+        return aPrice - bPrice;
+      }
+
+      return (aVal || "").toString().localeCompare(
+        (bVal || "").toString(),
+        "ar"
+      );
+    });
+  }, [filteredData, sortKey]);
 
   return (
     <div>
@@ -129,7 +196,7 @@ export const AllStudentsSubscriptions = () => {
             </div>
             <input
               type="text"
-              placeholder="بحث..."
+              placeholder="بحث بالإسم..."
               className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -148,14 +215,15 @@ export const AllStudentsSubscriptions = () => {
                 ترتيب حسب
               </Button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              <DropdownItem key="show">الإسم</DropdownItem>
-              <DropdownItem key="edit">رقم الهاتف</DropdownItem>
-              <DropdownItem key="add-to-course">التقييم</DropdownItem>
-              <DropdownItem key="change-password">
-                تاريخ تجديد الإشتراك
-              </DropdownItem>
-              <DropdownItem key="send-mail">الحالة</DropdownItem>
+            <DropdownMenu
+              aria-label="Static Actions"
+              onAction={(key) => setSortKey(key as string)}
+            >
+              <DropdownItem key="name">الإسم</DropdownItem>
+              <DropdownItem key="courses">إسم البرنامج</DropdownItem>
+              <DropdownItem key="price">قيمة الإشتراك</DropdownItem>
+              <DropdownItem key="created_at">تاريخ الطلب</DropdownItem>
+              <DropdownItem key="status">الحالة</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
@@ -172,6 +240,7 @@ export const AllStudentsSubscriptions = () => {
               aria-label="Static type"
               onAction={(key) => setSelectedType(key as string)}
             >
+              <DropdownItem key="all">الكل</DropdownItem>
               <DropdownItem key="new">جديد</DropdownItem>
               <DropdownItem key="renew">تجديد</DropdownItem>
               <DropdownItem key="upgrade">ترقية</DropdownItem>
@@ -189,6 +258,7 @@ export const AllStudentsSubscriptions = () => {
               aria-label="Static Actions"
               onAction={(key) => setSelectedStatus(key as string)}
             >
+              <DropdownItem key="all">الكل</DropdownItem>
               <DropdownItem key="approved">موافق عليه</DropdownItem>
               <DropdownItem key="new">جديد</DropdownItem>
               <DropdownItem key="canceled">ملغي</DropdownItem>
@@ -202,13 +272,18 @@ export const AllStudentsSubscriptions = () => {
       ) : (
         <TableComponent
           columns={columns}
-          data={formattedData}
+          data={sortedData}
           ActionsComponent={OptionsComponent}
         />
       )}
 
       <div className="my-10 px-6">
-        <CustomPagination />
+        <CustomPagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          last_page={studentsSubscriptions?.meta?.last_page}
+          total={studentsSubscriptions?.meta?.total}
+        />
       </div>
     </div>
   );
