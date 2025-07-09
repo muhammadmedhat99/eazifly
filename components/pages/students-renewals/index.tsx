@@ -112,7 +112,9 @@ export const Renewals = () => {
       phone: item.user_phone,
       email: item.user_email,
       },
-      last_contact_date: formatDate(item.last_contact_date),
+      last_contact_date: item.last_contact_date
+        ? formatDate(item.last_contact_date)
+        : null,
       last_contact_days: item.last_contact_days,
       renewal_amount: item.subscriped_price,
       renewal_date: formatDate(item.expire_date),
@@ -176,6 +178,9 @@ export const Renewals = () => {
             </DropdownTrigger>
             <DropdownMenu aria-label="Static Actions">
               <DropdownItem key="show">الإسم</DropdownItem>
+              <DropdownItem key="date">أخر موعد تواصل</DropdownItem>
+              <DropdownItem key="price">قيمة التجديد</DropdownItem>
+              <DropdownItem key="status">حالة التجديد</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
