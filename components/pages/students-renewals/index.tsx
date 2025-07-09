@@ -63,6 +63,11 @@ export const Renewals = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [studentDetails, setStudentDetails] = useState<any>(null)
+  const [currentPage, setCurrentPage] = useState(1);
+  
+    const params: Record<string, string | number> = {
+      page: currentPage,
+    };
 
   const handleRowClick = (student: any) => {
     setSelectedStudent(student);
@@ -186,7 +191,7 @@ export const Renewals = () => {
         </div>
 
         <div className="flex gap-2">
-          <Dropdown classNames={{ content: "min-w-36" }} showArrow>
+          {/* <Dropdown classNames={{ content: "min-w-36" }} showArrow>
             <DropdownTrigger>
               <Button
                 variant="flat"
@@ -233,7 +238,7 @@ export const Renewals = () => {
             <DropdownMenu aria-label="Static Actions">
               <DropdownItem key="show">الحالة</DropdownItem>
             </DropdownMenu>
-          </Dropdown>
+          </Dropdown> */}
         </div>
       </div>
       {isLoading ? (
@@ -253,7 +258,12 @@ export const Renewals = () => {
       />
 
       <div className="my-10 px-6">
-        <CustomPagination />
+        <CustomPagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          last_page={renewalsData?.meta?.last_page}
+          total={renewalsData?.meta?.total}
+        />
       </div>
     </>
   );
