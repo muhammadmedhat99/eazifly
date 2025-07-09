@@ -98,7 +98,7 @@ export const Renewals = () => {
   const { data: renewalsData, isLoading } = useQuery({
     queryFn: async () =>
       await fetchClient(`client/user/subscriptions?search=${debouncedSearch}`, axios_config),
-    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch),
+    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch, '', currentPage),
   });
 
   const formattedData =
