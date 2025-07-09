@@ -34,6 +34,7 @@ import { useParams } from "next/navigation";
 import { Subaccounts } from "./ProgramTabs/Subaccounts";
 import SubscriptionActionModal from "./SubscriptionActionModal";
 import ConfirmModal from "@/components/global/ConfirmModal";
+import ChangeTeacherModal from "./ChangeTeacherModal";
 
 type StudentDetailsProps = {
   subscriptionsData: {
@@ -275,8 +276,9 @@ export const Programs = ({
 }: StudentDetailsProps) => {
   const params = useParams();
   const user_id = params.id;
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const [editModeIndex, setEditModeIndex] = useState<number | null>(null);
+
   const [selectedInstructors, setSelectedInstructors] = useState<
     Record<number, any>
   >({});
@@ -305,67 +307,6 @@ export const Programs = ({
         }),
     })),
   });
-
-  const changeInstructor = useMutation({
-    mutationFn: (submitData: FormData) => {
-      const myHeaders = new Headers();
-      myHeaders.append("local", "ar");
-      myHeaders.append("Accept", "application/json");
-      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
-
-      const formData = new FormData();
-      formData.append("user_id", submitData.get("user_id") as string);
-      formData.append(
-        "instructor_id",
-        submitData.get("instructor_id") as string
-      );
-      formData.append("program_id", submitData.get("program_id") as string);
-
-      return postData("client/change/instructor", formData, myHeaders);
-    },
-
-    onSuccess: (data) => {
-      if (data.message !== "success") {
-        addToast({
-          title: "حدث خطأ أثناء التغيير",
-          color: "danger",
-        });
-      } else {
-        addToast({
-          title: "تم تغيير المعلم بنجاح",
-          color: "success",
-        });
-      }
-    },
-
-    onError: (error) => {
-      console.log("error ===>>", error);
-      addToast({
-        title: "عذراً، حدث خطأ ما",
-        color: "danger",
-      });
-    },
-  });
-
-  const onSubmit = (subscription: any) => {
-    const selected = selectedInstructors[subscription.id];
-
-    if (!selected) {
-      addToast({
-        title: "من فضلك اختر معلم أولاً",
-        color: "warning",
-      });
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("user_id", subscription.student_number.toString());
-    formData.append("instructor_id", selected.id.toString());
-    formData.append("program_id", subscription.program_id.toString());
-
-    changeInstructor.mutate(formData);
-    setEditModeIndex(null);
-  };
 
   const reportsResults = useQueries({
     queries: subscriptionsData.data.map((subscription: Subscription) => ({
@@ -481,6 +422,12 @@ export const Programs = ({
             key={index}
             className="bg-main border border-stroke rounded-lg p-5"
           >
+            <ChangeTeacherModal
+              isOpen={modalOpen}
+              onClose={() => setModalOpen(false)}
+              student={subscription}
+              refetchSubscriptions={refetch}
+            />
             <div className="grid grid-cols-4 gap-2 mb-10">
               <div className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke">
                 <div className="flex flex-col gap-4">
@@ -510,33 +457,6 @@ export const Programs = ({
               <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background">
                 <div className="flex flex-col gap-4 w-1/2">
                   <span className="text-primary text-sm font-bold">الإسم</span>
-                  {editModeIndex === index ? (
-                    <Select
-                      selectedKeys={
-                        selectedInstructors[subscription.id]?.id
-                          ? [String(selectedInstructors[subscription.id].id)]
-                          : []
-                      }
-                      label="اختر المعلم"
-                      onSelectionChange={(keys) => {
-                        const selectedId = Number(Array.from(keys)[0]);
-                        const selected = instructorsData.find(
-                          (i: any) => i.id === selectedId
-                        );
-
-                        setSelectedInstructors((prev) => ({
-                          ...prev,
-                          [subscription.id]: selected,
-                        }));
-                      }}
-                    >
-                      {instructorsData.map((inst: any) => (
-                        <SelectItem key={inst.id.toString()}>
-                          {inst.name_en}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  ) : (
                     <div className="flex items-center gap-2">
                       <Avatar
                         size="sm"
@@ -550,34 +470,16 @@ export const Programs = ({
                           subscription.instructor?.name}
                       </span>
                     </div>
-                  )}
                 </div>
-                {editModeIndex === index ? (
-                  <Button
-                    size="sm"
-                    color="primary"
-                    variant="solid"
-                    className="text-white mt-2"
-                    type="button"
-                    onPress={() => onSubmit(subscription)}
-                    isLoading={changeInstructor.isPending}
-                  >
-                    حفظ
-                  </Button>
-                ) : (
                   <Link
                     href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setEditModeIndex(index);
-                    }}
+                    onClick={()=> setModalOpen(true)}
                     className="flex items-center gap-1"
                   >
                     <span className="text-sm font-bold text-primary">
                       تغير المعلم
                     </span>
                   </Link>
-                )}
               </div>
 
               <div className="flex items-end justify-between bg-background p-5 rounded-2xl border border-stroke">
