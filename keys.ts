@@ -3,7 +3,7 @@ import { axios_config } from "./lib/const";
 export const AllQueryKeys = {
   GetAllUsers: (nameSearch: string, phoneSearch: string, currentPage: number) => ['GetAllUsers', axios_config, nameSearch, phoneSearch, currentPage],
   GetUserById: (id: string) => ['GetUserById', id],
-  GetAllStudentSubscriptions: (search: string, type?: string | null, status?: string | null) => ['GetAllStudentSubscriptions', axios_config, search,type, status],
+  GetAllStudentSubscriptions: (search: string, type?: string | null, status?: string | null, currentPage?: number) => ['GetAllStudentSubscriptions', axios_config, search,type, status, currentPage],
   GetSubscriptionRequestById: (postId: string | number) => ['GetSubscriptionRequestById', postId],
   GetAllCountries: ["GetAllCountries", axios_config],
   GetAllResponses: ["GetAllResponses", axios_config],
