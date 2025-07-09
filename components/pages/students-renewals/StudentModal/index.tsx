@@ -51,7 +51,7 @@ export default function StudentModal({
                     }}
                 >
                     <Tab key="action" title="الإجراء">
-                    <Action studentInfo={student}/>
+                    <Action studentInfo={student} onClose={onClose}/>
                     </Tab>
                     <Tab key="personal" title="البيانات الشخصية">
                     <PersonalInfo studentInfo={student} />
