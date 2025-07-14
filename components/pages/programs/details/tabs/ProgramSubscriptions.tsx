@@ -7,15 +7,17 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Switch,
 } from "@heroui/react";
 
-const columns = [
-  { name: "نوع الإشتراك", uid: "subscription_type" },
-  { name: "سعر الإشتراك", uid: "subscription_price" },
-  { name: "عدد الحصص", uid: "number_of_lessons" },
-  { name: "مدة المحاضرة", uid: "lesson_duration" },
-  { name: "نسبة الربح", uid: "profit" },
-  { name: "نسبة التخفيض", uid: "discount" },
+const plansColumns = [
+  { name: "خطة الاشتراك", uid: "subscription_plan" },
+  { name: "سعر الاشتراك", uid: "price" },
+  { name: "سعر البيع", uid: "discount_price" },
+  { name: "عدد الحصص", uid: "number_of_session_per_week" },
+  { name: "مدة المحاضرة", uid: "duration" },
+  { name: "نوع الاشتراك", uid: "type" },
+  { name: "الباقة المميزة", uid: "is_special_plan" },
 ];
 
 const OptionsComponent = ({ id }: { id: number }) => {
@@ -39,42 +41,49 @@ const OptionsComponent = ({ id }: { id: number }) => {
   );
 };
 
-const data = [
-  {
-    id: 1,
-    subscription_type: "شهري",
-    subscription_price: "1200  ج.م",
-    number_of_lessons: "42",
-    lesson_duration: "30  دقيقة",
-    profit: "20%",
-    discount: "20%",
-  },
-  {
-    id: 2,
-    subscription_type: "3 أشهر",
-    subscription_price: "1400  ج.م",
-    number_of_lessons: "39",
-    lesson_duration: "45  دقيقة",
-    profit: "20%",
-    discount: "20%",
-  },
-  {
-    id: 3,
-    subscription_type: "6 أشهر",
-    subscription_price: "1400  ج.م",
-    number_of_lessons: "34",
-    lesson_duration: "45  دقيقة",
-    profit: "10%",
-    discount: "20%",
-  },
-];
+type subscription = {
+  id: number;
+  title: string | null;
+  program: string;
+  label: string | null;
+  description: string | null;
+  currency: string | null;
+  price: string;
+  discount_price: string;
+  subscripe_days: string;
+  duration: string;
+  number_of_session_per_week: string;
+  is_special_plan: boolean;
+  type: string;
+  plan_title: string | null;
+  subscription_plan: string;
+};
+type subscriptionsProps = {
+  subscriptionsData: subscription[];
+};
 
-export const ProgramSubscriptions = () => {
+export const ProgramSubscriptions = ({ subscriptionsData }: subscriptionsProps) => {
+  const plansTableData = subscriptionsData?.map((item: any) => ({
+    id: item.id,
+    type: item.type,
+    discount_price: item.discount_price + " ج.م",
+    price: item.price + " ج.م",
+    number_of_session_per_week: item.number_of_session_per_week,
+    duration: item.duration + "دقيقة",
+    subscription_plan: item.subscription_plan,
+    is_special_plan: item.is_special_plan ? (<Switch
+      isSelected={true}
+      color="success"
+    />) : (<Switch
+      isSelected={false}
+      color="success"
+    />),
+  }));
   return (
     <div className="bg-main">
       <TableComponent
-        columns={columns}
-        data={data}
+        columns={plansColumns}
+        data={plansTableData}
         ActionsComponent={OptionsComponent}
       />
     </div>
