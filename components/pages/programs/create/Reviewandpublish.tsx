@@ -35,6 +35,7 @@ import Image from "next/image";
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
 import { Loader } from "@/components/global/Loader";
+import { useRouter } from "next/navigation";
 
 const columns = [
 { name: "", uid: "avatar" },
@@ -82,6 +83,7 @@ export const Reviewandpublish = ({
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
     programId: string;
 }) => {
+    const router = useRouter();
     const { data, isLoading } = useQuery({
         queryFn: async () =>
             await fetchClient(
@@ -127,6 +129,37 @@ export const Reviewandpublish = ({
             color="success"
         />),
     }));
+
+      const publishProgramMutation = useMutation({
+        mutationFn: () => {
+          const myHeaders = new Headers();
+          myHeaders.append("Accept", "application/json");
+          myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+          return postData(`client/program/publish/${programId}`, null, myHeaders);
+        },
+        onSuccess: (data: any) => {
+          if (data.status !== 200 && data.status !== 201) {
+            addToast({
+              title: `Error publish program: ${data.message}`,
+              color: "danger",
+            });
+          } else {
+            addToast({
+              title: data?.message,
+              color: "success",
+            });
+            router.push('/programs')
+          }
+        },
+        onError: (error: Error) => {
+          console.error("Error publish program:", error);
+          addToast({
+            title: "عذرا حدث خطأ ما",
+            color: "danger",
+          });
+        },
+      });
 
     return isLoading ? (
         <Loader />
@@ -231,6 +264,27 @@ export const Reviewandpublish = ({
                      />
                  </div>
              </div>
+             {/* Action Buttons */}
+                   <div className="flex items-center justify-end gap-4 mt-8 col-span-3">
+                     <Button
+                       type="button"
+                       variant="solid"
+                       color="primary"
+                       className="text-white"
+                     >
+                       السابق
+                     </Button>
+                     <Button
+                       type="button"
+                       onPress={() => publishProgramMutation.mutate()}
+                       variant="solid"
+                       color="primary"
+                       className="text-white"
+                       isLoading={publishProgramMutation.isPending}
+                     >
+                       {publishProgramMutation.isPending ? "جاري النشر..." : "نشر البرنامج"}
+                     </Button>
+                   </div>
       </div>
   );
 };

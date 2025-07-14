@@ -158,8 +158,8 @@ export const Subscriptions = ({
         plans: submitData?.subscriptions?.map((item) => ({
           program_id: programId,
           subscripe_days: item?.subscription_plan,
-          price: item?.sell_price,
-          discount_price: item.subscription_price,
+          discount_price: item?.sell_price,
+          price: item.subscription_price,
           duration: item.lesson_duration,
           number_of_session_per_week: item.number_of_lessons,
           type: item.subscription_type,
