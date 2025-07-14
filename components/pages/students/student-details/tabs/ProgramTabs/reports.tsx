@@ -18,7 +18,7 @@ type ReportsProps = {
   isLoadingReport: boolean;
 };
 
-export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => {
+export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => { 
     const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -62,11 +62,15 @@ export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => {
                         <div className="flex flex-col gap-4 w-full">
                             <div className="flex items-center justify-between">
                                 <span className="text-black-text text-sm font-bold">
-                                    {report.report_maker_type === "instructor"
-                                        ? `تقرير للطالب (${report.report_for_name}) من المعلم (${report.report_maker_name})`
-                                        : report.report_maker_type === "client"
-                                            ? `تقرير للطالب (${report.report_for_name}) من الإدارة (${report.report_maker_name})`
-                                            : null}
+                                    {
+                                        report.report_maker_type === "instructor"
+                                            ? `تقرير للطالب (${report.report_for_name}) من المعلم (${report.report_maker_name})`
+                                            : report.report_maker_type === "client"
+                                                ? `تقرير للطالب (${report.report_for_name}) من الإدارة (${report.report_maker_name})`
+                                                : report.report_maker_type === "user"
+                                                    ? `تقرير من الطالب (${report.report_maker_name}) إلى المعلم (${report.report_for_name})`
+                                                    : null
+                                    }
                                 </span>
                                 <span className="text-black-text text-sm font-bold">
                                     {formatDate(report.created_at)}

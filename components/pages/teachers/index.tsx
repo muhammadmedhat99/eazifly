@@ -26,7 +26,6 @@ const columns = [
   { name: "رقم الهاتف", uid: "phone" },
   { name: "رقم واتساب", uid: "whats_app" },
   { name: "التخصصات", uid: "specializations" },
-  { name: "ساعات العمل", uid: "working_hours" },
   { name: "الحالة", uid: "status" },
   { name: <Options />, uid: "actions" },
 ];
@@ -167,7 +166,7 @@ export const AllTeachers = () => {
               setSelectedStatus(e.target.id);
             }}
           >
-            جديد
+            نشط
           </Button>
           <Button
             id="2"
@@ -178,7 +177,7 @@ export const AllTeachers = () => {
               setSelectedStatus(e.target.id);
             }}
           >
-            معلق
+            جديد
           </Button>
           <Button
             id="3"
@@ -189,18 +188,7 @@ export const AllTeachers = () => {
               setSelectedStatus(e.target.id);
             }}
           >
-            تم الإشتراك
-          </Button>
-          <Button
-            id="4"
-            variant="flat"
-            color={selectedStatus === "4" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
-          >
-            مرفوض
+            معلق
           </Button>
         </div>
       </div>

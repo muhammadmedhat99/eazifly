@@ -8,6 +8,7 @@ import { FinancialTransactions } from "./tabs/FinancialTransactions";
 import { Statistics } from "./tabs/Satistics";
 import { TeacherReports } from "./tabs/TeacherReports";
 import { useState } from "react";
+import { Reports } from "../../students/student-details/tabs/ProgramTabs/reports";
 
 
 type TeacherDetailsProps = {
@@ -80,7 +81,10 @@ export const TeacherDetails = ({ data, reportsData }: TeacherDetailsProps) => {
             <Statistics />
         </Tab>
         <Tab key="teacher-reports" title="تقارير المعلمين">
-            <TeacherReports reportsData={reportsData} />
+             <Reports
+                reportData={reportsData}
+                isLoadingReport={false}
+              />
         </Tab>
       </Tabs>
     </div>
