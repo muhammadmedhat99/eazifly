@@ -31,6 +31,11 @@ type MainInformationProps = {
       id: number;
       title: string;
     }[];
+    status: {
+        label: string,
+        key: string,
+        color: string,
+      };
   };
 };
 
@@ -54,6 +59,18 @@ export const MainInformation = ({ mainData }: MainInformationProps) => {
       </div>
       {/* Main Card  */}
       {/* Main Card  */}
+       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
+        <div className="text-primary font-bold">الحالة</div>
+        <div className="w-fit">
+          <div
+            className={`text-${mainData?.status?.color}
+              bg-${mainData?.status?.color} bg-opacity-10
+              px-5 py-1 rounded-3xl font-bold text-[15px]`}
+          >
+            {mainData?.status?.label}
+          </div>
+        </div>
+      </div>
       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
         <div className="text-primary font-bold">عنوان البرنامج</div>
         <div className="text-black-text font-bold text-[15px]">

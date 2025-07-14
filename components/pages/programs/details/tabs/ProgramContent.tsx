@@ -11,6 +11,7 @@ type MainInformationProps = {
     content: string;
     description: string;
     image: string;
+    cover: string;
     duration: string;
     goals: string;
     number_of_students: number;
@@ -24,18 +25,34 @@ type MainInformationProps = {
 
 export const ProgramContent = ({ mainData }: MainInformationProps) => {
   return (
-    <div className="bg-main">
+    <div className="bg-main p-5 grid grid-cols-1 md:grid-cols-3 gap-8">
       {/* main info  */}
-      <div className="flex flex-col md:flex-row gap-4 p-4">
+      <div className="flex flex-col md:flex-row gap-4">
         <div className="flex flex-col">
           <h3 className="text-primary mb-2 font-bold">صورة البرنامج</h3>
           <div>
             <Image
               src={mainData.image}
-              width={350}
-              height={350}
+              width={450}
+              height={450}
               alt="login image"
-              className="w-full h-full flex-1 object-cover"
+              className="w-full h-full flex-1 object-cover rounded-xl"
+            />
+          </div>
+        </div>
+        
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 col-span-2">
+        <div className="flex flex-col">
+          <h3 className="text-primary mb-2 font-bold">صورة الغلاف</h3>
+          <div>
+            <Image
+              src={mainData.cover|| ''}
+              width={450}
+              height={450}
+              alt="login image"
+              className="w-full h-full flex-1 object-cover rounded-xl"
             />
           </div>
         </div>
@@ -43,7 +60,7 @@ export const ProgramContent = ({ mainData }: MainInformationProps) => {
       </div>
 
       {/* descriptiuon  */}
-      <div className="p-4 ">
+      <div className="col-span-3">
         <h2 className="text-right text-primary font-bold mb-4">وصف البرنامج</h2>
 
         <div className="mb-6">
@@ -54,7 +71,7 @@ export const ProgramContent = ({ mainData }: MainInformationProps) => {
       </div>
 
       {/* Program goals Section */}
-      <div className="p-4 ">
+      <div className="col-span-3">
         <h2 className="text-right text-primary font-bold mb-4">
           أهداف البرنامج
         </h2>

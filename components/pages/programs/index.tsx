@@ -22,11 +22,12 @@ import Image from "next/image";
 import { useState } from "react";
 
 const columns = [
-  { name: "صورة الغلاف", uid: "image" },
+  { name: "صورة البرنامج", uid: "image" },
   { name: "إسم البرنامج", uid: "program_name" },
   { name: "المعلمين المشتركين", uid: "related_teachers" },
   { name: "عدد الطلاب المشتركين", uid: "all_students" },
   { name: "عدد الحصص", uid: "number_of_lessons" },
+  { name: "الحالة", uid: "status" },
   { name: <Options />, uid: "actions" },
 ];
 
@@ -93,6 +94,12 @@ export const AllPrograms = () => {
     ),
     all_students: item?.number_of_students,
     number_of_lessons: item?.number_of_sessions,
+    status: {
+      name: item.status?.label || "N/A",
+      key: item.status?.key || null,
+      color:
+        item?.status?.color || null,
+    },
   }));
 
   return (

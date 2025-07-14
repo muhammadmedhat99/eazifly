@@ -39,6 +39,11 @@ type ProgramDetailsProps = {
         id: number;
         title: string;
       }[];
+      status: {
+        label: string,
+        key: string,
+        color: string,
+      };
       instructors: {
         id: number;
         name_en: string;
@@ -56,6 +61,7 @@ type ProgramDetailsProps = {
         image: string;
         specializations: any[]
         instructor_payment_method_id: number;
+        amount_per_hour: string;
       }[];
       plans: {
         id: number;

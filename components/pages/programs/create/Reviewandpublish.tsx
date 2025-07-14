@@ -44,6 +44,7 @@ const columns = [
   { name: "البريد الإلكترونى", uid: "email" },
   { name: "تاريخ التقديم", uid: "created_at" },
   { name: "التخصص", uid: "specializations" },
+  { name: "سعر الساعة", uid: "amount_per_hour" },
   { name: "الحالة", uid: "status" },
 ];
 
@@ -99,17 +100,15 @@ export const Reviewandpublish = ({
         name: item.name_ar || item.name_en,
         phone: item.phone,
         email: item.email,
+        amount_per_hour: item.amount_per_hour,
         created_at: new Date(item.created_at).toLocaleDateString("ar-EG"),
         specializations:
             item.specializations?.length > 0
                 ? item.specializations.map((s: any) => s.name_ar).join(", ")
                 : "غير محدد",
         status: {
-            name: item.status || "N/A",
-            color:
-                item?.status?.color === "info"
-                    ? "warning"
-                    : item?.status_label?.color || "success",
+            name: item.status.label || "N/A",
+            color: item?.status?.color || null,
         },
     }));
 
@@ -165,17 +164,31 @@ export const Reviewandpublish = ({
         <Loader />
   ) : (
     <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke col-span-3">
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke col-span-2">
+              <div className="flex flex-col gap-4">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                      صورة الغلاف
+                  </span>
+                  <Image
+                      src={data.data.cover || ''}
+                      width={450}
+                      height={450}
+                      alt="cover image"
+                      className="w-full h-full flex-1 object-cover rounded-xl"
+                  />
+              </div>
+          </div>
+          <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke col-span-1">
               <div className="flex flex-col gap-4">
                   <span className="text-[#5E5E5E] text-sm font-bold">
                       صورة البرنامج
                   </span>
                   <Image
                       src={data.data.image}
-                      width={350}
-                      height={350}
+                      width={450}
+                      height={450}
                       alt="login image"
-                      className="w-1/2 h-full flex-1 object-cover"
+                      className="w-full h-full flex-1 object-cover rounded-xl"
                   />
               </div>
           </div>

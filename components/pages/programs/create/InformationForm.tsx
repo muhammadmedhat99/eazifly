@@ -100,6 +100,9 @@ export const InformationForm = ({
     if (submitData.image && submitData.image.length > 0) {
       formdata.append("image", submitData.image[0]);
     }
+    if (submitData.cover && submitData.cover.length > 0) {
+      formdata.append("cover", submitData.cover[0]);
+    }
 
     return formdata;
   };
@@ -316,57 +319,25 @@ export const InformationForm = ({
         />
       </div>
 
-      {/* Switches Container */}
-      <div className="flex items-center justify-between gap-8">
-        {/* Why Us Switch */}
-        <div className="flex-1">
-          <Controller
-            name="why_us"
-            control={control}
-            render={({ field }) => (
-              <div className="flex flex-col gap-2">
-                <label className="text-[#272727] font-bold text-sm">
-                  لماذا نحن؟
-                </label>
-                <Switch
-                  onChange={(e) => field.onChange(e.target.checked)}
-                  color="success"
-                  isSelected={field.value}
-                />
-                {errors.why_us && (
-                  <span className="text-danger text-xs font-bold">
-                    {errors.why_us.message}
-                  </span>
-                )}
-              </div>
-            )}
-          />
-        </div>
-
-        {/* Learning Track Switch */}
-        <div className="flex-1">
-          <Controller
-            name="learning_track"
-            control={control}
-            render={({ field }) => (
-              <div className="flex flex-col gap-2">
-                <label className="text-[#272727] font-bold text-sm">
-                  مسار التعلم؟
-                </label>
-                <Switch
-                  onChange={(e) => field.onChange(e.target.checked)}
-                  color="success"
-                  isSelected={field.value}
-                />
-                {errors.learning_track && (
-                  <span className="text-danger text-xs font-bold">
-                    {errors.learning_track.message}
-                  </span>
-                )}
-              </div>
-            )}
-          />
-        </div>
+      {/* Program cover */}
+      <div className="col-span-2">
+        <Controller
+          name="cover"
+          control={control}
+          render={({ field, fieldState }) => (
+            <DropzoneField
+              value={field.value ? Array.from(field.value) : []}
+              onChange={(files: File[]) => {
+                // Convert File[] back to FileList-like object
+                const dt = new DataTransfer();
+                files.forEach((file) => dt.items.add(file));
+                field.onChange(dt.files);
+              }}
+              error={fieldState.error?.message}
+              label="صورة الغلاف"
+            />
+          )}
+        />
       </div>
 
       {/* Action Buttons */}
