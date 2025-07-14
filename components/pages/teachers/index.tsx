@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
 import {
@@ -56,7 +56,7 @@ export const AllTeachers = () => {
   const [phoneSearch, setPhoneSearch] = useState("");
   const debouncedNameSearch = useDebounce(nameSearch, 500);
   const debouncedPhoneSearch = useDebounce(phoneSearch, 500);
-  const [selectedStatus, setSelectedStatus] = useState("1");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
   const params: Record<string, string | number> = {
@@ -99,8 +99,35 @@ export const AllTeachers = () => {
         item.AvailabilityTime?.length > 0
           ? `${item.AvailabilityTime[0].day} ${item.AvailabilityTime[0].start_time} - ${item.AvailabilityTime[0].end_time}`
           : "N/A",
-      status: item.status || { name: "N/A", color: "primary" },
+      status: {
+        name: item.status?.label || "N/A",
+        key: item.status?.key || null,
+        color:
+          item?.status?.color || "",
+      },
     })) || [];
+
+  const STATUS_GROUPS: any = {
+    active: ["active", "available", "medium", "fully_booked"],
+    hold: ["fired", "Hold"],
+    new: ["in_review", "new"],
+  };
+
+  const filteredData = useMemo(() => {
+    if (selectedStatus === "all") return formattedData;
+
+    const groupKeys = STATUS_GROUPS[selectedStatus];
+
+    return formattedData.filter((item: any) => {
+      const userStatusKey = item?.status?.key;
+
+      if (groupKeys) {
+        return groupKeys.includes(userStatusKey);
+      }
+
+      return userStatusKey === selectedStatus;
+    });
+  }, [formattedData, selectedStatus]);
 
   return (
     <>
@@ -158,35 +185,38 @@ export const AllTeachers = () => {
 
         <div className="flex gap-2">
           <Button
-            id="1"
+            id="all"
             variant="flat"
-            color={selectedStatus === "1" ? "primary" : "default"}
+            color={selectedStatus === "all" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
+          >
+            الكل
+          </Button>
+          <Button
+            id="active"
+            variant="flat"
+            color={selectedStatus === "active" ? "primary" : "default"}
+            className="font-semibold"
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
             نشط
           </Button>
           <Button
-            id="2"
+            id="new"
             variant="flat"
-            color={selectedStatus === "2" ? "primary" : "default"}
+            color={selectedStatus === "new" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
             جديد
           </Button>
           <Button
-            id="3"
+            id="Hold"
             variant="flat"
-            color={selectedStatus === "3" ? "primary" : "default"}
+            color={selectedStatus === "Hold" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
             معلق
           </Button>
@@ -197,7 +227,7 @@ export const AllTeachers = () => {
       ) : (
         <TableComponent
           columns={columns}
-          data={formattedData}
+          data={filteredData}
           ActionsComponent={OptionsComponent}
           selectable={true}
         />
