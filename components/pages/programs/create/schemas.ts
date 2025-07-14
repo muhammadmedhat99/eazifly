@@ -32,6 +32,14 @@ export const informationFormSchema = yup.object({
       (value) => value && value.length > 0
     )
     .required("الرجاء تحميل ملف"),
+    cover: yup
+    .mixed<FileList>()
+    .test(
+      "fileType",
+      "الرجاء تحميل ملف صحيح",
+      (value) => value && value.length > 0
+    )
+    .required("الرجاء تحميل ملف"),
   why_us: yup.boolean().required(),
   learning_track: yup.boolean().required(),
   special_for: yup

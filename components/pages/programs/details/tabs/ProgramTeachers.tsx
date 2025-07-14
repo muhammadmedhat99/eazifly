@@ -16,6 +16,7 @@ const columns = [
   { name: "البريد الإلكترونى", uid: "email" },
   { name: "تاريخ التقديم", uid: "created_at" },
   { name: "التخصص", uid: "specializations" },
+  { name: "سعر الساعة", uid: "amount_per_hour" },
   { name: "الحالة", uid: "status" },
 ];
 
@@ -52,6 +53,7 @@ type Instructor = {
   image: string;
   specializations: any[];
   instructor_payment_method_id: number;
+  amount_per_hour: string;
 };
 type InstructorsProps = {
   teachersData: Instructor[];
@@ -65,17 +67,15 @@ export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
     name: item.name_ar || item.name_en,
     phone: item.phone,
     email: item.email,
+    amount_per_hour: item.amount_per_hour,
     created_at: new Date(item.created_at).toLocaleDateString("ar-EG"),
     specializations:
       item.specializations?.length > 0
         ? item.specializations.map((s: any) => s.name_ar).join(", ")
         : "غير محدد",
     status: {
-      name: item.status || "N/A",
-      color:
-        item?.status?.color === "info"
-          ? "warning"
-          : item?.status_label?.color || "success",
+      name: item.status.label || "N/A",
+      color: item?.status?.color ,
     },
   }));
 
