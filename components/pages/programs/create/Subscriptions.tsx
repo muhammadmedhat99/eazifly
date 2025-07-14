@@ -86,7 +86,40 @@ export const Subscriptions = ({
     name: "subscriptions",
   });
 
+  const [duplicateIndexes, setDuplicateIndexes] = useState<number[]>([]);
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
+
   const onSubmit = async (data: SubscriptionsFormData) => {
+    const rows = data.subscriptions;
+    const duplicates: number[] = [];
+    const seen = new Map<string, number>();
+
+    rows.forEach((sub, index) => {
+      const key = [
+        sub.subscription_plan,
+        sub.subscription_type,
+        sub.sell_price,
+        sub.number_of_lessons,
+      ].join("|");
+
+      if (seen.has(key)) {
+        duplicates.push(index);
+        duplicates.push(seen.get(key)!);
+      } else {
+        seen.set(key, index);
+      }
+    });
+
+    if (duplicates.length > 0) {
+      const uniqueDuplicates = Array.from(new Set(duplicates));
+      setDuplicateIndexes(uniqueDuplicates);
+      setDuplicateError("يوجد اشتراكان مكرران بنفس البيانات، يرجى تعديل أحدهما.");
+      return;
+    }
+
+    setDuplicateIndexes([]);
+    setDuplicateError(null);
+
     addSubscriptionToProgram.mutate(data);
   };
 
@@ -130,7 +163,7 @@ export const Subscriptions = ({
           duration: item.lesson_duration,
           number_of_session_per_week: item.number_of_lessons,
           type: item.subscription_type,
-          is_special_plan: item?.is_special_plan,
+          is_special_plan: item?.is_special_plan === "true",
           ...(item?.is_special_plan === "true" ? item.localizedFields : {}),
         })),
       };
@@ -172,14 +205,21 @@ export const Subscriptions = ({
           <div>نوع الإشتراك</div>
           <div>سعر الإشتراك</div>
           <div>سعر البيع </div>
-          <div>عدد الحصص </div>
+          <div> عدد الحصص الإسبوعية </div>
           <div>مدة المحاضرة </div>
           <div>خطة مميزه؟ </div>
           {fields.length > 1 && <div>الإجراءات</div>}
         </div>
         {fields.map((item, index) => (
           <React.Fragment key={item.id}>
-            <div className="flex items-center *:flex-1 *:px-4 *:py-2 *:border *:border-[#EAF0FD] text-xs font-semibold">
+            <div
+              className={
+                "flex items-center *:flex-1 *:px-4 *:py-2 *:border *:border-[#EAF0FD] text-xs font-semibold" +
+                (duplicateIndexes.includes(index)
+                  ? " bg-red-50 border border-red-400"
+                  : "")
+              }
+            >
               <Controller
                 name={`subscriptions.${index}.subscription_plan`}
                 control={control}
@@ -431,6 +471,12 @@ export const Subscriptions = ({
           </React.Fragment>
         ))}
       </div>
+
+      {duplicateError && (
+        <div className="text-red-600 text-sm mt-4 font-semibold text-center">
+          {duplicateError}
+        </div>
+      )}
 
       <div className="flex items-center justify-center my-10">
         <Button variant="light" color="primary" onPress={addNewSubscription}>

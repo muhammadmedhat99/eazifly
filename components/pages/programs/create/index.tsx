@@ -9,6 +9,7 @@ import { Button } from "@heroui/react";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { informationFormSchema } from "./schemas";
+import { Reviewandpublish } from "./Reviewandpublish";
 
 export const CreateProgram = () => {
   const [activeStep, setActiveStep] = useState(3);
@@ -160,25 +161,12 @@ export const CreateProgram = () => {
               );
             case 4:
               return (
-                <div className="p-5">
-                  <h2 className="text-xl font-bold mb-4">مراجعة المعلومات</h2>
-                  <div className="mb-4">
-                    <p>
-                      <strong>Program ID:</strong> {programId}
-                    </p>
-                    <p>
-                      <strong>Specialization ID:</strong> {specializationId}
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="solid"
-                    color="primary"
-                    className="text-white"
-                  >
-                    إرسال النموذج
-                  </Button>
-                </div>
+                <>
+                  <Reviewandpublish
+                    setActiveStep={setActiveStep}
+                    programId={programId}
+                  />
+                </>
               );
             default:
               return null;

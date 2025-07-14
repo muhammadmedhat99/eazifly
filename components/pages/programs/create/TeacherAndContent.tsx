@@ -36,7 +36,7 @@ export const TeacherAndContent = ({
   );
   const { data: instructors, isLoading: instructorsLoading } = useQuery({
     queryFn: async () => await fetchClient(`client/instructors`, axios_config),
-    queryKey: AllQueryKeys.GetAllInstructors,
+    queryKey: AllQueryKeys.GetAllInstructors("", "", 1),
   });
 
   const {
