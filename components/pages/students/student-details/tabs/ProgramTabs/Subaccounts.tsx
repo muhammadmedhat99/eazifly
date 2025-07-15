@@ -1,7 +1,7 @@
 "use client";
-import { ArrowLeft2, ArrowRight2, Trash } from "iconsax-reactjs";
+import { Add, ArrowLeft2, ArrowRight2, Trash } from "iconsax-reactjs";
 import { Loader } from "@/components/global/Loader";
-import { addToast, Tab, Tabs } from "@heroui/react";
+import { addToast, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs } from "@heroui/react";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
@@ -12,12 +12,50 @@ import { Feedbacks } from "./feedbacks";
 import { Reports } from "./reports";
 import { getCookie } from "cookies-next";
 import ConfirmModal from "@/components/global/ConfirmModal";
+import AddSubaccountModal from "./AddSubaccountModal";
 
 type appointmentsProps = {
   subaccountData?: any;
   isLoadingsubaccount: boolean;
   program_id: number;
   refetchSubaccounts?: () => void;
+  data: {
+    data: {
+      id: number;
+      age: string;
+      gender: string;
+      first_name: string;
+      last_name: string;
+      user_name: string;
+      email: string;
+      phone: string;
+      whats_app: string;
+      image: string;
+      created_at: string;
+      status_label: {
+        label: string;
+        color: string;
+      };
+      childrens: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        user_name: string;
+        email: string;
+        phone: string;
+        whats_app: string;
+        image: string;
+        gender: string;
+        age: string;
+        status_label: {
+          label: string;
+          color: string;
+        };
+        programs: any[];
+        chat_id: number;
+      }[];
+    };
+  };
 };
 
 export const Subaccounts = ({
@@ -25,10 +63,12 @@ export const Subaccounts = ({
   isLoadingsubaccount,
   program_id,
   refetchSubaccounts,
+  data,
 }: appointmentsProps) => {
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [confirmAction, setConfirmAction] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const ClientId = getCookie("client_id") as string;
 
@@ -248,6 +288,15 @@ export const Subaccounts = ({
           لا توجد بيانات حالية للعرض
         </div>
       )}
+      <button
+        className="flex justify-end items-center gap-1 pt-4"
+        onClick={()=> setModalOpen(true)}
+      >
+        <Add size="24" variant="Outline" className="text-primary" />
+        <span className="text-center justify-start text-primary text-sm font-bold">
+          إضافة حساب فرعي
+        </span>
+      </button>
       <ConfirmModal
         open={confirmAction}
         title={"حذف اشتراك الطالب"}
@@ -255,6 +304,8 @@ export const Subaccounts = ({
         onConfirm={handleConfirmAction}
         onCancel={() => setConfirmAction(false)}
       />
+      <AddSubaccountModal isOpen={modalOpen}
+        onClose={() => setModalOpen(false)} data={data} />
     </div>
   );
 };

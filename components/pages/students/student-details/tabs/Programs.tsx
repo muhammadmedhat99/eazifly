@@ -37,6 +37,43 @@ import ConfirmModal from "@/components/global/ConfirmModal";
 import ChangeTeacherModal from "./ChangeTeacherModal";
 
 type StudentDetailsProps = {
+    data: {
+    data: {
+      id: number;
+      age:string;
+      gender:string;
+      first_name: string;
+      last_name: string;
+      user_name: string;
+      email: string;
+      phone: string;
+      whats_app: string;
+      image: string;
+      created_at: string;
+      status_label: {
+        label: string;
+        color: string;
+      };
+      childrens: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        user_name: string;
+        email: string;
+        phone: string;
+        whats_app: string;
+        image: string;
+        gender: string;
+         age: string;
+        status_label: {
+          label: string;
+          color: string;
+        };
+        programs: any[];
+        chat_id: number;
+      }[];
+    };
+  };
   subscriptionsData: {
     data: {
       id: number;
@@ -273,6 +310,7 @@ const ActionsComponent = ({ id, user_id, children_users, subscription_status, re
 export const Programs = ({
   subscriptionsData: initialSubscriptionsData,
   client_id,
+  data,
 }: StudentDetailsProps) => {
   const params = useParams();
   const user_id = params.id;
@@ -601,8 +639,7 @@ export const Programs = ({
                     />
                   </Tab>
                 )}
-
-                {subaccountData?.data?.length > 0 && (
+              
                   <Tab
                     className="w-full"
                     key="subaccounts"
@@ -613,9 +650,9 @@ export const Programs = ({
                       isLoadingsubaccount={isLoadingsubaccount}
                       program_id={subscription?.program_id}
                       refetchSubaccounts={subaccountResult?.refetch}
+                      data={data}
                     />
                   </Tab>
-                )}
               </Tabs>
             </div>
           </div>
