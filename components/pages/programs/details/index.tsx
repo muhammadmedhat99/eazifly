@@ -33,6 +33,7 @@ type ProgramDetailsProps = {
       image: string;
       duration: string;
       goals: string;
+      cover: string;
       number_of_students: number;
       number_of_lessons: number;
       payment_methods: {
@@ -40,9 +41,9 @@ type ProgramDetailsProps = {
         title: string;
       }[];
       status: {
-        label: string,
-        key: string,
-        color: string,
+        label: string;
+        key: string;
+        color: string;
       };
       instructors: {
         id: number;
@@ -52,14 +53,14 @@ type ProgramDetailsProps = {
         status: string;
         email: string;
         whats_app: string;
-        created_at: string; 
+        created_at: string;
         address: string;
         age: string;
         experience_years: string;
         gender: string;
         can_approve_question: string;
         image: string;
-        specializations: any[]
+        specializations: any[];
         instructor_payment_method_id: number;
         amount_per_hour: string;
       }[];
@@ -100,7 +101,7 @@ export const ProgramDetails = ({ data }: ProgramDetailsProps) => {
         }}
       >
         <Tab key="info" title="بيانات البرنامج">
-          <MainInformation mainData={data.data} />
+          <MainInformation data={data.data} />
         </Tab>
         <Tab key="program_teachers" title="المعلمين المشتركين">
           <ProgramTeachers teachersData={data.data.instructors} />
@@ -109,7 +110,7 @@ export const ProgramDetails = ({ data }: ProgramDetailsProps) => {
           <ProgramSubscriptions subscriptionsData={data.data.plans} />
         </Tab>
         <Tab key="content" title="محتوي البرنامج">
-          <ProgramContent mainData={data.data}/>
+          <ProgramContent data={data?.data} />
         </Tab>
         <Tab key="goals" title="أهداف البرنامج">
           <ProgramGoals />

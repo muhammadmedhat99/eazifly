@@ -2,7 +2,7 @@ import Image from "next/image";
 import React from "react";
 
 type MainInformationProps = {
-  mainData: {
+  data: {
     id: number;
     title: string;
     label: string;
@@ -23,7 +23,7 @@ type MainInformationProps = {
   };
 };
 
-export const ProgramContent = ({ mainData }: MainInformationProps) => {
+export const ProgramContent = ({ data }: MainInformationProps) => {
   return (
     <div className="bg-main p-5 grid grid-cols-1 md:grid-cols-3 gap-8">
       {/* main info  */}
@@ -32,7 +32,7 @@ export const ProgramContent = ({ mainData }: MainInformationProps) => {
           <h3 className="text-primary mb-2 font-bold">صورة البرنامج</h3>
           <div>
             <Image
-              src={mainData.image}
+              src={data.image}
               width={450}
               height={450}
               alt="login image"
@@ -40,7 +40,6 @@ export const ProgramContent = ({ mainData }: MainInformationProps) => {
             />
           </div>
         </div>
-        
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 col-span-2">
@@ -48,7 +47,7 @@ export const ProgramContent = ({ mainData }: MainInformationProps) => {
           <h3 className="text-primary mb-2 font-bold">صورة الغلاف</h3>
           <div>
             <Image
-              src={mainData.cover|| ''}
+              src={data.cover || ""}
               width={450}
               height={450}
               alt="login image"
@@ -56,7 +55,6 @@ export const ProgramContent = ({ mainData }: MainInformationProps) => {
             />
           </div>
         </div>
-        
       </div>
 
       {/* descriptiuon  */}
@@ -64,9 +62,7 @@ export const ProgramContent = ({ mainData }: MainInformationProps) => {
         <h2 className="text-right text-primary font-bold mb-4">وصف البرنامج</h2>
 
         <div className="mb-6">
-          <p className="text-title text-sm">
-            {mainData.description}
-          </p>
+          <p className="text-title text-sm">{data.description}</p>
         </div>
       </div>
 
@@ -77,13 +73,9 @@ export const ProgramContent = ({ mainData }: MainInformationProps) => {
         </h2>
 
         <div className="mb-6">
-          <p className="text-title text-sm">
-            {mainData.goals}
-          </p>
+          <p className="text-title text-sm">{data.goals}</p>
         </div>
-
       </div>
-
     </div>
   );
 };

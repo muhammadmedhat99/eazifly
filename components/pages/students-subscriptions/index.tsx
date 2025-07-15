@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
@@ -35,6 +35,28 @@ const columns = [
   { name: <Options />, uid: "actions" },
 ];
 
+// Add a type for subscription items
+interface SubscriptionItem {
+  id: number;
+  num: number;
+  name: string;
+  request_type: {
+    name: string;
+    key: string | null;
+    color: string;
+  };
+  type: string;
+  courses: string;
+  price: string;
+  created_at: string;
+  order_status: {
+    name: string;
+    key: string | null;
+    color: string;
+  };
+  avatar: string;
+}
+
 const OptionsComponent = ({ id }: { id: number }) => {
   return (
     <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
@@ -55,6 +77,7 @@ const OptionsComponent = ({ id }: { id: number }) => {
     </Dropdown>
   );
 };
+
 export const AllStudentsSubscriptions = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
@@ -76,15 +99,10 @@ export const AllStudentsSubscriptions = () => {
   if (selectedStatus && selectedStatus !== "all") {
     params.status = selectedStatus;
   }
-  if (currentPage) {
-    params.page = currentPage;
-  }
-
 
   const { data: studentsSubscriptions, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(
-        `client/order`, {
+      await fetchClient(`client/order`, {
         ...axios_config,
         params,
       }),
@@ -96,31 +114,30 @@ export const AllStudentsSubscriptions = () => {
     ),
   });
 
-  const formattedData =
-    studentsSubscriptions?.data
-      .map((item: any) => ({
-        id: item.id,
-        num: item.id,
-        name: item.user.name,
-        request_type: {
-          name: item?.type.label,
-          key: item.type?.key || null,
-          color: item?.type.color === "primary" ? "primary" : "success",
-        },
-        type: item?.subscription_type || "N/A",
-        courses: item.order_details[0]?.program || "N/A",
-        price: `${item.total_after_discount} ${item.currency}`,
-        created_at: formatDate(item?.created_at) || "N/A",
-        order_status: {
-          name: item.status.label || "N/A",
-          key: item.status?.key || null,
-          color: item.status.color,
-        },
-        avatar: item.image || "N/A",
-      })) || [];
+  const formattedData: SubscriptionItem[] =
+    studentsSubscriptions?.data.map((item: any) => ({
+      id: item.id,
+      num: item.id,
+      name: item.user.name,
+      request_type: {
+        name: item?.type.label,
+        key: item.type?.key || null,
+        color: item?.type.color === "primary" ? "primary" : "success",
+      },
+      type: item?.subscription_type || "N/A",
+      courses: item.order_details[0]?.program || "N/A",
+      price: `${item.total_after_discount} ${item.currency}`,
+      created_at: formatDate(item?.created_at) || "N/A",
+      order_status: {
+        name: item.status.label || "N/A",
+        key: item.status?.key || null,
+        color: item.status.color,
+      },
+      avatar: item.image || "N/A",
+    })) || [];
 
   const filteredData = useMemo(() => {
-    return formattedData.filter((item: any) => {
+    return formattedData.filter((item: SubscriptionItem) => {
       let statusMatch = true;
       let typeMatch = true;
 
@@ -131,7 +148,7 @@ export const AllStudentsSubscriptions = () => {
 
       if (selectedType && selectedType !== "all") {
         const userTypeKey = item?.request_type?.key;
-        statusMatch = userTypeKey === selectedType;
+        typeMatch = userTypeKey === selectedType;
       }
 
       return statusMatch && typeMatch;
@@ -144,23 +161,26 @@ export const AllStudentsSubscriptions = () => {
     if (!sortKey) return dataToSort;
 
     return dataToSort.sort((a, b) => {
-      let aVal = a[sortKey];
-      let bVal = b[sortKey];
+      let aVal = a[sortKey as keyof SubscriptionItem];
+      let bVal = b[sortKey as keyof SubscriptionItem];
 
       if (sortKey === "status") {
         aVal = a.order_status?.name || "";
         bVal = b.order_status?.name || "";
-        return aVal.localeCompare(bVal, "ar");
+        return (aVal as string).localeCompare(bVal as string, "ar");
       }
 
       if (sortKey === "created_at") {
-        return new Date(bVal).getTime() - new Date(aVal).getTime();
+        return (
+          new Date(bVal as string).getTime() -
+          new Date(aVal as string).getTime()
+        );
       }
 
       if (sortKey === "courses") {
         aVal = a.courses || "";
         bVal = b.courses || "";
-        return aVal.localeCompare(bVal, "ar");
+        return (aVal as string).localeCompare(bVal as string, "ar");
       }
 
       if (sortKey === "price") {
@@ -175,12 +195,30 @@ export const AllStudentsSubscriptions = () => {
         return aPrice - bPrice;
       }
 
-      return (aVal || "").toString().localeCompare(
-        (bVal || "").toString(),
-        "ar"
-      );
+      return (aVal || "")
+        .toString()
+        .localeCompare((bVal || "").toString(), "ar");
     });
   }, [filteredData, sortKey]);
+
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+    },
+    []
+  );
+
+  const handleSortKey = useCallback((key: string | number) => {
+    setSortKey(key as string);
+  }, []);
+
+  const handleTypeChange = useCallback((key: string | number) => {
+    setSelectedType(key as string);
+  }, []);
+
+  const handleStatusChange = useCallback((key: string | number) => {
+    setSelectedStatus(key as string);
+  }, []);
 
   return (
     <div>
@@ -199,7 +237,7 @@ export const AllStudentsSubscriptions = () => {
               placeholder="بحث بالإسم..."
               className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
             />
           </div>
 
@@ -215,10 +253,7 @@ export const AllStudentsSubscriptions = () => {
                 ترتيب حسب
               </Button>
             </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Static Actions"
-              onAction={(key) => setSortKey(key as string)}
-            >
+            <DropdownMenu aria-label="Static Actions" onAction={handleSortKey}>
               <DropdownItem key="name">الإسم</DropdownItem>
               <DropdownItem key="courses">إسم البرنامج</DropdownItem>
               <DropdownItem key="price">قيمة الإشتراك</DropdownItem>
@@ -236,10 +271,7 @@ export const AllStudentsSubscriptions = () => {
                 <ArrowDown2 size={14} />
               </Button>
             </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Static type"
-              onAction={(key) => setSelectedType(key as string)}
-            >
+            <DropdownMenu aria-label="Static type" onAction={handleTypeChange}>
               <DropdownItem key="all">الكل</DropdownItem>
               <DropdownItem key="new">جديد</DropdownItem>
               <DropdownItem key="renew">تجديد</DropdownItem>
@@ -256,7 +288,7 @@ export const AllStudentsSubscriptions = () => {
             </DropdownTrigger>
             <DropdownMenu
               aria-label="Static Actions"
-              onAction={(key) => setSelectedStatus(key as string)}
+              onAction={handleStatusChange}
             >
               <DropdownItem key="all">الكل</DropdownItem>
               <DropdownItem key="approved">موافق عليه</DropdownItem>

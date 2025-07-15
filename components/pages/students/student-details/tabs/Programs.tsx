@@ -37,11 +37,11 @@ import ConfirmModal from "@/components/global/ConfirmModal";
 import ChangeTeacherModal from "./ChangeTeacherModal";
 
 type StudentDetailsProps = {
-    data: {
+  data: {
     data: {
       id: number;
-      age:string;
-      gender:string;
+      age: string;
+      gender: string;
       first_name: string;
       last_name: string;
       user_name: string;
@@ -64,7 +64,7 @@ type StudentDetailsProps = {
         whats_app: string;
         image: string;
         gender: string;
-         age: string;
+        age: string;
         status_label: {
           label: string;
           color: string;
@@ -97,7 +97,7 @@ type StudentDetailsProps = {
         name: string;
         age: string;
         image: string;
-      }[]
+      }[];
     }[];
   };
   client_id: number;
@@ -132,10 +132,22 @@ interface Subscription {
     name: string;
     age: string;
     image: string;
-  }[]
+  }[];
 }
 
-const ActionsComponent = ({ id, user_id, children_users, subscription_status, refetchSubscriptions }: { id: number, user_id: any, children_users:  ChildUser[], subscription_status: any, refetchSubscriptions: () => void;}) => {
+const ActionsComponent = ({
+  id,
+  user_id,
+  children_users,
+  subscription_status,
+  refetchSubscriptions,
+}: {
+  id: number;
+  user_id: any;
+  children_users: ChildUser[];
+  subscription_status: any;
+  refetchSubscriptions: () => void;
+}) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
@@ -178,7 +190,7 @@ const ActionsComponent = ({ id, user_id, children_users, subscription_status, re
           title: data?.message,
           color: "success",
         });
-        refetchSubscriptions()
+        refetchSubscriptions();
       }
     },
     onError: (error) => {
@@ -246,31 +258,59 @@ const ActionsComponent = ({ id, user_id, children_users, subscription_status, re
         <DropdownMenu aria-label="Static Actions">
           {subscription_status === "cancelled" ? (
             <>
-              <DropdownItem key="renew" onClick={() => handleActionClick("renew")}>
+              <DropdownItem
+                key="renew"
+                onClick={() => handleActionClick("renew")}
+              >
                 تجديد
               </DropdownItem>
-              <DropdownItem key="change" onClick={() => handleActionClick("change")}>
+              <DropdownItem
+                key="change"
+                onClick={() => handleActionClick("change")}
+              >
                 تغيير الاشتراك
               </DropdownItem>
             </>
           ) : (
             <>
-              <DropdownItem key="renew" onClick={() => handleActionClick("renew")}>
+              <DropdownItem
+                key="renew"
+                onClick={() => handleActionClick("renew")}
+              >
                 تجديد
               </DropdownItem>
-              <DropdownItem key="change" onClick={() => handleActionClick("change")}>
+              <DropdownItem
+                key="change"
+                onClick={() => handleActionClick("change")}
+              >
                 تغيير الاشتراك
               </DropdownItem>
-              {subscription_status !== "freeze" && <DropdownItem key="Pause" onClick={() => handleActionClick("Pause")}>
-                إيقاف مؤقت
-              </DropdownItem>}
-              {subscription_status === "freeze" && <DropdownItem key="resume" onClick={() => handleActionClick("resume")}>
-                إستئناف الاشتراك
-              </DropdownItem>}
-              <DropdownItem key="extend" onClick={() => handleActionClick("extend")}>
+              {subscription_status !== "freeze" && (
+                <DropdownItem
+                  key="Pause"
+                  onClick={() => handleActionClick("Pause")}
+                >
+                  إيقاف مؤقت
+                </DropdownItem>
+              )}
+              {subscription_status === "freeze" && (
+                <DropdownItem
+                  key="resume"
+                  onClick={() => handleActionClick("resume")}
+                >
+                  إستئناف الاشتراك
+                </DropdownItem>
+              )}
+              <DropdownItem
+                key="extend"
+                onClick={() => handleActionClick("extend")}
+              >
                 تمديد الاشتراك
               </DropdownItem>
-              <DropdownItem key="cancel" onClick={() => handleActionClick("cancel")}>
+              <DropdownItem
+                key="cancel"
+                onClick={() => handleActionClick("cancel")}
+              >
                 إنهاء الاشتراك
               </DropdownItem>
             </>
@@ -286,7 +326,7 @@ const ActionsComponent = ({ id, user_id, children_users, subscription_status, re
         user_id={user_id}
         children_users={children_users}
         onActionSuccess={() => {
-          refetchSubscriptions()
+          refetchSubscriptions();
           setModalOpen(false);
         }}
       />
@@ -294,15 +334,12 @@ const ActionsComponent = ({ id, user_id, children_users, subscription_status, re
       <ConfirmModal
         open={!!confirmAction}
         title={
-          confirmAction === "resume"
-            ? "استئناف الاشتراك"
-            : "إنهاء الاشتراك"
+          confirmAction === "resume" ? "استئناف الاشتراك" : "إنهاء الاشتراك"
         }
         message={confirmAction ? confirmMessages[confirmAction] : ""}
         onConfirm={handleConfirmAction}
         onCancel={() => setConfirmAction(null)}
       />
-
     </>
   );
 };
@@ -316,18 +353,14 @@ export const Programs = ({
   const user_id = params.id;
   const [modalOpen, setModalOpen] = useState(false);
 
-
   const [selectedInstructors, setSelectedInstructors] = useState<
     Record<number, any>
   >({});
 
-    const { data: subscriptionsData, refetch } = useQuery({
+  const { data: subscriptionsData, refetch } = useQuery({
     queryKey: ["subscriptions", user_id],
     queryFn: () =>
-      fetchClient(
-        `client/user/subscriptions/${user_id}`,
-        axios_config
-      ),
+      fetchClient(`client/user/subscriptions/${user_id}`, axios_config),
     initialData: initialSubscriptionsData,
   });
 
@@ -412,89 +445,113 @@ export const Programs = ({
     })),
   });
 
+  // Type guard to check if an object has a 'data' property that is an array
+  function hasDataArray(obj: unknown): obj is { data: any[] } {
+    return !!obj && typeof obj === "object" && Array.isArray((obj as any).data);
+  }
+
   return (
     <div className="grid grid-cols-1 gap-8">
-      {subscriptionsData?.data?.map((subscription: Subscription, index:number) => {
-        const reportResult = reportsResults[index];
-        const reportData = reportResult?.data;
-        const isLoadingReport = reportResult?.isLoading;
+      {subscriptionsData?.data?.map(
+        (subscription: Subscription, index: number) => {
+          const reportResult = reportsResults[index];
+          const reportData: { data: any[] } = hasDataArray(reportResult?.data)
+            ? reportResult.data
+            : { data: [] };
+          const isLoadingReport = reportResult?.isLoading;
 
-        const appointmentResult = appointmentsResults[index];
-        const appointmentData = appointmentResult?.data;
-        const isLoadingappointment = appointmentResult?.isLoading;
+          const appointmentResult = appointmentsResults[index];
+          const appointmentData: { data: any[] } = hasDataArray(
+            appointmentResult?.data
+          )
+            ? appointmentResult.data
+            : { data: [] };
+          const isLoadingappointment = appointmentResult?.isLoading;
 
-        const assignmentResult = assignmentsResults[index];
-        const assignmentData = assignmentResult?.data;
-        const isLoadingassignment = assignmentResult?.isLoading;
+          const assignmentResult = assignmentsResults[index];
+          const assignmentData: { data: any[] } = hasDataArray(
+            assignmentResult?.data
+          )
+            ? assignmentResult.data
+            : { data: [] };
+          const isLoadingassignment = assignmentResult?.isLoading;
 
-        const feedbackResult = feedbacksResults[index];
-        const feedbackData = feedbackResult?.data;
-        const isLoadingfeedback = feedbackResult?.isLoading;
+          const feedbackResult = feedbacksResults[index];
+          const feedbackData: { data: any[] } = hasDataArray(
+            feedbackResult?.data
+          )
+            ? feedbackResult.data
+            : { data: [] };
+          const isLoadingfeedback = feedbackResult?.isLoading;
 
-        const subaccountResult = subaccountsResults[index];
-        const subaccountData = subaccountResult?.data;
-        const isLoadingsubaccount = subaccountResult?.isLoading;
+          const subaccountResult = subaccountsResults[index];
+          const subaccountData = subaccountResult?.data;
+          const isLoadingsubaccount = subaccountResult?.isLoading;
 
-        const instructorsData = instructorsResults[index]?.data?.data ?? [];
-        const isLoadingInstructors = instructorsResults[index]?.isLoading;
+          const instructorsData = instructorsResults[index]?.data ?? [];
+          const isLoadingInstructors = instructorsResults[index]?.isLoading;
 
-        const subscriptionDate = subscription.subscription_date;
-        const expireDate = subscription.expire_date;
-        const daysToExpire = subscription.DaysToExpire;
+          const subscriptionDate = subscription.subscription_date;
+          const expireDate = subscription.expire_date;
+          const daysToExpire = subscription.DaysToExpire;
 
-        let progressValue = 0;
+          let progressValue = 0;
 
-        if (subscriptionDate && expireDate && daysToExpire !== undefined) {
-          const start = new Date(subscriptionDate);
-          const end = new Date(expireDate);
+          if (subscriptionDate && expireDate && daysToExpire !== undefined) {
+            const start = new Date(subscriptionDate);
+            const end = new Date(expireDate);
 
-          const totalMs = end.getTime() - start.getTime();
-          const totalDays = Math.ceil(totalMs / (1000 * 60 * 60 * 24));
+            const totalMs = end.getTime() - start.getTime();
+            const totalDays = Math.ceil(totalMs / (1000 * 60 * 60 * 24));
 
-          const usedDays = totalDays - daysToExpire;
-          progressValue = Math.round((usedDays / totalDays) * 100);
-        }
+            const usedDays = totalDays - daysToExpire;
+            progressValue = Math.round((usedDays / totalDays) * 100);
+          }
 
-        return (
-          <div
-            key={index}
-            className="bg-main border border-stroke rounded-lg p-5"
-          >
-            <ChangeTeacherModal
-              isOpen={modalOpen}
-              onClose={() => setModalOpen(false)}
-              student={subscription}
-              refetchSubscriptions={refetch}
-            />
-            <div className="grid grid-cols-4 gap-2 mb-10">
-              <div className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke">
-                <div className="flex flex-col gap-4">
-                  <span className="text-primary text-sm font-bold">
-                    إسم البرنامج
-                  </span>
-                  <div className="text-black-text font-bold text-[15px]">
-                    {subscription.program}
+          return (
+            <div
+              key={index}
+              className="bg-main border border-stroke rounded-lg p-5"
+            >
+              <ChangeTeacherModal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                student={subscription}
+                refetchSubscriptions={refetch}
+              />
+              <div className="grid grid-cols-4 gap-2 mb-10">
+                <div className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke">
+                  <div className="flex flex-col gap-4">
+                    <span className="text-primary text-sm font-bold">
+                      إسم البرنامج
+                    </span>
+                    <div className="text-black-text font-bold text-[15px]">
+                      {subscription.program}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-end justify-between bg-background p-5 rounded-2xl border border-stroke">
-                <div className="flex flex-col gap-4">
-                  <span className="text-primary text-sm font-bold">
-                    سعر الإشتراك
-                  </span>
-                  <div className="text-black-text font-bold text-[15px]">
-                    {subscription.price}
+                <div className="flex items-end justify-between bg-background p-5 rounded-2xl border border-stroke">
+                  <div className="flex flex-col gap-4">
+                    <span className="text-primary text-sm font-bold">
+                      سعر الإشتراك
+                    </span>
+                    <div className="text-black-text font-bold text-[15px]">
+                      {subscription.price}
+                    </div>
                   </div>
+                  <Link href="#" className="flex items-center gap-1">
+                    <span className="text-sm font-bold text-black-text">
+                      ج.م
+                    </span>
+                  </Link>
                 </div>
-                <Link href="#" className="flex items-center gap-1">
-                  <span className="text-sm font-bold text-black-text">ج.م</span>
-                </Link>
-              </div>
 
-              <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background">
-                <div className="flex flex-col gap-4 w-1/2">
-                  <span className="text-primary text-sm font-bold">الإسم</span>
+                <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background">
+                  <div className="flex flex-col gap-4 w-1/2">
+                    <span className="text-primary text-sm font-bold">
+                      الإسم
+                    </span>
                     <div className="flex items-center gap-2">
                       <Avatar
                         size="sm"
@@ -508,138 +565,144 @@ export const Programs = ({
                           subscription.instructor?.name}
                       </span>
                     </div>
-                </div>
+                  </div>
                   <Link
                     href="#"
-                    onClick={()=> setModalOpen(true)}
+                    onClick={() => setModalOpen(true)}
                     className="flex items-center gap-1"
                   >
                     <span className="text-sm font-bold text-primary">
                       تغير المعلم
                     </span>
                   </Link>
-              </div>
+                </div>
 
-              <div className="flex items-end justify-between bg-background p-5 rounded-2xl border border-stroke">
-                <div className="flex flex-col gap-4">
-                  <span className="text-primary text-sm font-bold">
-                    حالة الإشتراك
-                  </span>
-                  <div className="text-black-text font-bold text-[15px]">
-                    {subscription.subscription_status}
+                <div className="flex items-end justify-between bg-background p-5 rounded-2xl border border-stroke">
+                  <div className="flex flex-col gap-4">
+                    <span className="text-primary text-sm font-bold">
+                      حالة الإشتراك
+                    </span>
+                    <div className="text-black-text font-bold text-[15px]">
+                      {subscription.subscription_status}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-center flex-col">
-              <Tabs
-                aria-label="sub-tabs"
-                classNames={{
-                  cursor: "bg-primary",
-                  tabContent:
-                    "text-black-text text-sm font-bold group-data-[selected=true]:text-white",
-                  tabList: "bg-[#EAF0FD]",
-                }}
-              >
-                {subscriptionsData?.data?.length > 0 && (
-                  <Tab
-                    key="subscription-details"
-                    title="تفاصيل الإشتراك و التجديد"
-                    className="w-full"
-                  >
-                    <div className="flex items-center justify-between gap-2 w-full">
-                      <div className="flex-1">
-                        <Progress
-                          className="min-w-96 w-full"
-                          label={`متبقي ${subscription.DaysToExpire} يوم علي تجديد الإشتراك`}
-                          value={progressValue}
-                          classNames={{
-                            label: "text-sm font-semibold text-black-text",
-                            track: "bg-primary/30",
-                          }}
-                        />
-                        <div className="flex items-center justify-between mt-3">
-                          <div className="text-sm font-semibold text-title">
-                            تاريخ الإشتراك
-                            <br />
-                            {subscription.subscription_date}
-                          </div>
+              <div className="flex items-center justify-center flex-col">
+                <Tabs
+                  aria-label="sub-tabs"
+                  classNames={{
+                    cursor: "bg-primary",
+                    tabContent:
+                      "text-black-text text-sm font-bold group-data-[selected=true]:text-white",
+                    tabList: "bg-[#EAF0FD]",
+                  }}
+                >
+                  {subscriptionsData?.data?.length > 0 && (
+                    <Tab
+                      key="subscription-details"
+                      title="تفاصيل الإشتراك و التجديد"
+                      className="w-full"
+                    >
+                      <div className="flex items-center justify-between gap-2 w-full">
+                        <div className="flex-1">
+                          <Progress
+                            className="min-w-96 w-full"
+                            label={`متبقي ${subscription.DaysToExpire} يوم علي تجديد الإشتراك`}
+                            value={progressValue}
+                            classNames={{
+                              label: "text-sm font-semibold text-black-text",
+                              track: "bg-primary/30",
+                            }}
+                          />
+                          <div className="flex items-center justify-between mt-3">
+                            <div className="text-sm font-semibold text-title">
+                              تاريخ الإشتراك
+                              <br />
+                              {subscription.subscription_date}
+                            </div>
 
-                          <div className="flex gap-4">
-                            <div className="text-sm font-semibold text-title text-center">
-                              عدد الحصص الفائتة
-                              <br />
-                              <span className="text-primary">
-                                {subscription.missed_sessions}
-                              </span>
+                            <div className="flex gap-4">
+                              <div className="text-sm font-semibold text-title text-center">
+                                عدد الحصص الفائتة
+                                <br />
+                                <span className="text-primary">
+                                  {subscription.missed_sessions}
+                                </span>
+                              </div>
+                              <div className="text-sm font-semibold text-title text-center">
+                                عدد الحصص المكتملة
+                                <br />
+                                <span className="text-primary">
+                                  {subscription.completed_sessions}
+                                </span>
+                              </div>
+                              <div className="text-sm font-semibold text-title text-center">
+                                عدد الطلاب
+                                <br />
+                                <span className="text-primary">
+                                  {subscription.student_number}
+                                </span>
+                              </div>
                             </div>
-                            <div className="text-sm font-semibold text-title text-center">
-                              عدد الحصص المكتملة
-                              <br />
-                              <span className="text-primary">
-                                {subscription.completed_sessions}
-                              </span>
-                            </div>
-                            <div className="text-sm font-semibold text-title text-center">
-                              عدد الطلاب
-                              <br />
-                              <span className="text-primary">
-                                {subscription.student_number}
-                              </span>
-                            </div>
-                          </div>
 
-                          <div className="text-sm font-semibold text-title">
-                            تاريخ الإنتهاء
-                            <br />
-                            {subscription.expire_date}
+                            <div className="text-sm font-semibold text-title">
+                              تاريخ الإنتهاء
+                              <br />
+                              {subscription.expire_date}
+                            </div>
                           </div>
                         </div>
-                      </div> 
-                      <ActionsComponent id={subscription.program_id} user_id={user_id} children_users={subscription.children_users} subscription_status={subscription.subscription_status} refetchSubscriptions={refetch}/>
-                    </div>
-                  </Tab>
-                )}
+                        <ActionsComponent
+                          id={subscription.program_id}
+                          user_id={user_id}
+                          children_users={subscription.children_users}
+                          subscription_status={subscription.subscription_status}
+                          refetchSubscriptions={refetch}
+                        />
+                      </div>
+                    </Tab>
+                  )}
 
-                {appointmentData?.data?.length > 0 && (
-                  <Tab className="w-full" key="appointments" title="المواعيد">
-                    <Appointments
-                      appointmentData={appointmentData}
-                      isLoadingappointment={isLoadingappointment}
-                    />
-                  </Tab>
-                )}
+                  {appointmentData.data.length > 0 && (
+                    <Tab className="w-full" key="appointments" title="المواعيد">
+                      <Appointments
+                        appointmentData={appointmentData}
+                        isLoadingappointment={isLoadingappointment}
+                      />
+                    </Tab>
+                  )}
 
-                {assignmentData?.data?.length > 0 && (
-                  <Tab className="w-full" key="assignments" title="التسليمات">
-                    <Assignments
-                      isLoadingassignment={isLoadingassignment}
-                      assignmentData={assignmentData}
-                    />
-                  </Tab>
-                )}
+                  {assignmentData.data.length > 0 && (
+                    <Tab className="w-full" key="assignments" title="التسليمات">
+                      <Assignments
+                        isLoadingassignment={isLoadingassignment}
+                        assignmentData={assignmentData}
+                      />
+                    </Tab>
+                  )}
 
-                {reportData?.data?.length > 0 && (
-                  <Tab className="w-full" key="reports" title="التقارير">
-                    <Reports
-                      isLoadingReport={isLoadingReport}
-                      reportData={reportData}
-                    />
-                  </Tab>
-                )}
+                  {reportData.data.length > 0 && (
+                    <Tab className="w-full" key="reports" title="التقارير">
+                      <Reports
+                        isLoadingReport={isLoadingReport}
+                        reportData={reportData}
+                      />
+                    </Tab>
+                  )}
 
-                {feedbackData?.data?.length > 0 && (
-                  <Tab className="w-full" key="feedbacks" title="الملاحظات">
-                    <Feedbacks
-                      isLoadingfeedback={isLoadingfeedback}
-                      feedbackData={feedbackData}
-                      client_id={client_id}
-                      refetchFeedbacks={feedbackResult?.refetch}
-                    />
-                  </Tab>
-                )}
-              
+                  {feedbackData.data.length > 0 && (
+                    <Tab className="w-full" key="feedbacks" title="الملاحظات">
+                      <Feedbacks
+                        isLoadingfeedback={isLoadingfeedback}
+                        feedbackData={feedbackData}
+                        client_id={client_id}
+                        refetchFeedbacks={feedbackResult?.refetch}
+                      />
+                    </Tab>
+                  )}
+
                   <Tab
                     className="w-full"
                     key="subaccounts"
@@ -653,11 +716,12 @@ export const Programs = ({
                       data={data}
                     />
                   </Tab>
-              </Tabs>
+                </Tabs>
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        }
+      )}
     </div>
   );
 };

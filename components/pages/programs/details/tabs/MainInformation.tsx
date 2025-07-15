@@ -14,7 +14,7 @@ import { Copy } from "iconsax-reactjs";
 import React from "react";
 
 type MainInformationProps = {
-  mainData: {
+  data: {
     id: number;
     title: string;
     label: string;
@@ -32,14 +32,14 @@ type MainInformationProps = {
       title: string;
     }[];
     status: {
-        label: string,
-        key: string,
-        color: string,
-      };
+      label: string;
+      key: string;
+      color: string;
+    };
   };
 };
 
-export const MainInformation = ({ mainData }: MainInformationProps) => {
+export const MainInformation = ({ data }: MainInformationProps) => {
   const handleCopy = async (textToCopy: string) => {
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -54,27 +54,27 @@ export const MainInformation = ({ mainData }: MainInformationProps) => {
       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
         <div className="text-primary font-bold">إسم البرنامج</div>
         <div className="text-black-text font-bold text-[15px]">
-          {mainData.title}
+          {data.title}
         </div>
       </div>
       {/* Main Card  */}
       {/* Main Card  */}
-       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
+      <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
         <div className="text-primary font-bold">الحالة</div>
         <div className="w-fit">
           <div
-            className={`text-${mainData?.status?.color}
-              bg-${mainData?.status?.color} bg-opacity-10
+            className={`text-${data?.status?.color}
+              bg-${data?.status?.color} bg-opacity-10
               px-5 py-1 rounded-3xl font-bold text-[15px]`}
           >
-            {mainData?.status?.label}
+            {data?.status?.label}
           </div>
         </div>
       </div>
       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
         <div className="text-primary font-bold">عنوان البرنامج</div>
         <div className="text-black-text font-bold text-[15px]">
-          {mainData.label}
+          {data.label}
         </div>
       </div>
       {/* Main Card  */}
@@ -84,7 +84,7 @@ export const MainInformation = ({ mainData }: MainInformationProps) => {
         <div className="text-primary font-bold">التخصص</div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm">
-            {mainData.specialization}
+            {data.specialization}
           </div>
         </div>
       </div>
@@ -93,7 +93,7 @@ export const MainInformation = ({ mainData }: MainInformationProps) => {
       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
         <div className="text-primary font-bold">وسائل الدفع</div>
         <div className="flex items-center gap-3 flex-wrap">
-          {mainData.payment_methods.map((method) => (
+          {data.payment_methods.map((method) => (
             <div
               className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm"
               key={method.id}
