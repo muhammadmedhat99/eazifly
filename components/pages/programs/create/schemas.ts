@@ -32,6 +32,14 @@ export const informationFormSchema = yup.object({
       (value) => value && value.length > 0
     )
     .required("الرجاء تحميل ملف"),
+    cover: yup
+    .mixed<FileList>()
+    .test(
+      "fileType",
+      "الرجاء تحميل ملف صحيح",
+      (value) => value && value.length > 0
+    )
+    .required("الرجاء تحميل ملف"),
   why_us: yup.boolean().required(),
   learning_track: yup.boolean().required(),
   special_for: yup
@@ -85,23 +93,23 @@ export const subscriptionsSchema = yup.object().shape({
           .string()
           .required("يجب اختيار نوع الإشتراك")
           .oneOf(["single", "family"], "نوع الإشتراك غير صحيح"),
-        subscription_price: yup
-          .string()
-          .required("يجب إدخال سعر الإشتراك")
-          .matches(/^\d+(\.\d{1,2})?$/, "سعر الإشتراك يجب أن يكون رقماً صحيحاً")
-          .test(
-            'price-comparison',
-            'سعر الإشتراك يجب أن يكون أقل من أو يساوي سعر البيع',
-            function (value) {
-              const { sell_price } = this.parent;
-              if (!value || !sell_price) return true;
-              return parseFloat(value) <= parseFloat(sell_price);
-            }
-          ),
         sell_price: yup
           .string()
           .required("يجب إدخال سعر البيع")
-          .matches(/^\d+(\.\d{1,2})?$/, "سعر البيع يجب أن يكون رقماً صحيحاً"),
+          .matches(/^\d+(\.\d{1,2})?$/, "سعر الإشتراك يجب أن يكون رقماً صحيحاً")
+          .test(
+            'price-comparison',
+            'سعر البيع يجب أن يكون أقل من أو يساوي سعر الإشتراك',
+            function (value) {
+              const { subscription_price } = this.parent;
+              if (!value || !subscription_price) return true;
+              return parseFloat(value) <= parseFloat(subscription_price);
+            }
+          ),
+        subscription_price: yup
+          .string()
+          .required("يجب إدخال سعر الإشتراك")
+          .matches(/^\d+(\.\d{1,2})?$/, "سعر الإشتراك يجب أن يكون رقماً صحيحاً"),
         number_of_lessons: yup
           .string()
           .required("يجب إدخال عدد حصص البرنامج")

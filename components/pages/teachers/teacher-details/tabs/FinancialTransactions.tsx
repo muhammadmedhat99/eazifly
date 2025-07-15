@@ -10,6 +10,7 @@ import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/r
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { Loader } from "@/components/global/Loader";
+import { useParams } from 'next/navigation';
 
 const columns = [
     { name: "النوع", uid: "type" },
@@ -36,10 +37,12 @@ const OptionsComponent = () => {
     };
 
 export const FinancialTransactions = () => {
+  const params = useParams();
+  const teacher_id = params.id;
   const { data: teachersData, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/withdrawal/request`, axios_config),
-    queryKey: AllQueryKeys.GetAllUsers(""),
+      await fetchClient(`client/withdrawal/request?instructor_id=${teacher_id}`, axios_config),
+    queryKey: ["GetWithdrawalRequests", teacher_id],
   });
 
 const formattedData =
@@ -78,14 +81,23 @@ const formattedData =
   }) || [];
   
   return (
-    isLoading ? (
-      <Loader />
-    ) : (
-      <TableComponent
-        columns={columns}
-        data={formattedData}
-        ActionsComponent={OptionsComponent}
-      />
-    )
+    <>
+      {
+        isLoading ? (
+          <Loader />
+        ) : formattedData && formattedData.length > 0 ? (
+          <TableComponent
+            columns={columns}
+            data={formattedData}
+            ActionsComponent={OptionsComponent}
+          />
+        ) : (
+          <div className="text-sm text-gray-500 text-center">
+            لا توجد معاملات مالية 
+          </div>
+        )
+      }
+
+    </>
   );
 };

@@ -18,6 +18,7 @@ type MainInformationProps = {
     id: number;
     title: string;
     label: string;
+    specialization: string;
     category: string;
     content: string;
     description: string;
@@ -30,6 +31,11 @@ type MainInformationProps = {
       id: number;
       title: string;
     }[];
+    status: {
+        label: string,
+        key: string,
+        color: string,
+      };
   };
 };
 
@@ -53,56 +59,32 @@ export const MainInformation = ({ mainData }: MainInformationProps) => {
       </div>
       {/* Main Card  */}
       {/* Main Card  */}
+       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
+        <div className="text-primary font-bold">الحالة</div>
+        <div className="w-fit">
+          <div
+            className={`text-${mainData?.status?.color}
+              bg-${mainData?.status?.color} bg-opacity-10
+              px-5 py-1 rounded-3xl font-bold text-[15px]`}
+          >
+            {mainData?.status?.label}
+          </div>
+        </div>
+      </div>
       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
-        <div className="text-primary font-bold">عدد ساعات البرنامج</div>
-        <div className="text-black-text font-bold text-[15px] flex items-center justify-between">
-          <span>24</span>
-          <span>ساعة</span>
+        <div className="text-primary font-bold">عنوان البرنامج</div>
+        <div className="text-black-text font-bold text-[15px]">
+          {mainData.label}
         </div>
       </div>
       {/* Main Card  */}
+
       {/* Main Card  */}
       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
-        <div className="text-primary font-bold">سعر الساعة</div>
-        <div className="text-black-text font-bold text-[15px] flex items-center justify-between">
-          <span>120</span>
-          <span>ج.م</span>
-        </div>
-      </div>
-      {/* Main Card  */}
-      {/* Main Card  */}
-      <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
-        <div className="text-primary font-bold">عدد الحصص</div>
-        <div className="text-black-text font-bold text-[15px] flex items-center justify-between">
-          <span>{mainData?.number_of_lessons}</span>
-          <span>حصة</span>
-        </div>
-      </div>
-      {/* Main Card  */}
-      {/* Main Card  */}
-      <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
-        <div className="text-primary font-bold">الطلاب المشتركين</div>
-        <div className="text-black-text font-bold text-[15px] flex items-center justify-between">
-          <span>{mainData.number_of_students}</span>
-          <span>طالب</span>
-        </div>
-      </div>
-      {/* Main Card  */}
-      {/* Main Card  */}
-      <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
-        <div className="text-primary font-bold">حالة البرنامج</div>
-        <div className="text-success font-bold text-[15px]">
-          <span className="bg-success size-2 rounded-full inline-block me-1.5" />
-          <span>جاري</span>
-        </div>
-      </div>
-      {/* Main Card  */}
-      {/* Main Card  */}
-      <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
-        <div className="text-primary font-bold">المواد العلمية</div>
+        <div className="text-primary font-bold">التخصص</div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm">
-            {mainData.category}
+            {mainData.specialization}
           </div>
         </div>
       </div>

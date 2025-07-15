@@ -1,19 +1,28 @@
 "use client";
 
 import { DropzoneField } from "@/components/global/DropZoneField";
-import { postData } from "@/lib/utils";
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, ModalContent, addToast } from "@heroui/react";
-import { useMutation } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, ModalContent, addToast, Tabs, Tab, Checkbox } from "@heroui/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { axios_config } from "@/lib/const";
+import ProgramChangeComponent from "./ProgramChangeComponent";
 
 interface SubscriptionActionModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onActionSuccess?: () => void;
     action: string | null;
     subscriptionId: number | null;
     user_id: string;
+    children_users: {
+        user_id: string;
+        name: string;
+        age: string;
+        image: string;
+    }[]
 }
 
 export default function SubscriptionActionModal({
@@ -21,15 +30,27 @@ export default function SubscriptionActionModal({
     onClose,
     action,
     subscriptionId,
-    user_id
+    user_id,
+    children_users,
+    onActionSuccess
 }: SubscriptionActionModalProps) {
     const { handleSubmit, control, reset } = useForm({
         defaultValues: {
             paid: "",
-            image: []
+            image: [],
+            days: ""
         },
     });
 
+    const { data, isLoading } = useQuery({
+        queryKey: ["GetProgramData"],
+        queryFn: async () => await fetchClient(`client/plans/${subscriptionId}`, axios_config),
+    });
+    
+    const [selectedTab, setSelectedTab] = useState<string>(
+        data?.data?.subscripe_days?.[0] || ""
+    );
+    
     const renderContent = () => {
         switch (action) {
             case "renew":
@@ -72,49 +93,200 @@ export default function SubscriptionActionModal({
                 );
             case "Pause":
                 return (
-                    <div className="space-y-4">
-                        <Input label="مدة الإيقاف (بالأيام)" placeholder="مثلاً 30" />
+                    <div className="flex flex-col gap-3">
+                        <Controller
+                            name="days"
+                            control={control}
+                            render={({ field }) => (
+                                <Input
+                                    {...field}
+                                    type="number"
+                                    max={30}
+                                    label="مدة الإيقاف"
+                                    placeholder="نص الكتابة"
+                                    labelPlacement="outside"
+                                    classNames={{
+                                        label: "text-[#272727] font-bold text-sm",
+                                        inputWrapper: "shadow-none",
+                                    }}
+                                />
+                            )}
+                        />
                     </div>
                 );
             case "extend":
                 return (
-                    <div className="space-y-4">
-                        <Input label="عدد الأيام" placeholder="مثلاً 15" />
+                    <div className="flex flex-col gap-3">
+                        <Controller
+                            name="days"
+                            control={control}
+                            render={({ field }) => (
+                                <Input
+                                    {...field}
+                                    type="number"
+                                    max={30}
+                                    label="مدة التمديد"
+                                    placeholder="نص الكتابة"
+                                    labelPlacement="outside"
+                                    classNames={{
+                                        label: "text-[#272727] font-bold text-sm",
+                                        inputWrapper: "shadow-none",
+                                    }}
+                                />
+                            )}
+                        />
                     </div>
                 );
             case "change":
                 return (
-                    <div className="space-y-4">
-                        <Input label="نوع الاشتراك الجديد" placeholder="أدخل النوع" />
-                    </div>
-                );
-            case "cancel":
-                return (
-                    <div className="space-y-4">
-                        <Input label="سبب الإنهاء" placeholder="أدخل السبب" />
-                    </div>
+                    <ProgramChangeComponent
+                        children_users={children_users}
+                        data={data?.data}
+                        control={control}
+                        selectedTab={selectedTab}
+                        setSelectedTab={setSelectedTab}
+                    />
                 );
             default:
                 return null;
         }
     };
 
-    const onSubmit = (data: any) => handleAction.mutate(data);
+    const actionsMap: Record<
+        string,
+        {
+            endpoint: string;
+            buildFormData: (data: any, subscriptionId: number, userId: string) => FormData;
+        }
+    > = {
+        renew: {
+            endpoint: "client/order/renew",
+            buildFormData: (data, subscriptionId, userId) => {
+                const formdata = new FormData();
+                formdata.append("paid", data.paid);
+                if (data.image?.[0]) {
+                    formdata.append("image", data.image[0]);
+                }
+                formdata.append("program_id", subscriptionId.toString());
+                formdata.append("user_id", userId);
+                return formdata;
+            },
+        },
 
-    const handleAction = useMutation({
-        mutationFn: (submitData: any) => {
-            var myHeaders = new Headers();
+        Pause: {
+            endpoint: "client/subscription/freeze",
+            buildFormData: (data, subscriptionId, userId) => {
+                const formdata = new FormData();
+                formdata.append("days", data.days);
+                formdata.append("program_id", subscriptionId.toString());
+                formdata.append("user_id", userId);
+                return formdata;
+            },
+        },
+
+        extend: {
+            endpoint: "client/subscription/extension",
+            buildFormData: (data, subscriptionId, userId) => {
+                const formdata = new FormData();
+                formdata.append("days", data.days);
+                formdata.append("program_id", subscriptionId.toString());
+                formdata.append("user_id", userId);
+                return formdata;
+            },
+        },
+
+        change: {
+            endpoint: "client/subscription/change",
+            buildFormData: (data, subscriptionId, userId) => {
+                const formdata = new FormData();
+
+                formdata.append("program_id", subscriptionId?.toString() || "");
+                formdata.append("user_id", userId);
+                formdata.append("paid", data.paid || "");
+                formdata.append("student_number", data.student_number || "");
+
+                if (data.image?.[0]) {
+                    formdata.append("image", data.image[0]);
+                }
+
+                if (data.plan_id) {
+                    formdata.append("plan_id", data.plan_id.toString());
+                }
+
+                if (data.users_ids?.length > 0) {
+                    data.users_ids.forEach((id: string, index: number) => {
+                        formdata.append(`users_ids[${index}]`, id);
+                    });
+                }
+
+                return formdata;
+            },
+        },
+
+    };
+
+    const createPlanMutation = useMutation({
+        mutationFn: async (payload: any) => {
+            const myHeaders = new Headers();
             myHeaders.append("local", "ar");
             myHeaders.append("Accept", "application/json");
             myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
-            var formdata = new FormData();
-            formdata.append("paid", submitData.paid);
-            if (submitData.image?.[0]) {
-                formdata.append("image", submitData.image[0]);
+
+            const formdata = new FormData();
+            formdata.append("subscripe_days", payload.subscripe_days);
+            formdata.append("program_id", payload.program_id);
+            formdata.append("number_of_session_per_week", payload.number_of_session_per_week);
+            formdata.append("duration", payload.duration);
+
+            return await postData("client/program/plan", formdata, myHeaders);
+        },
+        onSuccess: (data, variables) => {
+            if (data?.status === 404) {
+                addToast({
+                    title: data.message || "الخطة غير موجودة",
+                    color: "warning",
+                });
+                return; 
             }
-            formdata.append("program_id", subscriptionId ? subscriptionId.toString() : "");
-            formdata.append("user_id", user_id);
-            return postData(`client/order/renew`, formdata, myHeaders);
+
+            const planId = data?.data?.id;
+
+            const finalFormValues = {
+                ...variables.originalData,
+                plan_id: planId,
+            };
+
+            handleAction.mutate(finalFormValues);
+        },
+        onError: (error) => {
+            console.log("error create plan ===>", error);
+            addToast({
+                title: "عذرا حدث خطأ ما",
+                color: "danger",
+            });
+        },
+    });
+    
+    const handleAction = useMutation({
+        mutationFn: (submitData: any) => {
+            if (!action || !subscriptionId) return Promise.reject("Missing data");
+
+            const config = actionsMap[action];
+
+            if (!config) return Promise.reject("Unknown action");
+
+            const myHeaders = new Headers();
+            myHeaders.append("local", "ar");
+            myHeaders.append("Accept", "application/json");
+            myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+            const formdata = config.buildFormData(
+                submitData,
+                subscriptionId,
+                user_id
+            );
+
+            return postData(config.endpoint, formdata, myHeaders);
         },
         onSuccess: (data) => {
             if (data.message !== "success") {
@@ -129,6 +301,7 @@ export default function SubscriptionActionModal({
                 });
                 reset();
                 onClose();
+                onActionSuccess?.();
             }
         },
         onError: (error) => {
@@ -140,10 +313,25 @@ export default function SubscriptionActionModal({
         },
     });
 
+
+    const onSubmit = (data: any) => {
+        if (action === "change") {
+            createPlanMutation.mutate({
+                subscripe_days: data.subscripe_days,
+                program_id: subscriptionId,
+                number_of_session_per_week: data.number_of_session_per_week,
+                duration: data.duration,
+                originalData: data,
+            });
+        } else {
+            handleAction.mutate(data);
+        }
+    };
+
     const [scrollBehavior, setScrollBehavior] = useState<"inside" | "normal" | "outside">("inside");
 
     return (
-        <Modal isOpen={isOpen} scrollBehavior={scrollBehavior} onOpenChange={(open) => !open && onClose()} size="xl">
+        <Modal isOpen={isOpen} scrollBehavior={scrollBehavior} onOpenChange={(open) => !open && onClose()} size={action === "change" ? "4xl" : "xl"}>
             <ModalContent>
                 <ModalHeader className="text-lg font-bold text-[#272727] flex justify-center">
                     {action ? getActionTitle(action) : "إجراء"}
@@ -171,7 +359,7 @@ function getActionTitle(action: string) {
         case "extend":
             return "تمديد الاشتراك";
         case "change":
-            return "تغيير الاشتراك";
+            return "تغيير إشتراك برنامج";
         case "cancel":
             return "إنهاء الاشتراك";
         default:

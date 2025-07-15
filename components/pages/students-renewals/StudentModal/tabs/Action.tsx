@@ -1,16 +1,17 @@
 "use client";
 
-import { addToast, Button, Input, Select, SelectItem, Switch } from "@heroui/react";
-import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import { addToast, Button, Input, Select, SelectItem, Spinner, Switch } from "@heroui/react";
+import React, { useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { JoditInput } from "@/components/global/JoditInput";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 const schema = yup.object({
     communication_type: yup
@@ -31,15 +32,22 @@ const schema = yup.object({
         .string()
         .required("برجاء تحديد حالة التجديد"),
 
-    reminder_type: yup
-        .string()
-        .required("برجاء اختيار وسيلة التذكير"),
-
-    reminder_date: yup
-        .string()
-        .required("برجاء تحديد موعد التذكير"),
-    note: yup.string().default(""),
     reminder: yup.boolean().default(false),
+    reminder_type: yup
+    .string()
+    .when("reminder", {
+      is: true,
+      then: (schema) => schema.required("برجاء اختيار وسيلة التذكير"),
+      otherwise: (schema) => schema.notRequired().nullable(),
+    }),
+     reminder_date: yup
+    .string()
+    .when("reminder", {
+      is: true,
+      then: (schema) => schema.required("برجاء تحديد موعد التذكير"),
+      otherwise: (schema) => schema.notRequired().nullable(),
+    }),
+    note: yup.string().default(""),
 });
 
 type FormData = yup.InferType<typeof schema>;
@@ -68,9 +76,10 @@ type StudentDetailsProps = {
       color: string;
     };
   };
+  onClose: () => void;
 };
 
-export const Action = ({studentInfo} : StudentDetailsProps) => {
+export const Action = ({studentInfo, onClose} : StudentDetailsProps) => {
     const {
         register,
         handleSubmit,
@@ -81,6 +90,10 @@ export const Action = ({studentInfo} : StudentDetailsProps) => {
         resolver: yupResolver(schema),
       });
     
+      const [search, setSearch] = useState("");
+      const debouncedSearch = useDebounce(search, 500);
+      const queryClient = useQueryClient();
+
       const onSubmit = (data: FormData) => storeCommunication.mutate(data);
     
       const storeCommunication = useMutation({
@@ -99,8 +112,10 @@ export const Action = ({studentInfo} : StudentDetailsProps) => {
             }
             });
           formdata.append("renewal_status", submitData.renewal_status);
-          formdata.append("reminder_type", submitData.reminder_type);
-          formdata.append("reminder_date", submitData.reminder_date);
+              if (submitData.reminder) {
+                  submitData.reminder_type && formdata.append("reminder_type", submitData.reminder_type);
+                  submitData.reminder_date && formdata.append("reminder_date", submitData.reminder_date);
+              }
           formdata.append("note", submitData.note);
           formdata.append("reminder", submitData.reminder.toString());
           formdata.append("subscription_id", `${studentInfo.id}`);
@@ -119,7 +134,11 @@ export const Action = ({studentInfo} : StudentDetailsProps) => {
               title: data?.message,
               color: "success",
             });
+            onClose();
             reset();
+            queryClient.invalidateQueries({
+                queryKey: AllQueryKeys.GetAllUsers(debouncedSearch, '', 1),
+            });
           }
         },
         onError: (error) => {
@@ -136,6 +155,12 @@ export const Action = ({studentInfo} : StudentDetailsProps) => {
           queryFn: async () => await fetchClient(`client/user/response`, axios_config),
         });
 
+    const reminderEnabled = useWatch({
+        control,
+        name: "reminder",
+        defaultValue: false,
+  });
+  
   return (
       <form
           onSubmit={handleSubmit(onSubmit)}
@@ -267,7 +292,7 @@ export const Action = ({studentInfo} : StudentDetailsProps) => {
               )}
           />
 
-          <div className="flex">
+          <div className="col-span-2 flex justify-center">
               <Controller
                   name="reminder"
                   control={control}
@@ -284,6 +309,9 @@ export const Action = ({studentInfo} : StudentDetailsProps) => {
                       </div>
                   )}
               />
+          </div>
+
+          <div className="flex">
               <Controller
                   name="reminder_type"
                   control={control}
@@ -291,12 +319,15 @@ export const Action = ({studentInfo} : StudentDetailsProps) => {
                       <Select
                           {...field}
                           selectedKeys={field.value ? [field.value] : [""]}
-                          onSelectionChange={(keys) => field.onChange(Array.from(keys)[0])}
+                          onSelectionChange={(keys) =>
+                              field.onChange(Array.from(keys)[0])
+                          }
                           label="وسيلة التذكير"
                           labelPlacement="outside"
                           placeholder="اختر وسيلة التذكير"
                           isInvalid={!!errors.reminder_type?.message}
                           errorMessage={errors.reminder_type?.message}
+                          isDisabled={!reminderEnabled}
                           classNames={{
                               label: "text-[#272727] font-bold text-sm",
                               base: "mb-4",
@@ -321,13 +352,18 @@ export const Action = ({studentInfo} : StudentDetailsProps) => {
               control={control}
               render={({ field }) => (
                   <div className="flex flex-col gap-1">
-                      <label className="text-[#272727] font-bold text-sm">موعد التذكير</label>
+                      <label className="text-[#272727] font-bold text-sm">
+                          موعد التذكير
+                      </label>
                       <Input
                           type="datetime-local"
                           {...field}
+                          isDisabled={!reminderEnabled}
                       />
                       {errors.reminder_date?.message && (
-                          <span className="text-red-500 text-xs mt-1">{errors.reminder_date.message}</span>
+                          <span className="text-red-500 text-xs mt-1">
+                              {errors.reminder_date.message}
+                          </span>
                       )}
                   </div>
               )}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
@@ -56,15 +56,38 @@ const OptionsComponent = ({ id }: { id: number }) => {
 };
 
 export const AllStudents = () => {
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 500);
-  const [selectedStatus, setSelectedStatus] = useState("1");
+  const [nameSearch, setNameSearch] = useState("");
+  const [phoneSearch, setPhoneSearch] = useState("");
+  const debouncedNameSearch = useDebounce(nameSearch, 500);
+  const debouncedPhoneSearch = useDebounce(phoneSearch, 500);
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const params: Record<string, string | number> = {
+    page: currentPage,
+  };
+
+  if (debouncedNameSearch) {
+    params.name = debouncedNameSearch;
+  }
+
+  if (debouncedPhoneSearch) {
+    params.phone = debouncedPhoneSearch;
+  }
 
   const { data: studentsData, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/user?search=${debouncedSearch}`, axios_config),
-    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch),
-  });
+      await fetchClient(`client/user`, {
+        ...axios_config,
+        params,
+      }),
+    queryKey: AllQueryKeys.GetAllUsers(
+      debouncedNameSearch,
+      debouncedPhoneSearch,
+      currentPage
+    ),
+});
 
   const formattedData =
     studentsData?.data?.map((item: any) => ({
@@ -80,6 +103,7 @@ export const AllStudents = () => {
       last_active: item.last_active_at || "N/A",
       status: {
         name: item.status_label?.label || "N/A",
+        key: item.status_label?.key || null,
         color:
           item?.status_label?.color === "info"
             ? "warning"
@@ -87,24 +111,74 @@ export const AllStudents = () => {
       },
     })) || [];
 
+  const filteredData = useMemo(() => {
+    if (selectedStatus === "all") return formattedData;
+
+    return formattedData.filter((item: any) => {
+      const userStatusKey = item?.status?.key;
+
+      return userStatusKey === selectedStatus;
+    });
+  }, [formattedData, selectedStatus]);
+
+  const sortedData = useMemo(() => {
+    let dataToSort = [...filteredData];
+
+    if (!sortKey) return dataToSort;
+
+    return dataToSort.sort((a, b) => {
+      let aVal = a[sortKey];
+      let bVal = b[sortKey];
+
+      if (sortKey === "status") {
+        aVal = a.status?.name || "";
+        bVal = b.status?.name || "";
+      }
+
+      if (sortKey === "phone") {
+        aVal = aVal || "";
+        bVal = bVal || "";
+        return aVal.localeCompare(bVal, "ar", { numeric: true });
+      }
+
+      if (sortKey === "last_active") {
+        return new Date(bVal).getTime() - new Date(aVal).getTime();
+      }
+
+      return (aVal || "").toString().localeCompare(
+        (bVal || "").toString(),
+        "ar"
+      );
+    });
+  }, [filteredData, sortKey]);
+
   return (
     <>
       <div className="p-4 flex items-center justify-between flex-wrap">
         <div className="flex items-center gap-2">
-          <div className="relative min-w-80">
+          <div className="relative w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <SearchNormal1
-                size="18"
-                className="text-gray-400"
-                variant="Outline"
-              />
+              <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
             </div>
             <input
               type="text"
-              placeholder="بحث..."
+              placeholder="بحث بالاسم..."
               className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={nameSearch}
+              onChange={(e) => setNameSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="relative w-48">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
+            </div>
+            <input
+              type="text"
+              placeholder="بحث برقم الهاتف..."
+              className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
+              value={phoneSearch}
+              onChange={(e) => setPhoneSearch(e.target.value)}
             />
           </div>
 
@@ -120,62 +194,65 @@ export const AllStudents = () => {
                 ترتيب حسب
               </Button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              <DropdownItem key="show">الإسم</DropdownItem>
-              <DropdownItem key="edit">رقم الهاتف</DropdownItem>
-              <DropdownItem key="add-to-course">التقييم</DropdownItem>
-              <DropdownItem key="change-password">
-                تاريخ تجديد الإشتراك
-              </DropdownItem>
-              <DropdownItem key="send-mail">الحالة</DropdownItem>
+            <DropdownMenu
+              aria-label="Static Actions"
+              onAction={(key) => setSortKey(key as string)}
+            >
+              <DropdownItem key="name">الإسم</DropdownItem>
+              <DropdownItem key="phone">رقم الهاتف</DropdownItem>
+              <DropdownItem key="email">البريد الإلكتروني</DropdownItem>
+              <DropdownItem key="last_active">أخر ظهور</DropdownItem>
+              <DropdownItem key="status">الحالة</DropdownItem>
             </DropdownMenu>
           </Dropdown>
+
         </div>
 
         <div className="flex gap-2">
           <Button
-            id="1"
+            id="all"
             variant="flat"
-            color={selectedStatus === "1" ? "primary" : "default"}
+            color={selectedStatus === "all" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
             الكل
           </Button>
           <Button
-            id="2"
+            id="active"
             variant="flat"
-            color={selectedStatus === "2" ? "primary" : "default"}
+            color={selectedStatus === "active" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
             نشط
           </Button>
           <Button
-            id="3"
+            id="inactive"
             variant="flat"
-            color={selectedStatus === "3" ? "primary" : "default"}
+            color={selectedStatus === "inactive" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
             متوقف
           </Button>
           <Button
-            id="4"
+            id="expired"
             variant="flat"
-            color={selectedStatus === "4" ? "primary" : "default"}
+            color={selectedStatus === "expired" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => {
-              setSelectedStatus(e.target.id);
-            }}
+            onPress={(e) => setSelectedStatus(e.target.id)}
           >
-            ملغي
+            منتهي
+          </Button>
+          <Button
+            id="no_subscriptions"
+            variant="flat"
+            color={selectedStatus === "no_subscriptions" ? "primary" : "default"}
+            className="font-semibold"
+            onPress={(e) => setSelectedStatus(e.target.id)}
+          >
+            غير مشترك
           </Button>
         </div>
       </div>
@@ -184,13 +261,18 @@ export const AllStudents = () => {
       ) : (
         <TableComponent
           columns={columns}
-          data={formattedData}
+          data={sortedData}
           ActionsComponent={OptionsComponent}
         />
       )}
 
       <div className="my-10 px-6">
-        <CustomPagination />
+        <CustomPagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          last_page={studentsData?.meta?.last_page}
+          total={studentsData?.meta?.total}
+        />
       </div>
     </>
   );

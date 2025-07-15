@@ -10,13 +10,14 @@ import {
 } from "@heroui/react";
 
 const columns = [
-  { name: "إسم المعلم", uid: "name" },
+  { name: "", uid: "avatar" },
+  { name: "الاسم", uid: "name" },
   { name: "رقم الهاتف", uid: "phone" },
-  { name: "البريد الإلكتروني", uid: "email" },
-  { name: "عدد الطلاب المشتركين", uid: "teacher_students" },
-  { name: "سعر الساعة", uid: "hour_rate" },
+  { name: "البريد الإلكترونى", uid: "email" },
+  { name: "تاريخ التقديم", uid: "created_at" },
+  { name: "التخصص", uid: "specializations" },
+  { name: "سعر الساعة", uid: "amount_per_hour" },
   { name: "الحالة", uid: "status" },
-  { name: <Options />, uid: "actions" },
 ];
 
 const OptionsComponent = ({ id }: { id: number }) => {
@@ -35,37 +36,54 @@ const OptionsComponent = ({ id }: { id: number }) => {
   );
 };
 
-const data = [
-  {
-    id: 1,
-    name: "أحمد علي",
-    created_at: "12-2-2025",
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-    phone: "+201004443303",
-    email: "Ahmed.ali12@gmail.com",
-    teacher_students: "16 طالب",
-    hour_rate: "120   ج.م",
-    status: { name: "نشط", color: "success" },
-  },
-  {
-    id: 2,
-    name: "محمد علي",
-    created_at: "12-2-2025",
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-    phone: "+201004443303",
-    email: "Ahmed.ali12@gmail.com",
-    teacher_students: "16 طالب",
-    hour_rate: "120   ج.م",
-    status: { name: "نشط", color: "success" },
-  },
-];
+type Instructor = {
+  id: number;
+  name_en: string;
+  name_ar: string;
+  phone: string;
+  status: string;
+  email: string;
+  whats_app: string;
+  created_at: string;
+  address: string;
+  age: string;
+  experience_years: string;
+  gender: string;
+  can_approve_question: string;
+  image: string;
+  specializations: any[];
+  instructor_payment_method_id: number;
+  amount_per_hour: string;
+};
+type InstructorsProps = {
+  teachersData: Instructor[];
+};
 
-export const ProgramTeachers = () => {
+export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
+
+  const tableData = teachersData?.map((item: any) => ({
+    id: item.id,
+    avatar: item.image,
+    name: item.name_ar || item.name_en,
+    phone: item.phone,
+    email: item.email,
+    amount_per_hour: item.amount_per_hour,
+    created_at: new Date(item.created_at).toLocaleDateString("ar-EG"),
+    specializations:
+      item.specializations?.length > 0
+        ? item.specializations.map((s: any) => s.name_ar).join(", ")
+        : "غير محدد",
+    status: {
+      name: item.status.label || "N/A",
+      color: item?.status?.color ,
+    },
+  }));
+
   return (
     <div className="bg-main">
       <TableComponent
         columns={columns}
-        data={data}
+        data={tableData}
         ActionsComponent={OptionsComponent}
       />
     </div>
