@@ -62,7 +62,9 @@ export default function AddSubaccountModal({
   onClose,
   data: programData,
 }: StudentModalProps) {
-  const [scrollBehavior, setScrollBehavior] = useState<"inside" | "normal" | "outside">("inside");
+  const [scrollBehavior, setScrollBehavior] = useState<
+    "inside" | "normal" | "outside"
+  >("inside");
   const [modalOpen, setModalOpen] = useState(false);
   const [studentDetails, setStudentDetails] = useState<any>(null);
   const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
@@ -129,42 +131,48 @@ export default function AddSubaccountModal({
                     </div>
 
                     <div className="flex flex-col gap-4">
-                      {programData.data?.childrens?.map((child: any, index: number) => (
-                        <div
-                          key={index}
-                          className="bg-background rounded-lg flex items-center justify-between p-4"
-                        >
-                          {/* Radio Button */}
-                          <div className="flex items-center gap-3 w-1/12">
-                            <input
-                              type="radio"
-                              name="selectedChild"
-                              checked={selectedChildId === child.id}
-                              onChange={() => handleRadioChange(child.id)}
-                              className="w-4 h-4 accent-primary"
-                            />
-                          </div>
+                      {programData.data?.childrens?.map(
+                        (child: any, index: number) => (
+                          <div
+                            key={index}
+                            className="bg-background rounded-lg flex items-center justify-between p-4"
+                          >
+                            {/* Radio Button */}
+                            <div className="flex items-center gap-3 w-1/12">
+                              <input
+                                type="radio"
+                                name="selectedChild"
+                                checked={selectedChildId === child.id}
+                                onChange={() => handleRadioChange(child.id)}
+                                className="w-4 h-4 accent-primary"
+                              />
+                            </div>
 
-                          {/* Name */}
-                          <div className="flex flex-col gap-2 w-5/12">
-                            <span className="text-sm font-bold text-title">الإسم</span>
-                            <div className="flex items-center gap-2">
-                              <Avatar size="sm" src={child.image} />
-                              <span className="text-black-text font-bold text-[15px]">
-                                {child.first_name + " " + child.last_name}
+                            {/* Name */}
+                            <div className="flex flex-col gap-2 w-5/12">
+                              <span className="text-sm font-bold text-title">
+                                الإسم
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <Avatar size="sm" src={child.image} />
+                                <span className="text-black-text font-bold text-[15px]">
+                                  {child.first_name + " " + child.last_name}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Age */}
+                            <div className="flex flex-col gap-2 w-5/12">
+                              <span className="text-sm font-bold text-title">
+                                السن
+                              </span>
+                              <span className="font-bold text-black-text">
+                                {child.age} عام
                               </span>
                             </div>
                           </div>
-
-                          {/* Age */}
-                          <div className="flex flex-col gap-2 w-5/12">
-                            <span className="text-sm font-bold text-title">السن</span>
-                            <span className="font-bold text-black-text">
-                              {child.age} عام
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   </div>
 
@@ -206,56 +214,64 @@ export default function AddSubaccountModal({
                       tabList: "bg-[#EAF0FD] w-full",
                     }}
                   >
-                    <Tab key="fixed" title="مواعيد ثابتة" className="w-full p-5">
+                    <Tab
+                      key="fixed"
+                      title="مواعيد ثابتة"
+                      className="w-full p-5"
+                    >
                       <div className="flex flex-col gap-4 mt-4">
                         <Input
-                            label="تاريخ الموعد"
-                            placeholder="نص الكتابه"
-                            type="date"
-                            labelPlacement="outside"
-                            classNames={{
+                          label="تاريخ الموعد"
+                          placeholder="نص الكتابه"
+                          type="date"
+                          labelPlacement="outside"
+                          classNames={{
                             label: "text-[#272727] font-bold text-sm",
                             inputWrapper: "shadow-none",
                             base: "mb-4",
-                            }}
+                          }}
                         />
                         <Input
-                            label="وقت الموعد"
-                            placeholder="نص الكتابه"
-                            type="time"
-                            labelPlacement="outside"
-                            classNames={{
+                          label="وقت الموعد"
+                          placeholder="نص الكتابه"
+                          type="time"
+                          labelPlacement="outside"
+                          classNames={{
                             label: "text-[#272727] font-bold text-sm",
                             inputWrapper: "shadow-none",
                             base: "mb-4",
-                            }}
+                          }}
                         />
                       </div>
                     </Tab>
 
-                    <Tab key="flexible" title="مواعيد مرنة" className="w-full p-5">
+                    <Tab
+                      key="flexible"
+                      title="مواعيد مرنة"
+                      className="w-full p-5"
+                    >
                       <div className="flex flex-col gap-4 mt-4">
                         <Input
-                            label="تاريخ الموعد"
-                            placeholder="نص الكتابه"
-                            type="date"
-                            labelPlacement="outside"
-                            classNames={{
+                          label="تاريخ الموعد"
+                          placeholder="نص الكتابه"
+                          type="date"
+                          labelPlacement="outside"
+                          classNames={{
                             label: "text-[#272727] font-bold text-sm",
                             inputWrapper: "shadow-none",
                             base: "mb-4",
-                            }}
+                          }}
                         />
                         <Input
-                            label="وقت الموعد"
-                            placeholder="نص الكتابه"
-                            type="time"
-                            labelPlacement="outside"
-                            classNames={{
+                          label="وقت الموعد"
+                          placeholder="نص الكتابه"
+                          type="time"
+                          labelPlacement="outside"
+                          classNames={{
                             label: "text-[#272727] font-bold text-sm",
                             inputWrapper: "shadow-none",
                             base: "mb-4",
-                            }}
+                          }}
                         />
                       </div>
                     </Tab>
@@ -293,61 +309,61 @@ export default function AddSubaccountModal({
                       إضافة معلم
                     </span>
 
-                    <Controller
-                        name={`teachers`}
-                        control={control}
-                        render={({ field }) => (
+                    {/* <Controller
+                      name={`teachers`}
+                      control={control}
+                      render={({ field }) => (
                         <Select
-                            {...field}
-                            selectedKeys={field.value ? [field.value] : [""]}
-                            onSelectionChange={(keys) => {
+                          {...field}
+                          selectedKeys={field.value ? [field.value] : [""]}
+                          onSelectionChange={(keys) => {
                             field.onChange(Array.from(keys)[0]);
-                            }}
-                            label="أختر المعلم"
-                            labelPlacement="outside"
-                            placeholder="حدد المعلم المناسب"
-                            // isInvalid={!!errors.teachers?.[index]?.teacher_id?.message}
-                            // errorMessage={errors.teachers?.[index]?.teacher_id?.message}
-                            // isLoading={instructorsLoading}
-                            classNames={{
+                          }}
+                          label="أختر المعلم"
+                          labelPlacement="outside"
+                          placeholder="حدد المعلم المناسب"
+                          // isInvalid={!!errors.teachers?.[index]?.teacher_id?.message}
+                          // errorMessage={errors.teachers?.[index]?.teacher_id?.message}
+                          // isLoading={instructorsLoading}
+                          classNames={{
                             label: "text-[#272727] font-bold text-sm",
                             base: "mb-4",
                             value: "text-[#87878C] text-sm",
-                            }}
-                            scrollShadowProps={{
+                          }}
+                          scrollShadowProps={{
                             isEnabled: false,
-                            }}
-                            maxListboxHeight={200}
+                          }}
+                          maxListboxHeight={200}
                         >
-                            {/* {instructors?.data?.map(
+                          {instructors?.data?.map(
                             (item: { id: string; name_ar: string }) => (
                                 <SelectItem key={item.id}>{item.name_ar}</SelectItem>
                             )
-                            )} */}
+                            )}
                         </Select>
-                        )}
-                    />
+                      )}
+                    /> */}
 
                     <div className="flex justify-end gap-4 py-4">
-                    <Button
-                      type="button"
-                      onPress={() => setStep(2)}
-                      variant="solid"
-                      color="primary"
-                      className="text-white"
-                    >
-                      رحوع
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="solid"
-                      color="primary"
-                      className="text-white"
-                      isDisabled={selectedChildId === null}
-                    >
-                      حفظ
-                    </Button>
-                  </div>
+                      <Button
+                        type="button"
+                        onPress={() => setStep(2)}
+                        variant="solid"
+                        color="primary"
+                        className="text-white"
+                      >
+                        رحوع
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="solid"
+                        color="primary"
+                        className="text-white"
+                        isDisabled={selectedChildId === null}
+                      >
+                        حفظ
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}

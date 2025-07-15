@@ -23,8 +23,8 @@ import { formatDate } from "@/lib/helper";
 import { User } from "@heroui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
-import { fetchClient, fetchData, postData } from "@/lib/utils";
-import { useParams } from 'next/navigation';
+import { fetchClient, postData } from "@/lib/utils";
+import { useParams } from "next/navigation";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 
@@ -80,7 +80,9 @@ type OrderDetailsProps = {
   client_id: number;
 };
 
-export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) => {
+export const StudentsSubscriptionDetails = ({
+  client_id,
+}: OrderDetailsProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -90,11 +92,12 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["orderDetails", order_id],
-    queryFn: async () => await fetchClient(`client/order/show/${order_id}`, axios_config),
+    queryFn: async () =>
+      await fetchClient(`client/order/show/${order_id}`, axios_config),
   });
 
   const ChangeOrderStatus = useMutation({
-    mutationFn: (submitData: { status: string; paid: string }) => {   
+    mutationFn: (submitData: { status: string; paid: string }) => {
       const myHeaders = new Headers();
       myHeaders.append("local", "ar");
       myHeaders.append("Accept", "application/json");
@@ -121,7 +124,7 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
           title: data?.message,
           color: "success",
         });
-        setPaidValue('')
+        setPaidValue("");
       }
     },
     onError: (error) => {
@@ -133,7 +136,7 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
     },
   });
 
-   const AddFeedback = useMutation({
+  const AddFeedback = useMutation({
     mutationFn: (submitData: { title: string; description: string }) => {
       var myHeaders = new Headers();
       myHeaders.append("local", "ar");
@@ -160,7 +163,7 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
         });
         setIsModalOpen(false);
         setTitle("");
-        setDescription("")
+        setDescription("");
         refetch();
       }
     },
@@ -173,7 +176,7 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
     },
   });
 
- return isLoading ? (
+  return isLoading ? (
     <Loader />
   ) : (
     <>
@@ -189,13 +192,12 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
                   <span
                     className={`size-2 rounded-full bg-${data?.data.type.color}`}
                   ></span>
-                  <span
-                    className={`text-${data?.data.type.color} font-bold`}
-                  >
+                  <span className={`text-${data?.data.type.color} font-bold`}>
                     {data?.data.type.label}
                   </span>
                 </div>
-              </div>}
+              </div>
+            }
             classNames={{
               title: "font-bold text-black-text text-[15px]",
               base: "shadow-none border border-stroke",
@@ -207,10 +209,7 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
                 <span className="text-[#5E5E5E] text-sm font-bold">الإسم</span>
 
                 <div className="flex items-center gap-2">
-                  <Avatar
-                    size="sm"
-                    src={data?.data.user.image}
-                  />
+                  <Avatar size="sm" src={data?.data.user.image} />
 
                   <span className="text-black-text font-bold text-[15px]">
                     {data?.data.user.name}
@@ -289,7 +288,9 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
                   عدد الحصص الأسبوعية
                 </span>
 
-                <span className="text-black-text font-bold text-[15px]">{data?.data.order_details[0].number_of_session_per_week}</span>
+                <span className="text-black-text font-bold text-[15px]">
+                  {data?.data.order_details[0].number_of_session_per_week}
+                </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
                 <span className="text-[#5E5E5E] text-sm font-bold">
@@ -334,39 +335,51 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
             indicator={<ArrowLeft2 variant="Bold" color="#2563EB" />}
           >
             <div className="py-5 flex flex-col gap-2">
-              {data.data.order_notes.map((note, noteIndex) => (
-                <div
-                key={noteIndex}
-                className="flex justify-between items-start bg-background p-5 rounded-2xl border border-stroke"
-              >
-                <div className="flex flex-col gap-4">
-
-                  <span className="text-black-text font-bold text-[15px]">
-                    {note.title}
-                  </span>
-                  <span className="text-[#5E5E5E] text-sm font-bold">
-                    {note.description}
-                    </span>
-                    {note.image && <Image
-                      src={note.image}
-                      alt="image"
-                      width={200}
-                      height={74}
-                    />}
+              {data.data.order_notes.map(
+                (
+                  note: (typeof data.data.order_notes)[0],
+                  noteIndex: number
+                ) => (
+                  <div
+                    key={noteIndex}
+                    className="flex justify-between items-start bg-background p-5 rounded-2xl border border-stroke"
+                  >
+                    <div className="flex flex-col gap-4">
+                      <span className="text-black-text font-bold text-[15px]">
+                        {note.title}
+                      </span>
+                      <span className="text-[#5E5E5E] text-sm font-bold">
+                        {note.description}
+                      </span>
+                      {note.image && (
+                        <Image
+                          src={note.image}
+                          alt="image"
+                          width={200}
+                          height={74}
+                        />
+                      )}
+                    </div>
+                    <div className="flex flex-col justify-between items-end">
+                      <span className="text-sm font-bold text-primary">
+                        {formatDate(note.created_at)}
+                      </span>
+                      <User
+                        avatarProps={{
+                          radius: "full",
+                          src: note.maker.image,
+                          size: "sm",
+                        }}
+                        name={
+                          <span className="text-sm font-bold text-[#272727]">
+                            {note.maker.name}
+                          </span>
+                        }
+                      ></User>
+                    </div>
                   </div>
-                <div className="flex flex-col justify-between items-end">
-                  <span className="text-sm font-bold text-primary">
-                    {formatDate(note.created_at)}
-                  </span>
-                    <User
-                      avatarProps={{ radius: "full", src: note.maker.image, size: "sm" }}
-                      name={
-                        <span className="text-sm font-bold text-[#272727]">{note.maker.name}</span>
-                      }
-                    ></User>
-                </div>
-              </div>
-              ))}
+                )
+              )}
             </div>
           </AccordionItem>
         </Accordion>
@@ -396,7 +409,8 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
                 status: "canceled",
                 paid: paidValue,
               });
-            }}>
+            }}
+          >
             رفض الطلب
           </Button>
           <Button variant="solid" color="primary" className="text-white">
@@ -411,7 +425,8 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
                 status: "approved",
                 paid: paidValue,
               });
-            }}>
+            }}
+          >
             الموافقة علي الطلب
           </Button>
           <Button
@@ -422,7 +437,7 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
               setIsModalOpen(true);
             }}
           >
-           إضافة ملاحظة
+            إضافة ملاحظة
           </Button>
         </div>
       </div>
@@ -450,7 +465,9 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
                     label="أدخل العنوان"
                     labelPlacement="outside"
                     placeholder="نص الكتابة"
-                    classNames={{ label: "text-black-text font-semibold text-sm" }}
+                    classNames={{
+                      label: "text-black-text font-semibold text-sm",
+                    }}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
@@ -470,10 +487,12 @@ export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) =>
                     variant="solid"
                     color="primary"
                     className="text-white"
-                    onPress={() => AddFeedback.mutate({
-                      title: title,
-                      description: description,
-                    })}
+                    onPress={() =>
+                      AddFeedback.mutate({
+                        title: title,
+                        description: description,
+                      })
+                    }
                   >
                     حفظ
                   </Button>
