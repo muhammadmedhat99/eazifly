@@ -100,6 +100,7 @@ export const PaymentForm = ({
             formdata.append("user_id", userId);
             formdata.append("plan_id", planData?.id);
             formdata.append("start_date", submitData.start_date.toString());
+            formdata.append("paid", submitData.payment_amount.toString());
             formdata.append("student_number", studentCount);
             {
                 submitData.recept && formdata.append("image", submitData.recept[0]);

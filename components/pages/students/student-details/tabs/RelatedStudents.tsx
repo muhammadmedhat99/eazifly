@@ -69,7 +69,7 @@ export const RelatedStudents = ({ data }: StudentDetailsProps) => {
         {data.data?.childrens?.map((child, index) =>
         (
           <div key={index} className="bg-background rounded-lg flex items-center justify-between p-4">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 w-1/2">
               <span className="text-sm font-bold text-title">الإسم</span>
               <div className="flex items-center gap-2">
                 <Avatar
@@ -83,7 +83,7 @@ export const RelatedStudents = ({ data }: StudentDetailsProps) => {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 w-1/2">
               <span className="text-sm font-bold text-title">السن </span>
               <span className="font-bold text-black-text">{child.age} عام </span>
             </div>

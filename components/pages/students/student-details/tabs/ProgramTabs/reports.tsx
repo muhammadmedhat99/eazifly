@@ -18,7 +18,7 @@ type ReportsProps = {
   isLoadingReport: boolean;
 };
 
-export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => {
+export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => { 
     const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -62,11 +62,15 @@ export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => {
                         <div className="flex flex-col gap-4 w-full">
                             <div className="flex items-center justify-between">
                                 <span className="text-black-text text-sm font-bold">
-                                    {report.report_maker_type === "instructor"
-                                        ? `تقرير للطالب (${report.report_for_name}) من المعلم (${report.report_maker_name})`
-                                        : report.report_maker_type === "client"
-                                            ? `تقرير للطالب (${report.report_for_name}) من الإدارة (${report.report_maker_name})`
-                                            : null}
+                                    {
+                                        report.report_maker_type === "instructor"
+                                            ? `تقرير للطالب (${report.report_for_name}) من المعلم (${report.report_maker_name})`
+                                            : report.report_maker_type === "client"
+                                                ? `تقرير للطالب (${report.report_for_name}) من الإدارة (${report.report_maker_name})`
+                                                : report.report_maker_type === "user"
+                                                    ? `تقرير من الطالب (${report.report_maker_name}) إلى المعلم (${report.report_for_name})`
+                                                    : null
+                                    }
                                 </span>
                                 <span className="text-black-text text-sm font-bold">
                                     {formatDate(report.created_at)}
@@ -92,6 +96,22 @@ export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => {
                 <ModalContent>
                     {(closeModal) => (
                         <>
+                        <ModalHeader className="p-0">
+                                <div className="bg-background border-b rounded-t-xl flex items-center justify-between w-full px-10 py-5">
+                                    <div className="flex flex-col gap-3 items-start items-center">
+                                        <span className="text-[#5E5E5E] text-sm font-bold">تقرير إلي</span>
+                                        <span className="text-sm font-bold">
+                                            {selectedAssignment.report_for_name}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col gap-3 items-start items-center">
+                                        <span className="text-[#5E5E5E] text-sm font-bold">تاريخ الإنشاء</span>
+                                        <span className="text-sm font-bold">
+                                            {formatDate(selectedAssignment.created_at)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </ModalHeader>
                             <ModalBody className="space-y-4 text-sm text-[#333] px-10 py-6">
                                 {isDetailsLoading ? (
                                     <Loader />

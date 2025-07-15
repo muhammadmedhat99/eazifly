@@ -26,6 +26,7 @@ type ProgramDetailsProps = {
       id: number;
       title: string;
       label: string;
+      specialization: string;
       category: string;
       content: string;
       description: string;
@@ -37,6 +38,47 @@ type ProgramDetailsProps = {
       payment_methods: {
         id: number;
         title: string;
+      }[];
+      status: {
+        label: string,
+        key: string,
+        color: string,
+      };
+      instructors: {
+        id: number;
+        name_en: string;
+        name_ar: string;
+        phone: string;
+        status: string;
+        email: string;
+        whats_app: string;
+        created_at: string; 
+        address: string;
+        age: string;
+        experience_years: string;
+        gender: string;
+        can_approve_question: string;
+        image: string;
+        specializations: any[]
+        instructor_payment_method_id: number;
+        amount_per_hour: string;
+      }[];
+      plans: {
+        id: number;
+        title: string | null;
+        program: string;
+        label: string | null;
+        description: string | null;
+        currency: string | null;
+        price: string;
+        discount_price: string;
+        subscripe_days: string;
+        duration: string;
+        number_of_session_per_week: string;
+        is_special_plan: boolean;
+        type: string;
+        plan_title: string | null;
+        subscription_plan: string;
       }[];
     };
   };
@@ -61,13 +103,13 @@ export const ProgramDetails = ({ data }: ProgramDetailsProps) => {
           <MainInformation mainData={data.data} />
         </Tab>
         <Tab key="program_teachers" title="المعلمين المشتركين">
-          <ProgramTeachers />
+          <ProgramTeachers teachersData={data.data.instructors} />
         </Tab>
         <Tab key="subscriptions" title="أنواع الأشتراكات">
-          <ProgramSubscriptions />
+          <ProgramSubscriptions subscriptionsData={data.data.plans} />
         </Tab>
         <Tab key="content" title="محتوي البرنامج">
-          <ProgramContent />
+          <ProgramContent mainData={data.data}/>
         </Tab>
         <Tab key="goals" title="أهداف البرنامج">
           <ProgramGoals />

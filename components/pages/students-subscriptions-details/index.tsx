@@ -21,10 +21,12 @@ import {
 import { ArrowLeft2 } from "iconsax-reactjs";
 import { formatDate } from "@/lib/helper";
 import { User } from "@heroui/react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
-import { postData } from "@/lib/utils";
+import { fetchClient, fetchData, postData } from "@/lib/utils";
 import { useParams } from 'next/navigation';
+import { axios_config } from "@/lib/const";
+import { Loader } from "@/components/global/Loader";
 
 type OrderDetailsProps = {
   data: {
@@ -78,13 +80,18 @@ type OrderDetailsProps = {
   client_id: number;
 };
 
-export const StudentsSubscriptionDetails = ({ data, client_id }: OrderDetailsProps) => {
+export const StudentsSubscriptionDetails = ({ client_id }: OrderDetailsProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [paidValue, setPaidValue] = useState("");
   const params = useParams();
   const order_id = params.id;
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["orderDetails", order_id],
+    queryFn: async () => await fetchClient(`client/order/show/${order_id}`, axios_config),
+  });
 
   const ChangeOrderStatus = useMutation({
     mutationFn: (submitData: { status: string; paid: string }) => {   
@@ -154,6 +161,7 @@ export const StudentsSubscriptionDetails = ({ data, client_id }: OrderDetailsPro
         setIsModalOpen(false);
         setTitle("");
         setDescription("")
+        refetch();
       }
     },
     onError: (error) => {
@@ -165,21 +173,36 @@ export const StudentsSubscriptionDetails = ({ data, client_id }: OrderDetailsPro
     },
   });
 
-  return (
+ return isLoading ? (
+    <Loader />
+  ) : (
     <>
       <div className="p-8">
-        <Accordion variant="splitted">
+        <Accordion variant="splitted" defaultExpandedKeys={["1"]}>
           <AccordionItem
             key="1"
             aria-label="بيانات الطالب"
-            title="بيانات الطالب"
+            title={
+              <div className="flex justify-between items-center gap-2">
+                <span>بيانات الطالب</span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`size-2 rounded-full bg-${data?.data.type.color}`}
+                  ></span>
+                  <span
+                    className={`text-${data?.data.type.color} font-bold`}
+                  >
+                    {data?.data.type.label}
+                  </span>
+                </div>
+              </div>}
             classNames={{
               title: "font-bold text-black-text text-[15px]",
               base: "shadow-none border border-stroke",
             }}
-            indicator={<ArrowLeft2 variant="Bold" color="#2563EB" />}
+            // indicator={<ArrowLeft2 variant="Bold" color="#2563EB" />}
           >
-            <div className="py-5 grid grid-cols-5 gap-4">
+            <div className="py-5 grid grid-cols-4 gap-4">
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
                 <span className="text-[#5E5E5E] text-sm font-bold">الإسم</span>
 
@@ -218,19 +241,8 @@ export const StudentsSubscriptionDetails = ({ data, client_id }: OrderDetailsPro
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  {formatDate(data?.data.created_at)}
+                  {formatDate(data?.data?.created_at)}
                 </span>
-              </div>
-              <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
-                <span className="text-[#5E5E5E] text-sm font-bold">
-                  نوع الطلب
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className={`size-2 rounded-full bg-${data?.data.type.color}`}></span>
-                  <span className={`text-${data?.data.type.color} font-bold text-[15px]`}>
-                    {data?.data.type.label}
-                  </span>
-                </div>
               </div>
             </div>
           </AccordionItem>

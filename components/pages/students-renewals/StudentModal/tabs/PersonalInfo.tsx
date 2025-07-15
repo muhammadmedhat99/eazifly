@@ -124,7 +124,9 @@ export const PersonalInfo = ({studentInfo} : StudentDetailsProps) => {
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">أخر موعد تم التواصل فية مع الطالب</span>
           <div className="flex justify-between">
             <span className="text-black-text font-bold text-[15px]">
-            {formatDate(studentInfo.last_contact_date)}
+              {studentInfo.last_contact_date
+                ? formatDate(studentInfo.last_contact_date)
+                : null}
           </span>
           <span className="text-black-text font-bold text-[15px]">
             منذ {studentInfo.last_contact_days} يوم

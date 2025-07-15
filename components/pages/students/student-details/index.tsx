@@ -52,6 +52,7 @@ type StudentDetailsProps = {
       program_id: number;
       program: string;
       price: number;
+      subscription_status: string;
       instructor: {
         id: number;
         name: string;
@@ -63,6 +64,12 @@ type StudentDetailsProps = {
       student_number: number;
       missed_sessions: number;
       completed_sessions: number;
+      children_users: {
+        user_id: string;
+        name: string;
+        age: string;
+        image: string;
+      }[]
     }[];
   };
   actionsData: {
@@ -113,7 +120,7 @@ const [studentData, setStudentData] = useState(data.data);
           <Information data={{ data: studentData }} onUpdated={setStudentData} />
         </Tab>
         <Tab key="programs" title="البرامج و اللإشتراكات">
-          <Programs subscriptionsData={subscriptionsData} client_id={client_id}/>
+          <Programs subscriptionsData={subscriptionsData} client_id={client_id} data={data}/>
         </Tab>
         <Tab key="actions" title="الإجراءات السابقة">
           <TimelineDemo actionsData={actionsData} />
