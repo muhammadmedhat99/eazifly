@@ -42,7 +42,12 @@ export const DropzoneField = ({
   useEffect(() => {
     if (!value) return;
 
-    const urls = value.map((file) => URL.createObjectURL(file));
+    const urls = value.map((file: any) =>
+      file instanceof File
+        ? URL.createObjectURL(file)
+        : file.preview
+    );
+
     setPreviewUrls(urls);
 
     return () => {
@@ -67,27 +72,31 @@ export const DropzoneField = ({
           </div>
         ) : value?.length ? (
           <div className="flex items-center flex-col gap-2">
-            {previewUrls.map((url, index) => {
-              const file = value[index];
-              const isImage = file.type.startsWith("image/");
-              return (
-                <div key={index} className="w-full">
-                  {isImage ? (
-                    <Image
-                      src={url}
-                      alt={file.name}
-                      width={1024}
-                      height={1024}
-                      className="w-full h-40 rounded-sm object-cover"
-                    />
-                  ) : (
-                    <p className="font-semibold text-gray-500 text-xs">
-                      {file.name}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+              {previewUrls.map((url, index) => {
+                const file = value[index];
+                const isImage =
+                  file instanceof File
+                    ? file.type?.startsWith("image/")
+                    : /\.(jpg|jpeg|png|webp|gif)$/i.test(file.preview);
+
+                return (
+                  <div key={index} className="w-full">
+                    {isImage ? (
+                      <Image
+                        src={url}
+                        alt={file.name}
+                        width={1024}
+                        height={1024}
+                        className="w-full h-40 rounded-sm object-cover"
+                      />
+                    ) : (
+                      <p className="font-semibold text-gray-500 text-xs">
+                        {file.name}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
           </div>
         ) : (
           <div className="flex items-center flex-col gap-2">
