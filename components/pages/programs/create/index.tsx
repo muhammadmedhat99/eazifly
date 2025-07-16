@@ -150,6 +150,8 @@ export const CreateProgram = ({
                   setActiveStep={setActiveStep}
                   programId={programId}
                   specializationId={specializationId}
+                  initialData={initialData} 
+                  mode={mode} 
                 />
               );
             case 2:
