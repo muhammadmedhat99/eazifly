@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { addToast, Button, Input, Select, SelectItem } from "@heroui/react";
@@ -15,7 +15,9 @@ interface TeacherAndContentProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   programId: string;
   specializationId: string;
-  specializationName?: string; // Add this to display the specialization name
+  specializationName?: string;
+  initialData?: any;
+  mode?: string;
 }
 interface Specialization {
   id: string;
@@ -25,7 +27,9 @@ export const TeacherAndContent = ({
   setActiveStep,
   programId,
   specializationId,
-  specializationName = "التخصص المحدد", // Default fallback
+  specializationName = "التخصص المحدد",
+  initialData,
+  mode
 }: TeacherAndContentProps) => {
   const { data: specializations, isLoading: loadingSpecializations } = useQuery(
     {
@@ -39,6 +43,18 @@ export const TeacherAndContent = ({
     queryKey: ["GetRelatedInstructores", programId],
   });
 
+  let defaultValues: TeacherAndContentFormData = {
+    specialization_id: specializationId,
+    teachers: [{ teacher_id: "", hour_rate: "" }],
+  };
+
+  if (initialData.data?.instructors?.length) {
+    defaultValues.teachers = initialData.data.instructors.map((instructor: any) => ({
+      teacher_id: instructor.id?.toString() || "",
+      hour_rate: instructor.amount_per_hour?.toString() || "",
+    }));
+  }
+
   const {
     register,
     handleSubmit,
@@ -47,11 +63,21 @@ export const TeacherAndContent = ({
     reset,
   } = useForm<TeacherAndContentFormData>({
     resolver: yupResolver(teacherAndContentSchema),
-    defaultValues: {
-      specialization_id: specializationId,
-      teachers: [{ teacher_id: "", hour_rate: "" }],
-    },
+    defaultValues,
   });
+
+  useEffect(() => {
+    if (initialData?.data.instructors?.length) {
+      reset({
+        specialization_id: specializationId,
+        teachers: initialData.data.instructors.map((instructor: any) => ({
+          teacher_id: instructor.id?.toString() || "",
+          hour_rate: instructor.amount_per_hour?.toString() || "",
+        })),
+      });
+    }
+  }, [initialData, reset, specializationId]);
+
 
   const { fields, append, remove } = useFieldArray({
     control,
