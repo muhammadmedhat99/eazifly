@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { DropzoneField } from "@/components/global/DropZoneField";
 import {
@@ -31,6 +31,8 @@ const locales = ["ar", "en"] as const;
 interface InformationFormProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   onProgramCreated: (id: string, specId: string) => void;
+  initialData?: any;
+  mode?: string;
 }
 
 interface Specialization {
@@ -39,8 +41,6 @@ interface Specialization {
 }
 
 const defaultValues: Partial<InformationFormData> = {
-  why_us: false,
-  learning_track: false,
   slug: "",
   limit_users: 0,
   localizedFields: locales.reduce(
@@ -55,7 +55,55 @@ const defaultValues: Partial<InformationFormData> = {
 export const InformationForm = ({
   setActiveStep,
   onProgramCreated,
-}: InformationFormProps) => {
+  initialData,
+  mode
+}: InformationFormProps) => {  
+  function mapInitialDataToDefaultValues(data: any): InformationFormData {
+    return {
+      localizedFields: {
+        ar: {
+          title: data.data.title || "",
+          label: data.data.label || "",
+          goals: data.data.goals || "",
+          content: data.data.content || "",
+        },
+        en: {
+          title: data.data.title || "",
+          label: data.data.label || "",
+          goals: data.data.goals || "",
+          content: data.data.content || "",
+        },
+      },
+      slug: data.data.slug || "",
+      limit_users: Number(data.data.limit_users || 0),
+      specialization_id: data.data.specialization_id
+      ? String(data.data.specialization_id)
+      : "",
+      special_for: data.data.special_for || "",
+      image: data.data.image
+        ? [
+          {
+            name: "image",
+            preview: data.data.image,
+          },
+        ]
+        : [],
+      cover: data.data.cover
+        ? [
+          {
+            name: "cover",
+            preview: data.data.cover,
+          },
+        ]
+        : [],
+
+    };
+  }
+
+  const mappedDefaults = initialData
+    ? mapInitialDataToDefaultValues(initialData)
+    : {};
+
   const {
     register,
     handleSubmit,
@@ -65,8 +113,14 @@ export const InformationForm = ({
     getValues,
   } = useForm<InformationFormData>({
     resolver: yupResolver(informationFormSchema),
-    defaultValues,
+    defaultValues: mappedDefaults,
   });
+
+  useEffect(() => {
+    if (initialData) {
+      reset(mapInitialDataToDefaultValues(initialData));
+    }
+  }, [initialData, reset]);
 
   const { data: specializations, isLoading: loadingSpecializations } = useQuery(
     {
@@ -89,20 +143,28 @@ export const InformationForm = ({
     });
 
     // Add other fields
-    formdata.append("why_us", submitData.why_us.toString());
-    formdata.append("learning_track", submitData.learning_track.toString());
     formdata.append("special_for", submitData.special_for);
     formdata.append("specialization_id", submitData.specialization_id);
     formdata.append("slug", submitData.slug);
     formdata.append("limit_users", submitData.limit_users.toString());
 
     // Add image if exists
-    if (submitData.image && submitData.image.length > 0) {
+    if (
+      submitData.image &&
+      submitData.image.length > 0 &&
+      submitData.image[0] instanceof File
+    ) {
       formdata.append("image", submitData.image[0]);
     }
-    if (submitData.cover && submitData.cover.length > 0) {
+
+    if (
+      submitData.cover &&
+      submitData.cover.length > 0 &&
+      submitData.cover[0] instanceof File
+    ) {
       formdata.append("cover", submitData.cover[0]);
     }
+
 
     return formdata;
   };
@@ -140,8 +202,45 @@ export const InformationForm = ({
     },
   });
 
+  const updateProgramMutation = useMutation({
+    mutationFn: (submitData: InformationFormData) => {
+      const myHeaders = new Headers();
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = createFormData(submitData);
+      return postData(`client/program/update/${initialData?.data.id}`, formdata, myHeaders);
+    },
+    onSuccess: (data: any) => {
+      if (data.status !== 200 && data.status !== 201) {
+        addToast({
+          title: `Error updating program: ${data.message}`,
+          color: "danger",
+        });
+      } else {
+        onProgramCreated(data.data.id, getValues("specialization_id"));
+        setActiveStep(1);
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Error updating program:", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
   const onSubmit = (data: InformationFormData) => {
-    createProgramMutation.mutate(data);
+    if (mode === "edit") {
+      updateProgramMutation.mutate(data);
+    } else {
+      createProgramMutation.mutate(data);
+    }
   };
 
   const handleReset = () => {
