@@ -160,6 +160,8 @@ export const CreateProgram = ({
                   <PaymentMethods
                     setActiveStep={setActiveStep}
                     programId={programId}
+                    initialData={initialData}
+                    mode={mode} 
                   />
                 </>
               );
@@ -169,6 +171,8 @@ export const CreateProgram = ({
                   <Subscriptions
                     setActiveStep={setActiveStep}
                     programId={programId}
+                    initialData={initialData}
+                    mode={mode} 
                   />
                 </>
               );

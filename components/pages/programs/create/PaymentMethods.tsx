@@ -38,10 +38,16 @@ const extractSelectedPaymentMethodIds = (
 export const PaymentMethods = ({
   setActiveStep,
   programId,
+  initialData,
+  mode
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   programId: string;
+  initialData?: any;
+  mode?: string;
 }) => {
+  
+  
   const { data: paymentMethods, isLoading } = useQuery({
     queryFn: async () =>
       await fetchClient(`client/payment/method`, axios_config),
@@ -55,12 +61,20 @@ export const PaymentMethods = ({
 
   // Default form values
   const defaultValues = useMemo(() => {
-    const defaults: Record<string, boolean> = {};
-    paymentMethods?.data?.forEach((method: { id: string }) => {
-      defaults[method.id] = false;
-    });
-    return defaults;
-  }, [paymentMethods?.data]);
+  const defaults: Record<string, boolean> = {};
+
+  const selectedIds =
+    initialData?.data?.payment_methods?.map(
+      (pm: { id: number | string }) => pm.id?.toString()
+    ) || [];
+
+  paymentMethods?.data?.forEach((method: { id: number | string }) => {
+    defaults[method.id.toString()] = selectedIds.includes(method.id.toString());
+  });
+
+  return defaults;
+}, [paymentMethods?.data, initialData]);
+console.log('defaultValues', defaultValues);
 
   const {
     handleSubmit,
@@ -76,7 +90,7 @@ export const PaymentMethods = ({
     if (paymentMethods?.data) {
       reset(defaultValues);
     }
-  }, [paymentMethods?.data, defaultValues, reset]);
+  }, [paymentMethods?.data, initialData, defaultValues, reset]);
 
   const onSubmit = async (data: PaymentMethodsFormData) => {
     assignPaymentMethodsMutation.mutate(data);
@@ -153,7 +167,7 @@ export const PaymentMethods = ({
                   <Switch
                     color="success"
                     onChange={(e) => field.onChange(e.target.checked)}
-                    defaultSelected={field.value}
+                     isSelected={field.value}
                     classNames={{
                       base: cn(
                         "flex flex-row-reverse w-full bg-content1 hover:bg-content2 items-center border border-stroke max-w-full",
