@@ -48,7 +48,7 @@ export const TeacherAndContent = ({
     teachers: [{ teacher_id: "", hour_rate: "" }],
   };
 
-  if (initialData.data?.instructors?.length) {
+  if (initialData?.data?.instructors?.length) {
     defaultValues.teachers = initialData.data.instructors.map((instructor: any) => ({
       teacher_id: instructor.id?.toString() || "",
       hour_rate: instructor.amount_per_hour?.toString() || "",
