@@ -10,6 +10,7 @@ import {
   Avatar,
   Select,
   SelectItem,
+  addToast,
 } from "@heroui/react";
 import { useState } from "react";
 import AddStudentModal from "../../AddStudentModal";
@@ -17,50 +18,46 @@ import { Add } from "iconsax-reactjs";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useQuery } from "@tanstack/react-query";
-import { fetchClient } from "@/lib/utils";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
 import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
+import { getCookie } from "cookies-next";
+
+const weekDays = [
+  { key: "sunday", label: "الأحد" },
+  { key: "monday", label: "الاثنين" },
+  { key: "tuesday", label: "الثلاثاء" },
+  { key: "wednesday", label: "الأربعاء" },
+  { key: "thursday", label: "الخميس" },
+  { key: "friday", label: "الجمعة" },
+  { key: "saturday", label: "السبت" },
+];
 
 interface StudentModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: any;
+  program_id: number;
 }
 
-const schema = yup
-  .object({
-    first_name: yup.string().required("ادخل الاسم الأول").min(3),
-    last_name: yup.string().required("ادخل الاسم الأخير").min(3),
-    user_name: yup.string().required("ادخل اسم المستخدم").min(3),
-    email: yup.string().email().required("ادخل بريد إلكتروني"),
-    phone: yup.string().required("ادخل رقم الهاتف"),
-    whats_app: yup.string().required("ادخل رقم الواتس آب"),
-    password: yup.string().required("ادخل كلمة المرور"),
-    password_confirmation: yup
-      .string()
-      .required("ادخل تأكيد كلمة المرور")
-      .oneOf([yup.ref("password")], "كلمة المرور غير متطابقة"),
-    gender: yup.string().required("برجاء اختيار الجنس"),
-    age: yup.string().required("ادخل العمر"),
-    country: yup.string().required("إختر الدولة"),
-    image: yup
-      .mixed<FileList>()
-      .test(
-        "fileType",
-        "الرجاء تحميل ملف صحيح",
-        (value) => value && value.length > 0
-      )
-      .required("الرجاء تحميل ملف"),
-  })
-  .required();
-
-type FormData = yup.InferType<typeof schema>;
+type FormData = {
+  start_date: string;
+  fixed_sessions: {
+    weekday: string;
+    time: string;
+  }[];
+  flexible_sessions: {
+    date: string;
+    time: string;
+  }[];
+};
 
 export default function AddSubaccountModal({
   isOpen,
   onClose,
   data: programData,
+  program_id,
 }: StudentModalProps) {
   const [scrollBehavior, setScrollBehavior] = useState<
     "inside" | "normal" | "outside"
@@ -71,20 +68,15 @@ export default function AddSubaccountModal({
   const [step, setStep] = useState(1);
   const [tabKey, setTabKey] = useState("fixed");
 
-  const { data, isLoading } = useQuery({
-    queryKey: AllQueryKeys.GetAllCountries,
-    queryFn: async () => await fetchClient(`client/countries`, axios_config),
-  });
-
   const {
     register,
     handleSubmit,
     reset,
     control,
+    watch,
+    getValues,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: yupResolver(schema),
-  });
+  } = useForm<FormData>();
 
   const handleRowClick = () => {
     setModalOpen(true);
@@ -93,6 +85,89 @@ export default function AddSubaccountModal({
   const handleRadioChange = (childId: number) => {
     setSelectedChildId(childId);
   };
+
+    const { data: subscriptionDetails, isLoading : isSubscriptionDetailsLoading } = useQuery({
+      queryKey: ["GetsubscriptionDetails", programData, program_id],
+      queryFn: async () => await fetchClient(`client/subscription/details?program_id=${program_id}&user_id=${programData.data.id}`, axios_config),
+    });
+
+  const AddWeeklyAppointment = useMutation({
+    mutationFn: async () => {
+      const headers = new Headers();
+      headers.append("local", "ar");
+      headers.append("Accept", "application/json");
+      headers.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formData = new FormData();
+      formData.append("user_id", String(selectedChildId));
+      formData.append("start_date", String(watch("start_date")));
+      formData.append("duration", String(subscriptionDetails?.data?.duration));
+      formData.append("subscripe_days", String(subscriptionDetails?.data?.subscripe_days));
+      formData.append("number_of_sessions", String(subscriptionDetails?.data?.number_of_sessions));
+
+      const fixedSessions = getValues("fixed_sessions") || [];
+      fixedSessions.forEach((session: { weekday: string; time: string }) => {
+        if (session?.weekday && session?.time) {
+          formData.append(`appointments[${session.weekday}]`, session.time);
+        }
+      });
+
+      const response = await postData("client/add/weekly/appointments", formData, headers);
+
+      if (response?.message === "success" && Array.isArray(response?.data)) {
+        const availabilitiesPayload = {
+          program_id: program_id,
+          appointments: response.data,
+        };
+
+        const formData = new FormData();
+        formData.append("program_id", String(availabilitiesPayload.program_id));
+        availabilitiesPayload.appointments.forEach((appointment: any, index: number) => {
+          formData.append(`appointments[${index}][start]`, appointment.start);
+          formData.append(`appointments[${index}][end]`, appointment.end);
+        });
+
+        const formHeaders = new Headers();
+        formHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+        formHeaders.append("local", "ar");
+
+        const availabilitiesResponse = await postData(
+          "client/get/program/availabilities-instructors",
+          formData,
+          formHeaders
+        );
+      }
+
+      return response;
+    },
+    onSuccess: (data) => {
+      console.log("Data:", data);
+
+      if (data?.status === 201) {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+      } else {
+        addToast({
+          title: "error",
+          color: "warning",
+        });
+      }
+    },
+    onError: (error) => {
+      console.error("Error:", error);
+      addToast({
+        title: "عذراً، حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
+  const GetAppointments = () => {
+    AddWeeklyAppointment.mutate()
+    setStep(3)
+  }
 
   return (
     <Modal
@@ -214,67 +289,111 @@ export default function AddSubaccountModal({
                       tabList: "bg-[#EAF0FD] w-full",
                     }}
                   >
-                    <Tab
-                      key="fixed"
-                      title="مواعيد ثابتة"
-                      className="w-full p-5"
-                    >
-                      <div className="flex flex-col gap-4 mt-4">
-                        <Input
-                          label="تاريخ الموعد"
-                          placeholder="نص الكتابه"
-                          type="date"
-                          labelPlacement="outside"
-                          classNames={{
-                            label: "text-[#272727] font-bold text-sm",
-                            inputWrapper: "shadow-none",
-                            base: "mb-4",
-                          }}
-                        />
-                        <Input
-                          label="وقت الموعد"
-                          placeholder="نص الكتابه"
-                          type="time"
-                          labelPlacement="outside"
-                          classNames={{
-                            label: "text-[#272727] font-bold text-sm",
-                            inputWrapper: "shadow-none",
-                            base: "mb-4",
-                          }}
-                        />
-                      </div>
+                    <Tab key="fixed" title="مواعيد ثابتة" className="w-full p-5">
+                      <Input
+                        label="تاريخ البدء"
+                        placeholder="نص الكتابه"
+                        type="date"
+                        labelPlacement="outside"
+                        classNames={{
+                          label: "text-[#272727] font-bold text-sm",
+                          inputWrapper: "shadow-none",
+                          base: "mb-4",
+                        }}
+                        {...register("start_date")}
+                        defaultValue={subscriptionDetails?.data?.start_date?.split("T")[0]}
+                      />
+
+                      {(subscriptionDetails?.data?.number_of_session_per_week
+                        ? Array.from({ length: Number(subscriptionDetails.data.number_of_session_per_week) })
+                        : []
+                      ).map((_, index) => (
+                        <div key={index} className="flex gap-4 mt-4">
+                          {/* Day select */}
+                          <Controller
+                            name={`fixed_sessions.${index}.weekday`}
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                selectedKeys={field.value ? [field.value] : []}
+                                onSelectionChange={(keys) => field.onChange(Array.from(keys)[0])}
+                                label="اليوم"
+                                labelPlacement="outside"
+                                placeholder="اختر اليوم"
+                                isInvalid={!!errors?.fixed_sessions?.[index]?.weekday}
+                                errorMessage={errors?.fixed_sessions?.[index]?.weekday?.message}
+                                classNames={{
+                                  label: "text-[#272727] font-bold text-sm",
+                                  base: "mb-4",
+                                  value: "text-[#87878C] text-sm",
+                                }}
+                              >
+                                {weekDays.map((day) => (
+                                  <SelectItem key={day.key}>{day.label}</SelectItem>
+                                ))}
+                              </Select>
+                            )}
+                          />
+
+                          {/* Time input */}
+                          <Input
+                            label="الوقت"
+                            placeholder="نص الكتابه"
+                            type="time"
+                            {...register(`fixed_sessions.${index}.time`)}
+                            isInvalid={!!errors?.fixed_sessions?.[index]?.time}
+                            errorMessage={errors?.fixed_sessions?.[index]?.time?.message}
+                            labelPlacement="outside"
+                            classNames={{
+                              label: "text-[#272727] font-bold text-sm",
+                              inputWrapper: "shadow-none",
+                              base: "mb-4",
+                            }}
+                          />
+                        </div>
+                      ))}
                     </Tab>
 
-                    <Tab
-                      key="flexible"
-                      title="مواعيد مرنة"
-                      className="w-full p-5"
-                    >
-                      <div className="flex flex-col gap-4 mt-4">
-                        <Input
-                          label="تاريخ الموعد"
-                          placeholder="نص الكتابه"
-                          type="date"
-                          labelPlacement="outside"
-                          classNames={{
-                            label: "text-[#272727] font-bold text-sm",
-                            inputWrapper: "shadow-none",
-                            base: "mb-4",
-                          }}
-                        />
-                        <Input
-                          label="وقت الموعد"
-                          placeholder="نص الكتابه"
-                          type="time"
-                          labelPlacement="outside"
-                          classNames={{
-                            label: "text-[#272727] font-bold text-sm",
-                            inputWrapper: "shadow-none",
-                            base: "mb-4",
-                          }}
-                        />
-                      </div>
+
+                    <Tab key="flexible" title="مواعيد مرنة" className="w-full p-5">
+                      {(subscriptionDetails?.data?.number_of_sessions
+                        ? Array.from({ length: Number(subscriptionDetails.data.number_of_sessions) })
+                        : []
+                      ).map((_, index) => (
+                        <div key={index} className="flex gap-4 mt-4">
+                          <Input
+                            label="الموعد"
+                            placeholder="نص الكتابه"
+                            type="date"
+                            {...register(`flexible_sessions.${index}.date`)}
+                            isInvalid={!!errors?.flexible_sessions?.[index]?.date}
+                            errorMessage={errors?.flexible_sessions?.[index]?.date?.message}
+                            labelPlacement="outside"
+                            classNames={{
+                              label: "text-[#272727] font-bold text-sm",
+                              inputWrapper: "shadow-none",
+                              base: "mb-4",
+                            }}
+                          />
+                          <Input
+                            label="الوقت"
+                            placeholder="نص الكتابه"
+                            type="time"
+                            {...register(`flexible_sessions.${index}.time`)}
+                            isInvalid={!!errors?.flexible_sessions?.[index]?.time}
+                            errorMessage={errors?.flexible_sessions?.[index]?.time?.message}
+                            labelPlacement="outside"
+                            classNames={{
+                              label: "text-[#272727] font-bold text-sm",
+                              inputWrapper: "shadow-none",
+                              base: "mb-4",
+                            }}
+                          />
+                        </div>
+                      ))}
                     </Tab>
+
                   </Tabs>
 
                   <div className="flex justify-end gap-4 py-4">
@@ -289,7 +408,7 @@ export default function AddSubaccountModal({
                     </Button>
                     <Button
                       type="button"
-                      onPress={() => setStep(3)}
+                      onPress={() => GetAppointments()}
                       variant="solid"
                       color="primary"
                       className="text-white"
