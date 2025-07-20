@@ -182,29 +182,46 @@ export const Subscriptions = ({
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
 
       const formData = {
-        plans: submitData?.subscriptions?.map((item) => ({
-          program_id: programId,
-          subscripe_days: item?.subscription_plan,
-          discount_price: item?.sell_price,
-          price: item.subscription_price,
-          duration: item.lesson_duration,
-          number_of_session_per_week: item.number_of_lessons,
-          type: item.subscription_type,
-          is_special_plan: item?.is_special_plan === "true",
-          ...(item?.is_special_plan === "true" ? item.localizedFields : {}),
-        })),
+        plans: submitData?.subscriptions?.map((item, index) => {
+          const base = {
+            program_id: programId,
+            subscripe_days: item?.subscription_plan,
+            discount_price: item?.sell_price,
+            price: item.subscription_price,
+            duration: item.lesson_duration,
+            number_of_session_per_week: item.number_of_lessons,
+            type: item.subscription_type,
+            is_special_plan: item?.is_special_plan === "true",
+          };
+
+          // Add localizedFields if it's a special plan
+          if (item.is_special_plan === "true") {
+            Object.assign(base, item.localizedFields);
+          }
+
+          // Add plan_id in edit mode
+          if (mode === "edit") {
+            return {
+              ...base,
+              plan_id: initialData?.data?.plans?.[index]?.id,
+            };
+          }
+
+          return base;
+        }),
       };
 
-      return postData(
-        "client/program/plan/store",
-        JSON.stringify(formData),
-        myHeaders
-      );
+      const endpoint =
+        mode === "edit"
+          ? "client/program/plan/update"
+          : "client/program/plan/store";
+
+      return postData(endpoint, JSON.stringify(formData), myHeaders);
     },
     onSuccess: (data: any) => {
       if (data.status !== 200 && data.status !== 201) {
         addToast({
-          title: `Error Adding Subscription Plan: ${data.message}`,
+          title: `Error Submitting Subscription Plan: ${data.message}`,
           color: "danger",
         });
       } else {
@@ -216,7 +233,7 @@ export const Subscriptions = ({
       }
     },
     onError: (error: Error) => {
-      console.error("Error creating program:", error);
+      console.error("Error submitting program:", error);
       addToast({
         title: "عذرا حدث خطأ ما",
         color: "danger",
