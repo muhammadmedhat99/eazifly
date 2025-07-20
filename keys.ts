@@ -9,6 +9,7 @@ export const AllQueryKeys = {
   GetAllResponses: ["GetAllResponses", axios_config],
   GetAllPrograms: (search: string, currentPage: number) => ['GetAllPrograms', axios_config, search, currentPage],
   GetAllSpecializations: ["GetAllSpecializations", axios_config],
+  GetAllHost: ["GetAllHost", axios_config],
   GetAllInstructors: (nameSearch: string, phoneSearch: string, currentPage: number) => ['GetAllInstructors', axios_config, nameSearch, phoneSearch, currentPage],
   GetAllPaymentMethods: ["GetAllPaymentMethods", axios_config],
   GetAllSubscriptionPeriods: ["GetAllSubscriptionsPeriods", axios_config],

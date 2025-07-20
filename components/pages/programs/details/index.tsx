@@ -40,6 +40,10 @@ type ProgramDetailsProps = {
         id: number;
         title: string;
       }[];
+      host: {
+      id: number;
+      title: string;
+    };
       status: {
         label: string;
         key: string;
