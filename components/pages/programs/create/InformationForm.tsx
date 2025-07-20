@@ -40,6 +40,11 @@ interface Specialization {
   title: string;
 }
 
+interface host {
+  id: string;
+  title: string;
+}
+
 const defaultValues: Partial<InformationFormData> = {
   slug: "",
   limit_users: 0,
@@ -78,6 +83,9 @@ export const InformationForm = ({
       limit_users: Number(data.data.limit_users || 0),
       specialization_id: data.data.specialization_id
       ? String(data.data.specialization_id)
+      : "",
+      meeting_host_id: data.data.host.id 
+      ? String(data.data.host.id) 
       : "",
       special_for: data.data.special_for || "",
       image: data.data.image
@@ -130,6 +138,14 @@ export const InformationForm = ({
     }
   );
 
+  const { data: hosts, isLoading: loadingHosts } = useQuery(
+    {
+      queryFn: async (): Promise<{ data: Specialization[] }> =>
+        await fetchClient(`client/program/hosts`, axios_config),
+      queryKey: AllQueryKeys.GetAllHost,
+    }
+  );
+
   const createFormData = (submitData: InformationFormData): FormData => {
     const formdata = new FormData();
 
@@ -145,6 +161,7 @@ export const InformationForm = ({
     // Add other fields
     formdata.append("special_for", submitData.special_for);
     formdata.append("specialization_id", submitData.specialization_id);
+    formdata.append("meeting_host_id", submitData.meeting_host_id);
     formdata.append("slug", submitData.slug);
     formdata.append("limit_users", submitData.limit_users.toString());
 
@@ -393,6 +410,41 @@ export const InformationForm = ({
                 الأطفال
               </Radio>
             </RadioGroup>
+          )}
+        />
+      </div>
+
+      {/* hosts Select */}
+      <div className="col-span-4">
+        <Controller
+          name="meeting_host_id"
+          control={control}
+          render={({ field }) => (
+            <Select
+              {...field}
+              selectedKeys={field.value ? [field.value] : []}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0] as string;
+                field.onChange(selectedKey);
+              }}
+              label="الاستضافة"
+              labelPlacement="outside"
+              placeholder="اختر الاستضافة"
+              isInvalid={!!errors.meeting_host_id?.message}
+              errorMessage={errors.meeting_host_id?.message}
+              isLoading={loadingHosts}
+              classNames={{
+                label: "text-[#272727] font-bold text-sm",
+                base: "mb-4",
+                value: "text-[#87878C] text-sm",
+              }}
+            >
+              {hosts?.data?.map((host: host) => (
+                <SelectItem key={host.id}>
+                  {host.title}
+                </SelectItem>
+              )) ?? []}
+            </Select>
           )}
         />
       </div>
