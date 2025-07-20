@@ -5,6 +5,7 @@ import { InformationForm } from "./InformationForm";
 import { SpecialtiesForm } from "./SpecialtiesForm";
 import { AttachmentsForm } from "./AttachmentsForm";
 import { WorkingHoursForm } from "./WorkingHoursForm";
+import { HostingForm } from "./HostingForm";
 
 type CreateTeacherProps = {
   Specializations: any;
@@ -30,7 +31,7 @@ export const CreateTeacher = ({ Specializations }: CreateTeacherProps) => {
           2
         </span>
         <span
-          className={`w-[7rem] h-px opacity-0 ${activeStep === 1 ? "bg-stroke" : "bg-primary"}`}
+          className={`w-[5rem] h-px opacity-0 ${activeStep === 1 ? "bg-stroke" : "bg-primary"}`}
         ></span>
         <span
           className={`font-bold text-xs text-center mb-2 w-[78px] ${activeStep === 2 ? "text-primary" : "text-stroke"}`}
@@ -38,12 +39,20 @@ export const CreateTeacher = ({ Specializations }: CreateTeacherProps) => {
           3
         </span>
         <span
-          className={`w-[7rem] h-px opacity-0 ${activeStep === 2 ? "bg-stroke" : "bg-primary"}`}
+          className={`w-[4rem] h-px opacity-0 ${activeStep === 2 ? "bg-stroke" : "bg-primary"}`}
         ></span>
         <span
           className={`font-bold text-xs text-center mb-2 w-[78px] ${activeStep === 3 ? "text-primary" : "text-stroke"}`}
         >
           4
+        </span>
+        <span
+          className={`w-[6rem] h-px opacity-0 ${activeStep === 3 ? "bg-stroke" : "bg-primary"}`}
+        ></span>
+        <span
+          className={`font-bold text-xs text-center mb-2 w-[78px] ${activeStep === 4 ? "text-primary" : "text-stroke"}`}
+        >
+          5
         </span>
       </div>
       <div className="flex items-center justify-center">
@@ -66,13 +75,21 @@ export const CreateTeacher = ({ Specializations }: CreateTeacherProps) => {
         <div
           className={`px-5 py-2 text-sm flex items-center justify-between rounded-full border ${activeStep === 2 ? "text-primary border-primary cursor-pointer bg-primary/10 opacity-100" : "text-gray-600 bg-main border-stroke"} font-bold`}
         >
-          ساعات العمل
+          الاستضافة
         </div>
         <span
           className={`w-10 h-px ${activeStep === 3 ? "bg-primary" : "bg-stroke"}`}
         ></span>
         <div
           className={`px-5 py-2 text-sm flex items-center justify-between rounded-full border ${activeStep === 3 ? "text-primary border-primary cursor-pointer bg-primary/10 opacity-100" : "text-gray-600 bg-main border-stroke"} font-bold`}
+        >
+          ساعات العمل
+        </div>
+        <span
+          className={`w-10 h-px ${activeStep === 4 ? "bg-primary" : "bg-stroke"}`}
+        ></span>
+        <div
+          className={`px-5 py-2 text-sm flex items-center justify-between rounded-full border ${activeStep === 4 ? "text-primary border-primary cursor-pointer bg-primary/10 opacity-100" : "text-gray-600 bg-main border-stroke"} font-bold`}
         >
           الملفات و المرفقات
         </div>
@@ -84,8 +101,10 @@ export const CreateTeacher = ({ Specializations }: CreateTeacherProps) => {
             case 1:
             return <SpecialtiesForm setActiveStep={setActiveStep} Specializations={Specializations} teacherId={teacherId} />;
             case 2:
+            return <HostingForm setActiveStep={setActiveStep} teacherId={teacherId}/>;
+             case 3:
             return <WorkingHoursForm setActiveStep={setActiveStep} teacherId={teacherId}/>;
-            case 3:
+            case 4:
             return <AttachmentsForm setActiveStep={setActiveStep} teacherId={teacherId}/>;
             default:
             return null;
