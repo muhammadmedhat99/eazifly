@@ -21,6 +21,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
+import { CustomPagination } from "@/components/global/Pagination";
 
 type appointmentsProps = {
   appointmentData?: any;
@@ -51,6 +52,7 @@ export const Appointments = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
   const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: AilabilitiesSessions, isLoading } = useQuery({
     enabled: !!selectedAppointment,
@@ -338,6 +340,14 @@ export const Appointments = ({
           )}
         </ModalContent>
       </Modal>
+      <div className="my-10 px-6">
+        <CustomPagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          last_page={appointmentData?.meta?.last_page}
+          total={appointmentData?.meta?.total}
+        />
+      </div>
     </div>
   );
 };

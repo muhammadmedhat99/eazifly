@@ -79,8 +79,8 @@ export const Feedbacks = ({
     <div className="flex flex-col gap-2">
       {isLoadingfeedback ? (
         <Loader />
-      ) : feedbackData.data && feedbackData.data.length > 0 ? (
-        feedbackData.data.map((feedback: any, feedbackIndex: number) => (
+      ) : feedbackData?.data && feedbackData?.data.length > 0 ? (
+        feedbackData?.data.map((feedback: any, feedbackIndex: number) => (
           <div
             key={feedbackIndex}
             className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke"

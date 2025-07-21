@@ -401,6 +401,7 @@ export const Programs = ({
           ...axios_config,
           params: {
             program_id: subscription.program_id,
+            per_page: 5,
           },
         }),
     })),
