@@ -93,6 +93,7 @@ export const Subaccounts = ({
         ...axios_config,
         params: {
           program_id: program_id,
+          per_page: 5,
         },
       }),
     enabled: selectedTab === "appointments" && hasCurrentStudent,
