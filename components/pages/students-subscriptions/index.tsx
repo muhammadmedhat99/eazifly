@@ -126,7 +126,7 @@ export const AllStudentsSubscriptions = () => {
       },
       type: item?.subscription_type || "N/A",
       courses: item.order_details[0]?.program || "N/A",
-      price: `${item.total_after_discount} ${item.currency}`,
+      price: `${item.total_after_discount} ${item.currency || ""}`,
       created_at: formatDate(item?.created_at) || "N/A",
       order_status: {
         name: item.status.label || "N/A",
