@@ -105,7 +105,7 @@ export const AllTeachers = () => {
         color:
           item?.status?.color || "",
       },
-    })) || [];
+    })).reverse() || [];
 
   const STATUS_GROUPS: any = {
     active: ["active", "available", "medium", "fully_booked"],

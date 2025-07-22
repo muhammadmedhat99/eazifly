@@ -146,7 +146,7 @@ export const Renewals = () => {
             ? "danger"
             : item?.status_label?.color,
       },
-    })) || [];
+    })).reverse() || [];
 
   return (
     <>
