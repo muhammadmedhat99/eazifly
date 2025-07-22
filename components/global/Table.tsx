@@ -17,6 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Trash } from "iconsax-reactjs";
 
 export default function TableComponent({
   columns,
@@ -24,6 +25,8 @@ export default function TableComponent({
   ActionsComponent,
   handleRowClick,
   selectable = false,
+  setConfirmAction,
+  setSelectedItem
 }: any) {
   const pathname = usePathname();
   const router = useRouter();
@@ -41,6 +44,20 @@ export default function TableComponent({
             src={item.avatar}
           />
         );
+      case "delete":
+        return (
+          <button
+           onClick={(e) => {
+              e.stopPropagation();
+              setSelectedItem(item); 
+              setConfirmAction(true);
+            }}
+            className="text-red-500 hover:text-red-700"
+          >
+            <Trash color="red" size="16" />
+          </button>
+        );
+
 
       case "name":
         return (
