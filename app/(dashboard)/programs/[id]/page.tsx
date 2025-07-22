@@ -50,7 +50,7 @@ export default async function page({
         </div>
       </BreadCrumb>
 
-      <ProgramDetails data={data} />
+      <ProgramDetails />
     </>
   );
 }
