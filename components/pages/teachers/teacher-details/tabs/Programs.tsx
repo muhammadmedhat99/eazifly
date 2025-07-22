@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   Avatar,
   AvatarGroup,
+  Button,
   CardBody,
   Chip,
   Dropdown,
@@ -32,6 +33,8 @@ import { formatDate } from "@/lib/helper";
 import { CustomPagination } from "@/components/global/Pagination";
 import { User } from "@heroui/react";
 import { Reports } from "@/components/pages/students/student-details/tabs/ProgramTabs/reports";
+import AddTeacherModal from "@/components/pages/programs/details/tabs/AddTeacherModal";
+import AddProgram from "./AddProgram";
 
 const columns = [
   { name: "", uid: "avatar" },
@@ -74,6 +77,7 @@ const OptionsComponent = () => {
 };
 
 export const Programs = () => {
+  const [modalOpen, setModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const params = useParams();
   const instructor_id = params.id;
@@ -433,7 +437,7 @@ export const Programs = () => {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="p-4 grid grid-cols-1 gap-5">
+        data.data.length > 0 ? <div className="p-4 grid grid-cols-1 gap-5">
           {data.data.map((program: Program, index: number) => (
             <div
               key={index}
@@ -769,7 +773,21 @@ export const Programs = () => {
             </div>
           ))}
         </div>
+        :
+        <div className="flex justify-end p-4">
+          <Button
+          onPress={()=>setModalOpen(true)}
+            className="text-white font-semibold text-sm px-6 py-2 rounded-md bg-primary"
+          >
+            إضافة برنامج
+          </Button>
+        </div>
+      
       )}
+      <AddProgram
+        isOpen={modalOpen}
+        onClose={()=>setModalOpen(false)}
+      /> 
     </>
   );
 };
