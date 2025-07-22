@@ -397,6 +397,20 @@ export const Programs = ({
     queries: subscriptionsData.data.map((subscription: Subscription) => ({
       queryKey: ["programappointments", subscription.id],
       queryFn: async () =>
+        await fetchClient(`client/user/upcoming/appointments/${user_id}`, {
+          ...axios_config,
+          params: {
+            program_id: subscription.program_id,
+            per_page: 5,
+          },
+        }),
+    })),
+  });
+
+  const allAppointmentsResults = useQueries({
+    queries: subscriptionsData.data.map((subscription: Subscription) => ({
+      queryKey: ["programallappointments", subscription.id],
+      queryFn: async () =>
         await fetchClient(`client/user/appointments/${user_id}`, {
           ...axios_config,
           params: {
@@ -468,6 +482,14 @@ export const Programs = ({
             ? appointmentResult.data
             : { data: [] };
           const isLoadingappointment = appointmentResult?.isLoading;
+
+          const allappointmentResult = allAppointmentsResults[index];
+          const allappointmentData: { data: any[] } = hasDataArray(
+            allappointmentResult?.data
+          )
+            ? allappointmentResult.data
+            : { data: [] };
+          const isLoadingallappointment = allappointmentResult?.isLoading;
 
           const assignmentResult = assignmentsResults[index];
           const assignmentData: { data: any[] } = hasDataArray(
@@ -671,6 +693,15 @@ export const Programs = ({
                       <Appointments
                         appointmentData={appointmentData}
                         isLoadingappointment={isLoadingappointment}
+                      />
+                    </Tab>
+                  )}
+
+                  {appointmentData.data.length > 0 && (
+                    <Tab className="w-full" key="allAppointments" title="المحاضرات">
+                      <Appointments
+                        appointmentData={allappointmentData}
+                        isLoadingappointment={isLoadingallappointment}
                       />
                     </Tab>
                   )}

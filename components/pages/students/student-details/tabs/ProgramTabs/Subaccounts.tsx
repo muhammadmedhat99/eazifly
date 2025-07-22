@@ -89,7 +89,7 @@ export const Subaccounts = ({
   const { data: appointmentData, isLoading: isLoadingappointment } = useQuery({
     queryKey: ["subaccountAppointments", currentStudent?.id, program_id],
     queryFn: async () =>
-      await fetchClient(`client/user/appointments/${currentStudent.id}`, {
+      await fetchClient(`client/user/upcoming/appointments/${currentStudent.id}`, {
         ...axios_config,
         params: {
           program_id: program_id,
@@ -97,6 +97,19 @@ export const Subaccounts = ({
         },
       }),
     enabled: selectedTab === "appointments" && hasCurrentStudent,
+  });
+
+  const { data: allAppointmentData, isLoading: isLoadingAllAppointment } = useQuery({
+    queryKey: ["subaccountAllAppointments", currentStudent?.id, program_id],
+    queryFn: async () =>
+      await fetchClient(`client/user/appointments/${currentStudent.id}`, {
+        ...axios_config,
+        params: {
+          program_id: program_id,
+          per_page: 5,
+        },
+      }),
+    enabled: selectedTab === "allAppointments" && hasCurrentStudent,
   });
 
   const { data: reportData, isLoading: isLoadingReport } = useQuery({
@@ -248,6 +261,7 @@ export const Subaccounts = ({
                 }}
               >
                 <Tab key="appointments" title="المواعيد" />
+                <Tab key="allAppointments" title="المحاضرات" />
                 <Tab key="assignments" title="التسليمات" />
                 <Tab key="reports" title="التقارير" />
                 <Tab key="feedbacks" title="الملاحظات" />
@@ -261,6 +275,12 @@ export const Subaccounts = ({
               <Appointments
                 appointmentData={appointmentData}
                 isLoadingappointment={isLoadingappointment}
+              />
+            )}
+            {selectedTab === "allAppointments" && (
+              <Appointments
+                appointmentData={allAppointmentData}
+                isLoadingappointment={isLoadingAllAppointment}
               />
             )}
             {selectedTab === "assignments" && (
