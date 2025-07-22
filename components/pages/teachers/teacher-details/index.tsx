@@ -9,6 +9,7 @@ import { Statistics } from "./tabs/Satistics";
 import { TeacherReports } from "./tabs/TeacherReports";
 import { useState } from "react";
 import { Reports } from "../../students/student-details/tabs/ProgramTabs/reports";
+import { Hostinglinks } from "./tabs/Hostinglinks";
 
 
 type TeacherDetailsProps = {
@@ -33,6 +34,13 @@ type TeacherDetailsProps = {
       specializations: {
         id: number;
         title: string;
+      }[];
+      links: {
+        id: number;
+        title: string;
+        icon: string,
+        type: string,
+        link: string,
       }[];
     };
   };
@@ -85,6 +93,11 @@ export const TeacherDetails = ({ data, reportsData }: TeacherDetailsProps) => {
                 reportData={reportsData}
                 isLoadingReport={false}
               />
+        </Tab>
+        <Tab key="teacher-links" title="الاستضافات">
+          <Hostinglinks
+            data={{ data: teacherData }}
+          />
         </Tab>
       </Tabs>
     </div>

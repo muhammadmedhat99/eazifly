@@ -31,6 +31,10 @@ type MainInformationProps = {
       id: number;
       title: string;
     }[];
+    host: {
+      id: number;
+      title: string;
+    };
     status: {
       label: string;
       key: string;
@@ -101,6 +105,17 @@ export const MainInformation = ({ data }: MainInformationProps) => {
               {method.title}
             </div>
           ))}
+        </div>
+      </div>
+      {/* Main Card  */}
+       {/* Main Card  */}
+      <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
+        <div className="text-primary font-bold">الاستضافة</div>
+        <div
+          className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm w-fit"
+          key={data.host.id}
+        >
+          {data.host.title}
         </div>
       </div>
       {/* Main Card  */}

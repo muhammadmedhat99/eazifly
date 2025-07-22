@@ -40,13 +40,12 @@ export const informationFormSchema = yup.object({
       (value) => value && value.length > 0
     )
     .required("الرجاء تحميل ملف"),
-  why_us: yup.boolean().required(),
-  learning_track: yup.boolean().required(),
   special_for: yup
     .string()
     .oneOf(["adult", "child"])
     .required("اختر الفئة المناسبة"),
   specialization_id: yup.string().required("اختر التخصص"),
+  meeting_host_id: yup.string().required("اختر الاستضافة"),
   slug: yup.string().required("ادخل slug الخاص ب البرنامج"),
   limit_users: yup.number().required("ادخل عدد المستخدمين"),
 });

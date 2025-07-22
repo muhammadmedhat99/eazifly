@@ -31,10 +31,55 @@ const locales = ["ar", "en"] as const;
 export const Subscriptions = ({
   setActiveStep,
   programId,
+  initialData,
+  mode
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   programId: string;
-}) => {
+  initialData?: any;
+  mode?: string;
+  }) => {
+  
+  const mappedDefaults = {
+    subscriptions: initialData?.data?.plans.length > 0
+      ? initialData?.data?.plans.map(plan => ({
+        localizedFields: {
+          ar: {
+            title: plan.title || "",
+            label: plan.label || "",
+            description: plan.description || "",
+          },
+          en: {
+            title: "",
+            label: "",
+            description: "",
+          },
+        },
+        subscription_plan: plan.subscripe_days || "",
+        subscription_type: plan.type || "",
+        subscription_price: plan.price || "",
+        sell_price: plan.discount_price || "",
+        number_of_lessons: plan.number_of_session_per_week || "",
+        lesson_duration: plan.duration || "",
+        is_special_plan:  plan.is_special_plan === true ? "true" : "false",
+      }))
+      : [
+        {
+          localizedFields: {
+            ar: { title: "", label: "", description: "" },
+            en: { title: "", label: "", description: "" },
+          },
+          subscription_plan: "",
+          subscription_type: "",
+          subscription_price: "",
+          sell_price: "",
+          number_of_lessons: "",
+          lesson_duration: "",
+          is_special_plan: "",
+        }
+      ],
+  };
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [selectedValues, setSelectedValues] = useState<{
@@ -60,25 +105,7 @@ export const Subscriptions = ({
     control,
   } = useForm<SubscriptionsFormData>({
     resolver: yupResolver(subscriptionsSchema),
-    defaultValues: {
-      subscriptions: [
-        {
-          localizedFields: locales.reduce(
-            (acc, locale) => ({
-              ...acc,
-              [locale]: { title: "", label: "", description: "" },
-            }),
-            {} as any
-          ),
-          subscription_plan: "",
-          subscription_type: "",
-          subscription_price: "",
-          sell_price: "",
-          number_of_lessons: "",
-          lesson_duration: "",
-        },
-      ],
-    },
+    defaultValues: mappedDefaults
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -155,29 +182,46 @@ export const Subscriptions = ({
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
 
       const formData = {
-        plans: submitData?.subscriptions?.map((item) => ({
-          program_id: programId,
-          subscripe_days: item?.subscription_plan,
-          discount_price: item?.sell_price,
-          price: item.subscription_price,
-          duration: item.lesson_duration,
-          number_of_session_per_week: item.number_of_lessons,
-          type: item.subscription_type,
-          is_special_plan: item?.is_special_plan === "true",
-          ...(item?.is_special_plan === "true" ? item.localizedFields : {}),
-        })),
+        plans: submitData?.subscriptions?.map((item, index) => {
+          const base = {
+            program_id: programId,
+            subscripe_days: item?.subscription_plan,
+            discount_price: item?.sell_price,
+            price: item.subscription_price,
+            duration: item.lesson_duration,
+            number_of_session_per_week: item.number_of_lessons,
+            type: item.subscription_type,
+            is_special_plan: item?.is_special_plan === "true",
+          };
+
+          // Add localizedFields if it's a special plan
+          if (item.is_special_plan === "true") {
+            Object.assign(base, item.localizedFields);
+          }
+
+          // Add plan_id in edit mode
+          if (mode === "edit") {
+            return {
+              ...base,
+              plan_id: initialData?.data?.plans?.[index]?.id,
+            };
+          }
+
+          return base;
+        }),
       };
 
-      return postData(
-        "client/program/plan/store",
-        JSON.stringify(formData),
-        myHeaders
-      );
+      const endpoint =
+        mode === "edit"
+          ? "client/program/plan/update"
+          : "client/program/plan/store";
+
+      return postData(endpoint, JSON.stringify(formData), myHeaders);
     },
     onSuccess: (data: any) => {
       if (data.status !== 200 && data.status !== 201) {
         addToast({
-          title: `Error Adding Subscription Plan: ${data.message}`,
+          title: `Error Submitting Subscription Plan: ${data.message}`,
           color: "danger",
         });
       } else {
@@ -189,7 +233,7 @@ export const Subscriptions = ({
       }
     },
     onError: (error: Error) => {
-      console.error("Error creating program:", error);
+      console.error("Error submitting program:", error);
       addToast({
         title: "عذرا حدث خطأ ما",
         color: "danger",
@@ -373,9 +417,8 @@ export const Subscriptions = ({
                   >
                     {sessionPeriods?.data.map(
                       (item: { id: string; time: string; title: string }) => (
-                        <SelectItem key={item.id}>
-                          {item.time}
-                          {item.title}
+                        <SelectItem key={item.time}>
+                          {item.time} دقيقة
                         </SelectItem>
                       )
                     )}

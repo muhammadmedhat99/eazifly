@@ -305,7 +305,7 @@ export const Subaccounts = ({
         onCancel={() => setConfirmAction(false)}
       />
       <AddSubaccountModal isOpen={modalOpen}
-        onClose={() => setModalOpen(false)} data={data} />
+        onClose={() => setModalOpen(false)} data={data} program_id={program_id} />
     </div>
   );
 };
