@@ -105,7 +105,7 @@ export const TeacherAndContent = ({
       };
 
       return postData(
-        "client/program/assign/instructor",
+        "client/program/sync/assign/instructor",
         JSON.stringify(formdata),
         myHeaders
       );

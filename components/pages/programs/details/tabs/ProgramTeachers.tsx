@@ -3,11 +3,22 @@
 import { Options } from "@/components/global/Icons";
 import TableComponent from "@/components/global/Table";
 import {
+  addToast,
+  Button,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
 } from "@heroui/react";
+import { useState } from "react";
+import AddTeacherModal from "./AddTeacherModal";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+import { axios_config } from "@/lib/const";
+import { fetchClient, postData } from "@/lib/utils";
+import { Loader } from "@/components/global/Loader";
+import { getCookie } from "cookies-next";
+import ConfirmModal from "@/components/global/ConfirmModal";
 
 const columns = [
   { name: "", uid: "avatar" },
@@ -18,6 +29,7 @@ const columns = [
   { name: "التخصص", uid: "specializations" },
   { name: "سعر الساعة", uid: "amount_per_hour" },
   { name: "الحالة", uid: "status" },
+  { name: "", uid: "delete" },
 ];
 
 const OptionsComponent = ({ id }: { id: number }) => {
@@ -59,9 +71,56 @@ type InstructorsProps = {
   teachersData: Instructor[];
 };
 
-export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
+export const ProgramTeachers = () => {
 
-  const tableData = teachersData?.map((item: any) => ({
+  const [modalOpen, setModalOpen] = useState(false);
+  const params = useParams();
+  const programId = params.id;
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["GetProgramDetails", programId],
+    queryFn: async () => await fetchClient(`client/program/show/${programId}`, axios_config),
+  });
+
+  const [confirmAction, setConfirmAction] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+
+  const handleRemove = useMutation({
+    mutationFn: (item: any) => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+      formdata.append("program_id", programId.toString());
+      formdata.append("instructor_id", item.id); // من الـ item
+
+      return postData("client/program/remove/assign/instructor", formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({ title: "error", color: "danger" });
+      } else {
+        addToast({ title: data?.message, color: "success" });
+        queryClient.invalidateQueries({ queryKey: ["GetProgramDetails", programId] });
+      }
+    },
+    onError: () => {
+      addToast({ title: "عذرا حدث خطأ ما", color: "danger" });
+    },
+  });
+
+  const handleConfirmRemove = () => {
+    if (selectedItem) {
+      handleRemove.mutate(selectedItem);
+      setConfirmAction(false);
+      setSelectedItem(null);
+    }
+  };
+
+  const tableData = data?.data?.instructors?.map((item: any) => ({
     id: item.id,
     avatar: item.image,
     name: item.name_ar || item.name_en,
@@ -77,14 +136,40 @@ export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
       name: item.status.label || "N/A",
       color: item?.status?.color ,
     },
-  }));
+  })) ?? [];;
 
   return (
     <div className="bg-main">
+      {isLoading && <Loader/>}
+      <ConfirmModal
+        open={confirmAction}
+        onCancel={() => {
+          setConfirmAction(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleConfirmRemove}
+        title="تأكيد الحذف"
+        message="هل أنت متأكد من أنك تريد حذف هذا المدرس من البرنامج؟"
+      />
       <TableComponent
         columns={columns}
         data={tableData}
         ActionsComponent={OptionsComponent}
+        setConfirmAction={setConfirmAction}
+        setSelectedItem={setSelectedItem}
+      />
+      <div className="flex justify-end p-4">
+        <Button
+        onPress={()=>setModalOpen(true)}
+          className="text-white font-semibold text-sm px-6 py-2 rounded-md bg-primary"
+        >
+          إضافة معلم
+        </Button>
+      </div>
+      <AddTeacherModal
+        isOpen={modalOpen}
+        onClose={()=>setModalOpen(false)}
+        tableTeachers={tableData}
       />
     </div>
   );
