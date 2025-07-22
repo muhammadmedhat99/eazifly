@@ -11,13 +11,22 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { informationFormSchema } from "./schemas";
 import { Reviewandpublish } from "./Reviewandpublish";
 
-export const CreateProgram = () => {
+interface CreateProgramProps {
+  initialData?: any; 
+  mode?: "create" | "edit";
+}
+
+export const CreateProgram = ({
+  initialData,
+  mode = "create",
+}: CreateProgramProps) => {
   const [activeStep, setActiveStep] = useState(0);
   const [programId, setProgramId] = useState<string>("");
   const [specializationId, setSpecializationId] = useState<string>("");
 
   const methods = useForm({
     resolver: yupResolver(informationFormSchema),
+    defaultValues: initialData || {},
   });
 
   const handleProgramCreated = (id: string, specId: string) => {
@@ -131,6 +140,8 @@ export const CreateProgram = () => {
                 <InformationForm
                   setActiveStep={setActiveStep}
                   onProgramCreated={handleProgramCreated}
+                  initialData={initialData} 
+                  mode={mode} 
                 />
               );
             case 1:
@@ -139,6 +150,8 @@ export const CreateProgram = () => {
                   setActiveStep={setActiveStep}
                   programId={programId}
                   specializationId={specializationId}
+                  initialData={initialData} 
+                  mode={mode} 
                 />
               );
             case 2:
@@ -147,6 +160,8 @@ export const CreateProgram = () => {
                   <PaymentMethods
                     setActiveStep={setActiveStep}
                     programId={programId}
+                    initialData={initialData}
+                    mode={mode} 
                   />
                 </>
               );
@@ -156,6 +171,8 @@ export const CreateProgram = () => {
                   <Subscriptions
                     setActiveStep={setActiveStep}
                     programId={programId}
+                    initialData={initialData}
+                    mode={mode} 
                   />
                 </>
               );

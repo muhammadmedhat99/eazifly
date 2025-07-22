@@ -78,7 +78,7 @@ export const WorkingHoursForm =({
           color: "success",
         });
         reset();
-        setActiveStep(3);
+        setActiveStep(4);
       }
     },
     onError: (error) => {

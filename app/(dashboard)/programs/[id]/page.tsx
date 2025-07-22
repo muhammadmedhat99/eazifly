@@ -41,6 +41,12 @@ export default async function page({
           >
             انشاء برنامج جديد
           </Link>
+          <Link
+            href={`/programs/update/${id}`}
+            className="text-white font-semibold text-sm px-6 py-2 rounded-md bg-primary"
+          >
+            تعديل البيانات
+          </Link>
         </div>
       </BreadCrumb>
 

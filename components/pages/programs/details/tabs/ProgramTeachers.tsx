@@ -70,9 +70,9 @@ export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
     amount_per_hour: item.amount_per_hour,
     created_at: new Date(item.created_at).toLocaleDateString("ar-EG"),
     specializations:
-      item.specializations?.length > 0
-        ? item.specializations.map((s: any) => s.name_ar).join(", ")
-        : "غير محدد",
+        item.specializations?.length > 0
+          ? `${item.specializations[0]?.title}${item.specializations.length > 1 ? ` (+${item.specializations.length})` : ""}`
+          : "N/A",
     status: {
       name: item.status.label || "N/A",
       color: item?.status?.color ,
