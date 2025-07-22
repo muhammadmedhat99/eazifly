@@ -111,12 +111,12 @@ export const MainInformation = ({ data }: MainInformationProps) => {
        {/* Main Card  */}
       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
         <div className="text-primary font-bold">الاستضافة</div>
-        <div
+        {data?.host && <div
           className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm w-fit"
-          key={data.host.id}
+          key={data?.host?.id}
         >
-          {data.host.title}
-        </div>
+          {data?.host?.title}
+        </div>}
       </div>
       {/* Main Card  */}
 
