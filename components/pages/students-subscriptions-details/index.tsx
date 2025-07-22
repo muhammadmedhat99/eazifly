@@ -248,7 +248,19 @@ export const StudentsSubscriptionDetails = ({
           <AccordionItem
             key="2"
             aria-label="بيانات الطلب"
-            title="بيانات الطلب"
+            title={
+              <div className="flex justify-between items-center gap-2">
+                <span>بيانات الطلب</span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`size-2 rounded-full bg-${data?.data.status.color}`}
+                  ></span>
+                  <span className={`text-${data?.data.status.color} font-bold`}>
+                    {data?.data.status.label}
+                  </span>
+                </div>
+              </div>
+            }
             classNames={{
               title: "font-bold text-black-text text-[15px]",
               base: "shadow-none border border-stroke",
@@ -386,7 +398,7 @@ export const StudentsSubscriptionDetails = ({
       </div>
 
       <div className="bg-stroke p-5 flex gap-3 flex-col">
-        <div className="max-w-md">
+        {data?.data.status.key !== "approved" && <div className="max-w-md">
           <Input
             type="text"
             label="أدخل قيمة التحويل يدوي"
@@ -397,10 +409,10 @@ export const StudentsSubscriptionDetails = ({
             value={paidValue}
             onChange={(e) => setPaidValue(e.target.value)}
           />
-        </div>
+        </div>}
 
         <div className="flex items-center justify-end gap-3">
-          <Button
+          {data?.data.status.key !== "approved" && <Button
             variant="solid"
             color="primary"
             className="text-white"
@@ -412,11 +424,11 @@ export const StudentsSubscriptionDetails = ({
             }}
           >
             رفض الطلب
-          </Button>
+          </Button>}
           <Button variant="solid" color="primary" className="text-white">
             إرسال رسالة
           </Button>
-          <Button
+          {data?.data.status.key !== "approved" && <Button
             variant="solid"
             color="primary"
             className="text-white"
@@ -428,7 +440,7 @@ export const StudentsSubscriptionDetails = ({
             }}
           >
             الموافقة علي الطلب
-          </Button>
+          </Button>}
           <Button
             variant="solid"
             color="primary"

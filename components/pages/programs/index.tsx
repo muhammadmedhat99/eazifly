@@ -43,11 +43,7 @@ const OptionsComponent = ({ id }: { id: number }) => {
         <DropdownItem href={`/programs/${id}`} key="show">
           عرض البيانات
         </DropdownItem>
-        <DropdownItem key="edit">تعديل البيانات</DropdownItem>
-        <DropdownItem key="add-to-course">إلحاق ببرنامج</DropdownItem>
-        <DropdownItem key="change-password">تغيير كلمة المرور</DropdownItem>
-        <DropdownItem key="send-mail">إرسال رسالة</DropdownItem>
-        <DropdownItem key="delete">حذف</DropdownItem>
+        <DropdownItem href={`/programs/update/${id}`} key="edit">تعديل البيانات</DropdownItem>
       </DropdownMenu>
     </Dropdown>
   );
