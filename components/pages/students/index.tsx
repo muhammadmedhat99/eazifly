@@ -109,7 +109,7 @@ export const AllStudents = () => {
             ? "warning"
             : item?.status_label?.color || "danger",
       },
-    })) || [];
+    })).reverse() || [];
 
   const filteredData = useMemo(() => {
     if (selectedStatus === "all") return formattedData;
