@@ -71,17 +71,13 @@ type InstructorsProps = {
   teachersData: Instructor[];
 };
 
-export const ProgramTeachers = () => {
+export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const params = useParams();
   const programId = params.id;
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["GetProgramDetails", programId],
-    queryFn: async () => await fetchClient(`client/program/show/${programId}`, axios_config),
-  });
 
   const [confirmAction, setConfirmAction] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -120,7 +116,7 @@ export const ProgramTeachers = () => {
     }
   };
 
-  const tableData = data?.data?.instructors?.map((item: any) => ({
+  const tableData = teachersData?.map((item: any) => ({
     id: item.id,
     avatar: item.image,
     name: item.name_ar || item.name_en,
@@ -140,7 +136,6 @@ export const ProgramTeachers = () => {
 
   return (
     <div className="bg-main">
-      {isLoading && <Loader/>}
       <ConfirmModal
         open={confirmAction}
         onCancel={() => {
