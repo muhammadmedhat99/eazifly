@@ -219,7 +219,7 @@ export default function AddSubaccountModal({
         onClose()
       } else {
         addToast({
-          title: "error",
+          title: response.message,
           color: "danger",
         });
       }
