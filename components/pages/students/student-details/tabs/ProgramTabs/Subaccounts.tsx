@@ -1,7 +1,7 @@
 "use client";
 import { Add, ArrowLeft2, ArrowRight2, Trash } from "iconsax-reactjs";
 import { Loader } from "@/components/global/Loader";
-import { addToast, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs } from "@heroui/react";
+import { addToast, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs, toast } from "@heroui/react";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
@@ -19,6 +19,7 @@ type appointmentsProps = {
   isLoadingsubaccount: boolean;
   program_id: number;
   refetchSubaccounts?: () => void;
+  student_number: number;
   data: {
     data: {
       id: number;
@@ -64,6 +65,7 @@ export const Subaccounts = ({
   program_id,
   refetchSubaccounts,
   data,
+  student_number
 }: appointmentsProps) => {
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -311,11 +313,20 @@ export const Subaccounts = ({
       )}
       <button
         className="flex justify-end items-center gap-1 pt-4"
-        onClick={()=> setModalOpen(true)}
+        onClick={() => {
+          if (students.length >= student_number) {
+            addToast({
+              title: `لقد وصلت إلى الحد الأقصى لعدد الطلاب المسموح به في هذا البرنامج`,
+              color: "warning",
+            });
+            return;
+          }
+          setModalOpen(true);
+        }}
       >
         <Add size="24" variant="Outline" className="text-primary" />
         <span className="text-center justify-start text-primary text-sm font-bold">
-          إضافة حساب فرعي
+          إضافة طالب 
         </span>
       </button>
       <ConfirmModal

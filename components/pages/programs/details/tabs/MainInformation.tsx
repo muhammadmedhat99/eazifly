@@ -141,7 +141,7 @@ export const MainInformation = ({ data }: MainInformationProps) => {
       </div>
       {/* Main Card  */}
 
-      <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2 lg:col-span-2">
+      {/* <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2 lg:col-span-2">
         <div className="text-primary font-bold">انواع الدفع</div>
 
         <Table
@@ -187,7 +187,7 @@ export const MainInformation = ({ data }: MainInformationProps) => {
             </TableRow>
           </TableBody>
         </Table>
-      </div>
+      </div> */}
     </div>
     ) : <Loader/>}
     </>
