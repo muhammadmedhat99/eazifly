@@ -200,9 +200,9 @@ export const Appointments = ({
           (appointment: any, appointmentIndex: number) => (
             <div
               key={appointmentIndex}
-              className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke"
+              className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8"
             >
-              <div className="flex items-center gap-20">
+              <div className="flex items-center gap-20 whitespace-nowrap">
                 <div className="flex flex-col gap-4 items-center">
                   <span className="text-[#5E5E5E] text-sm font-bold">
                     تاريخ المحاضرة

@@ -204,7 +204,7 @@ export const StudentsSubscriptionDetails = ({
             }}
             // indicator={<ArrowLeft2 variant="Bold" color="#2563EB" />}
           >
-            <div className="py-5 grid grid-cols-4 gap-4">
+            <div className="py-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
                 <span className="text-[#5E5E5E] text-sm font-bold">الإسم</span>
 
@@ -267,7 +267,7 @@ export const StudentsSubscriptionDetails = ({
             }}
             indicator={<ArrowLeft2 variant="Bold" color="#2563EB" />}
           >
-            <div className="py-5 grid grid-cols-5 gap-4">
+            <div className="py-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
                 <span className="text-[#5E5E5E] text-sm font-bold">
                   وسيلة الدفع

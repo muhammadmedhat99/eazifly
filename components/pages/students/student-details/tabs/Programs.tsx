@@ -27,15 +27,10 @@ import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import Link from "next/link";
 import React, { useState } from "react";
-import { Reports } from "./ProgramTabs/reports";
-import { Appointments } from "./ProgramTabs/appointments";
-import { Assignments } from "./ProgramTabs/assignments";
-import { Feedbacks } from "./ProgramTabs/feedbacks";
 import { useParams } from "next/navigation";
 import { Subaccounts } from "./ProgramTabs/Subaccounts";
 import SubscriptionActionModal from "./SubscriptionActionModal";
 import ConfirmModal from "@/components/global/ConfirmModal";
-import ChangeTeacherModal from "./ChangeTeacherModal";
 import { Teachers } from "./ProgramTabs/teachers";
 
 type StudentDetailsProps = {
@@ -358,7 +353,6 @@ export const Programs = ({
 }: StudentDetailsProps) => {
   const params = useParams();
   const user_id = params.id;
-  const [modalOpen, setModalOpen] = useState(false);
 
   const [selectedInstructors, setSelectedInstructors] = useState<
     Record<number, any>
@@ -388,7 +382,7 @@ export const Programs = ({
 
   const teachersResults = useQueries({
     queries: subscriptionsData.data.map((subscription: Subscription) => ({
-      queryKey: ["programteachers", subscription.id],
+      queryKey: ["programteachers", subscription.main_subscription_id],
       queryFn: async () =>
         await fetchClient(`client/subscription/user/instructors/${subscription.main_subscription_id}`, axios_config),
     })),
@@ -454,13 +448,7 @@ export const Programs = ({
               key={index}
               className="bg-main border border-stroke rounded-lg p-5"
             >
-              <ChangeTeacherModal
-                isOpen={modalOpen}
-                onClose={() => setModalOpen(false)}
-                student={subscription}
-                refetchSubscriptions={refetch}
-              />
-              <div className="grid grid-cols-4 gap-2 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-10">
                 <div className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke">
                   <div className="flex flex-col gap-4">
                     <span className="text-primary text-sm font-bold">
@@ -534,7 +522,7 @@ export const Programs = ({
                       title="تفاصيل الإشتراك و التجديد"
                       className="w-full"
                     >
-                      <div className="flex items-center justify-between gap-2 w-full">
+                      <div className="flex items-center justify-between gap-2 w-full overflow-x-auto">
                         <div className="flex-1">
                           <Progress
                             className="min-w-96 w-full"
@@ -545,29 +533,29 @@ export const Programs = ({
                               track: "bg-primary/30",
                             }}
                           />
-                          <div className="flex items-center justify-between mt-3">
-                            <div className="text-sm font-semibold text-title">
+                          <div className="flex items-center justify-between mt-3 gap-2">
+                            <div className="text-sm font-semibold text-title whitespace-nowrap">
                               تاريخ الإشتراك
                               <br />
                               {subscription.subscription_date}
                             </div>
 
                             <div className="flex gap-4">
-                              <div className="text-sm font-semibold text-title text-center">
+                              <div className="text-sm font-semibold text-title text-center whitespace-nowrap">
                                 عدد الحصص الفائتة
                                 <br />
                                 <span className="text-primary">
                                   {subscription.missed_sessions}
                                 </span>
                               </div>
-                              <div className="text-sm font-semibold text-title text-center">
+                              <div className="text-sm font-semibold text-title text-center whitespace-nowrap">
                                 عدد الحصص المكتملة
                                 <br />
                                 <span className="text-primary">
                                   {subscription.completed_sessions}
                                 </span>
                               </div>
-                              <div className="text-sm font-semibold text-title text-center">
+                              <div className="text-sm font-semibold text-title text-center whitespace-nowrap">
                                 عدد الطلاب
                                 <br />
                                 <span className="text-primary">
@@ -576,7 +564,7 @@ export const Programs = ({
                               </div>
                             </div>
 
-                            <div className="text-sm font-semibold text-title">
+                            <div className="text-sm font-semibold text-title whitespace-nowrap">
                               تاريخ الإنتهاء
                               <br />
                               {subscription.expire_date}
@@ -597,8 +585,8 @@ export const Programs = ({
                   {teacherData.data.length > 0 && (
                     <Tab className="w-full" key="teachers" title="المعلمين">
                       <Teachers
-                        appointmentData={teacherData}
-                        isLoadingappointment={isLoadingteacher}
+                        teachersData={teacherData}
+                        isLoadingteachers={isLoadingteacher}
                       />
                     </Tab>
                   )}

@@ -222,9 +222,9 @@ export const AllStudentsSubscriptions = () => {
 
   return (
     <div>
-      <div className="p-4 flex items-center justify-between flex-wrap">
+      <div className="p-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2">
-          <div className="relative min-w-80">
+          <div className="relative md:min-w-80 w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <SearchNormal1
                 size="18"
