@@ -397,7 +397,7 @@ export default function AddStudentModal({
                                           errorMessage={errors.country?.message}
                                           classNames={{
                                               label: "text-[#272727] font-bold text-sm",
-                                              base: "mb-4 col-span-2",
+                                              base: "mb-4 md:col-span-2",
                                               value: "text-[#87878C] text-sm",
                                           }}
                                       >

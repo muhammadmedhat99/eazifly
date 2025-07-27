@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Notification, MessageText1, SearchNormal1 } from "iconsax-reactjs";
 import { useDebounce } from "@/lib/hooks/useDebounce"; // see below for implementation
 
-export const Header = () => {
+export const Header = ({ children }: { children?: React.ReactNode }) => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
 
@@ -17,6 +17,9 @@ export const Header = () => {
 
   return (
     <header className="w-full flex justify-between items-center px-4 py-2 border-b border-stroke bg-main h-[74px] gap-4 lg:gap-[50px]">
+      {/* Right (on mobile): Burger menu or any external children */}
+      <div className="md:hidden">{children}</div>
+      
       {/* Center: Search Bar */}
       <div className="relative flex-1">
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">

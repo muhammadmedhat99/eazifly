@@ -199,7 +199,7 @@ export const Subaccounts = ({
       ) : students.length > 0 ? (
         <div className="rounded-2xl border border-stroke flex flex-col">
           {/* Header Section */}
-          <div className="flex items-center justify-between bg-background px-5 py-3 border-b">
+          <div className="flex items-center justify-between bg-background px-5 py-3 border-b flex-wrap gap-4">
             {/* Students & Pagination */}
             <div className="flex flex-col gap-3 items-center">
               <span className="text-sm font-bold">الطلاب</span>
@@ -249,7 +249,7 @@ export const Subaccounts = ({
             </div>
 
             {/* Tabs */}
-            <div>
+            <div className="overflow-x-auto">
               <Tabs
                 selectedKey={selectedTab}
                 onSelectionChange={(key) => setSelectedTab(key.toString())}

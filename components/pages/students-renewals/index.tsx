@@ -152,7 +152,7 @@ export const Renewals = () => {
     <>
       <div className="p-4 flex items-center justify-between flex-wrap">
         <div className="flex items-center gap-2">
-          <div className="relative min-w-80">
+          <div className="relative md:min-w-80 w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <SearchNormal1
                 size="18"
@@ -190,56 +190,6 @@ export const Renewals = () => {
           </Dropdown>
         </div>
 
-        <div className="flex gap-2">
-          {/* <Dropdown classNames={{ content: "min-w-36" }} showArrow>
-            <DropdownTrigger>
-              <Button
-                variant="flat"
-                color="default"
-                className="text-[#3D5066] font-bold text-sm gap-1"
-                radius="sm"
-              >
-                <ArrowDown2 size={14} />
-                حالة الإشتراك 
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              <DropdownItem key="show">الحالة</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-          <Dropdown classNames={{ content: "min-w-36" }} showArrow>
-            <DropdownTrigger>
-              <Button
-                variant="flat"
-                color="default"
-                className="text-[#3D5066] font-bold text-sm gap-1"
-                radius="sm"
-              >
-                <ArrowDown2 size={14} />
-                البرنامج
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              <DropdownItem key="show">الحالة</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-          <Dropdown classNames={{ content: "min-w-36" }} showArrow>
-            <DropdownTrigger>
-              <Button
-                variant="flat"
-                color="default"
-                className="text-[#3D5066] font-bold text-sm gap-1"
-                radius="sm"
-              >
-                <ArrowDown2 size={14} />
-                حالة التجديد
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              <DropdownItem key="show">الحالة</DropdownItem>
-            </DropdownMenu>
-          </Dropdown> */}
-        </div>
       </div>
       {isLoading ? (
         <Loader />

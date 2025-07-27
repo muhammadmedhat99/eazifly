@@ -154,9 +154,10 @@ export const AllStudents = () => {
 
   return (
     <>
-      <div className="p-4 flex items-center justify-between flex-wrap">
-        <div className="flex items-center gap-2">
-          <div className="relative w-48">
+      <div className="p-4 flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="relative w-full md:w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
             </div>
@@ -169,7 +170,7 @@ export const AllStudents = () => {
             />
           </div>
 
-          <div className="relative w-48">
+          <div className="relative w-full md:w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
             </div>
@@ -180,6 +181,7 @@ export const AllStudents = () => {
               value={phoneSearch}
               onChange={(e) => setPhoneSearch(e.target.value)}
             />
+          </div>
           </div>
 
           <Dropdown classNames={{ content: "min-w-36" }} showArrow>
@@ -208,7 +210,7 @@ export const AllStudents = () => {
 
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             id="all"
             variant="flat"

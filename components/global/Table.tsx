@@ -165,7 +165,8 @@ export default function TableComponent({
   }, []);
 
   return (
-    <Table
+    <div className="w-full overflow-x-auto">
+      <Table
       {...(selectable && { selectionMode: "multiple" })}
       removeWrapper
       aria-label="Example table with custom cells"
@@ -201,5 +202,6 @@ export default function TableComponent({
         )}
       </TableBody>
     </Table>
+    </div>
   );
 }
