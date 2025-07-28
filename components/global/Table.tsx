@@ -165,7 +165,7 @@ export default function TableComponent({
   }, []);
 
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full overflow-x-auto px-4 sm:px-0">
       <Table
       {...(selectable && { selectionMode: "multiple" })}
       removeWrapper
