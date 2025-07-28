@@ -388,6 +388,10 @@ export const Programs = ({
     })),
   });
 
+  const handleManualRefetch = () => {
+    teachersResults.forEach((query) => query.refetch());
+  };
+
   const subaccountsResults = useQueries({
     queries: subscriptionsData.data.map((subscription: Subscription) => ({
       queryKey: ["programsubaccounts", subscription.id],
@@ -587,6 +591,7 @@ export const Programs = ({
                       <Teachers
                         teachersData={teacherData}
                         isLoadingteachers={isLoadingteacher}
+                        handleManualRefetch={handleManualRefetch}
                       />
                     </Tab>
                   )}
