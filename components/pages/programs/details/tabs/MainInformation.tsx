@@ -15,6 +15,9 @@ import { Copy, Edit2 } from "iconsax-reactjs";
 import React, { useState } from "react";
 import PaymentMethodsUpdateModal from "./PaymentMethodsUpdateModal";
 import { Loader } from "@/components/global/Loader";
+import { getCookie } from "cookies-next";
+import { postData } from "@/lib/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 type MainInformationProps = {
   data: {
@@ -44,9 +47,11 @@ type MainInformationProps = {
       color: string;
     };
   };
+  refetch: any;
 };
 
-export const MainInformation = ({ data }: MainInformationProps) => {
+export const MainInformation = ({ data, refetch }: MainInformationProps) => {
+  const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const handleCopy = async (textToCopy: string) => {
     try {
@@ -57,6 +62,47 @@ export const MainInformation = ({ data }: MainInformationProps) => {
     }
   };
 
+  const handleStatusChange = (newStatus: string) => {
+    UpdateStatus.mutate(newStatus);
+  };
+
+  const UpdateStatus = useMutation({
+    mutationFn: (newStatus: string) => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+
+      return postData(
+        `client/program/change/status/${data.id}?status=${newStatus}`,
+        formdata,
+        myHeaders
+      );
+    },
+    onSuccess: (response) => {
+      if (response.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: response?.message,
+          color: "success",
+        });
+        refetch();
+      }
+    },
+    onError: () => {
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+  
   return (
     <>
     {Object.keys(data || {}).length > 0 ? (
@@ -75,17 +121,52 @@ export const MainInformation = ({ data }: MainInformationProps) => {
       </div>
       {/* Main Card  */}
       {/* Main Card  */}
-      <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
-        <div className="text-primary font-bold">الحالة</div>
-        <div className="w-fit">
-          <div
-            className={`text-${data?.status?.color}
-              bg-${data?.status?.color} bg-opacity-10
-              px-5 py-1 rounded-3xl font-bold text-[15px]`}
-          >
-            {data?.status?.label}
+      <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex justify-between items-center">
+        <div className="flex flex-col gap-2">
+          <div className="text-primary font-bold">الحالة</div>
+          <div className="w-fit">
+            <div
+              className={`text-${data?.status?.color}
+                bg-${data?.status?.color} bg-opacity-10
+                px-5 py-1 rounded-3xl font-bold text-[15px]`}
+            >
+              {data?.status?.label}
+            </div>
           </div>
         </div>
+
+        {data?.status?.key === "uncompleted" && (
+          <button
+            type="button"
+            className="flex items-center gap-1 text-sm font-bold text-success"
+            onClick={() => handleStatusChange("published")}
+          >
+            <Edit2 size={18} />
+            نشر
+          </button>
+        )}
+
+        {data?.status?.key === "published" && (
+          <button
+            type="button"
+            className="flex items-center gap-1 text-sm font-bold text-warning"
+            onClick={() => handleStatusChange("archived")}
+          >
+            <Edit2 size={18} />
+            أرشفة
+          </button>
+        )}
+
+        {data?.status?.key === "archived" && (
+          <button
+            type="button"
+            className="flex items-center gap-1 text-sm font-bold text-success"
+            onClick={() => handleStatusChange("published")}
+          >
+            <Edit2 size={18} />
+            نشر
+          </button>
+        )}
       </div>
       <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
         <div className="text-primary font-bold">عنوان البرنامج</div>

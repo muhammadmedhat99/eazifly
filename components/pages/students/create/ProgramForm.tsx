@@ -139,7 +139,7 @@ export const ProgramForm = ({
 
   const { data: programData, isLoading: isProgramDataLoading } = useQuery({
     queryKey: ["programs"],
-    queryFn: async () => await fetchClient(`client/program`, axios_config),
+    queryFn: async () => await fetchClient(`client/program?status=published`, axios_config),
   });
 
   const { data: planData, isLoading: isPlanDataLoading } = useQuery({

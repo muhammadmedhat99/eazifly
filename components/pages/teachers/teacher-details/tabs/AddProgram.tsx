@@ -102,7 +102,7 @@ export default function AddProgram({
     const debouncedSearch = useDebounce(search, 500);
 
     const { data: programs, isLoading: programsLoading } = useQuery({
-        queryFn: async () => await fetchClient(`client/program`, axios_config),
+        queryFn: async () => await fetchClient(`client/program?status=published`, axios_config),
         queryKey: AllQueryKeys.GetAllPrograms(debouncedSearch, 1),
     });
     

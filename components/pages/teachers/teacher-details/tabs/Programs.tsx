@@ -437,7 +437,7 @@ export const Programs = () => {
       {isLoading ? (
         <Loader />
       ) : (
-        data.data.length > 0 ? <div className="p-4 grid grid-cols-1 gap-5">
+        data.data.length > 0 && <div className="p-4 grid grid-cols-1 gap-5">
           {data.data.map((program: Program, index: number) => (
             <div
               key={index}
@@ -773,17 +773,16 @@ export const Programs = () => {
             </div>
           ))}
         </div>
-        :
-        <div className="flex justify-end p-4">
-          <Button
-          onPress={()=>setModalOpen(true)}
-            className="text-white font-semibold text-sm px-6 py-2 rounded-md bg-primary"
-          >
-            إضافة برنامج
-          </Button>
-        </div>
-      
+ 
       )}
+      <div className="flex justify-end p-4">
+        <Button
+          onPress={() => setModalOpen(true)}
+          className="text-white font-semibold text-sm px-6 py-2 rounded-md bg-primary"
+        >
+          إضافة برنامج
+        </Button>
+      </div>
       <AddProgram
         isOpen={modalOpen}
         onClose={()=>setModalOpen(false)}
