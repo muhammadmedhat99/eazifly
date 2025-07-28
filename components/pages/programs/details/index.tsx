@@ -96,7 +96,7 @@ type ProgramDetailsProps = {
 export const ProgramDetails = () => {
     const params = useParams();
     const programId = params.id;
-    const { data, isLoading } = useQuery({
+    const { data, isLoading, refetch } = useQuery({
       queryKey: ["GetProgramDetails", programId],
       queryFn: async () => await fetchClient(`client/program/show/${programId}`, axios_config),
     });
@@ -115,7 +115,7 @@ export const ProgramDetails = () => {
         }}
       >
         <Tab key="info" title="بيانات البرنامج">
-          <MainInformation data={data?.data} />
+          <MainInformation data={data?.data} refetch={refetch} />
         </Tab>
         <Tab key="program_teachers" title="المعلمين المشتركين">
           <ProgramTeachers teachersData={data?.data.instructors} />
