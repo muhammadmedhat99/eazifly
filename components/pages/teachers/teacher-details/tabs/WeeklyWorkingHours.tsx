@@ -90,7 +90,7 @@ export default function WeeklyWorkingHours() {
         {daysOfWeek.map((day, dayIndex) => (
           <div
             key={day}
-            className="flex items-center justify-between mb-4 border p-4 rounded-lg bg-gray-50"
+            className="flex items-center justify-between mb-4 border p-4 rounded-lg bg-gray-50 overflow-x-auto gap-8"
           >
             <div className="flex items-center justify-between gap-2">
               <label className="text-[#272727] font-bold text-sm w-20">{day}</label>
