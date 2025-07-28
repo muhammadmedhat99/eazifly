@@ -452,7 +452,7 @@ export const Programs = () => {
                     {program.title}
                   </span>
                 </div>
-                <div className="py-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
                     <div className="flex flex-col gap-4">
                       <span className="text-[#5E5E5E] text-sm font-bold text-primary">
@@ -642,10 +642,10 @@ export const Programs = () => {
                             (assignment, index) => (
                               <div
                                 key={index}
-                                className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke}`}
+                                className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8}`}
                               >
-                                <div className="flex items-center gap-20 w-full">
-                                  <div className="flex items-center gap-20 w-1/2">
+                                <div className="flex items-center gap-20 w-full whitespace-nowrap">
+                                  <div className="flex items-center gap-20 md:w-1/2">
                                     <div className="flex flex-col gap-4 items-center w-1/3">
                                       <span className="text-[#5E5E5E] text-sm font-bold">
                                         اسم التسليم
@@ -681,7 +681,7 @@ export const Programs = () => {
                                       </span>
                                     </div>
                                   </div>
-                                  <div className="flex justify-end w-1/2">
+                                  <div className="flex justify-end md:w-1/2">
                                     <User
                                       avatarProps={{
                                         radius: "full",
@@ -727,9 +727,9 @@ export const Programs = () => {
                           {tabsState[program.id]?.exams?.map((exam, index) => (
                             <div
                               key={index}
-                              className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke`}
+                              className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8`}
                             >
-                              <div className="flex flex-col gap-4 w-full">
+                              <div className="flex flex-col gap-4 w-full whitespace-nowrap">
                                 <div className="flex items-center justify-between">
                                   <span className="text-black-text text-sm font-bold">
                                     {exam.quiz_title || "null"}
