@@ -43,11 +43,7 @@ const OptionsComponent = ({ id }: { id: number }) => {
         <DropdownItem href={`/programs/${id}`} key="show">
           عرض البيانات
         </DropdownItem>
-        <DropdownItem key="edit">تعديل البيانات</DropdownItem>
-        <DropdownItem key="add-to-course">إلحاق ببرنامج</DropdownItem>
-        <DropdownItem key="change-password">تغيير كلمة المرور</DropdownItem>
-        <DropdownItem key="send-mail">إرسال رسالة</DropdownItem>
-        <DropdownItem key="delete">حذف</DropdownItem>
+        <DropdownItem href={`/programs/update/${id}`} key="edit">تعديل البيانات</DropdownItem>
       </DropdownMenu>
     </Dropdown>
   );
@@ -104,9 +100,9 @@ export const AllPrograms = () => {
 
   return (
     <>
-      <div className="p-4 flex items-center justify-between flex-wrap">
+      <div className="p-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2">
-          <div className="relative min-w-80">
+          <div className="relative md:min-w-80">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <SearchNormal1
                 size="18"

@@ -12,6 +12,7 @@ import {
   Button,
   Card,
   CardBody,
+  Chip,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -26,15 +27,11 @@ import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import Link from "next/link";
 import React, { useState } from "react";
-import { Reports } from "./ProgramTabs/reports";
-import { Appointments } from "./ProgramTabs/appointments";
-import { Assignments } from "./ProgramTabs/assignments";
-import { Feedbacks } from "./ProgramTabs/feedbacks";
 import { useParams } from "next/navigation";
 import { Subaccounts } from "./ProgramTabs/Subaccounts";
 import SubscriptionActionModal from "./SubscriptionActionModal";
 import ConfirmModal from "@/components/global/ConfirmModal";
-import ChangeTeacherModal from "./ChangeTeacherModal";
+import { Teachers } from "./ProgramTabs/teachers";
 
 type StudentDetailsProps = {
   data: {
@@ -113,9 +110,14 @@ type ChildUser = {
 interface Subscription {
   id: number;
   program_id: number;
+  main_subscription_id: number;
   program: string;
   price: number;
-  subscription_status: string;
+  subscription_status: {
+    label: string;
+    color: string;
+    key: string;
+  };
   instructor: {
     id: number;
     name: string;
@@ -145,7 +147,7 @@ const ActionsComponent = ({
   id: number;
   user_id: any;
   children_users: ChildUser[];
-  subscription_status: any;
+    subscription_status: string;
   refetchSubscriptions: () => void;
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -351,7 +353,6 @@ export const Programs = ({
 }: StudentDetailsProps) => {
   const params = useParams();
   const user_id = params.id;
-  const [modalOpen, setModalOpen] = useState(false);
 
   const [selectedInstructors, setSelectedInstructors] = useState<
     Record<number, any>
@@ -379,58 +380,17 @@ export const Programs = ({
     })),
   });
 
-  const reportsResults = useQueries({
+  const teachersResults = useQueries({
     queries: subscriptionsData.data.map((subscription: Subscription) => ({
-      queryKey: ["programReports", subscription.id],
+      queryKey: ["programteachers", subscription.main_subscription_id],
       queryFn: async () =>
-        await fetchClient("client/user/program/reports", {
-          ...axios_config,
-          params: {
-            user_id: user_id,
-            program_id: subscription.program_id,
-          },
-        }),
+        await fetchClient(`client/subscription/user/instructors/${subscription.main_subscription_id}`, axios_config),
     })),
   });
 
-  const appointmentsResults = useQueries({
-    queries: subscriptionsData.data.map((subscription: Subscription) => ({
-      queryKey: ["programappointments", subscription.id],
-      queryFn: async () =>
-        await fetchClient(`client/user/appointments/${user_id}`, {
-          ...axios_config,
-          params: {
-            program_id: subscription.program_id,
-          },
-        }),
-    })),
-  });
-
-  const assignmentsResults = useQueries({
-    queries: subscriptionsData.data.map((subscription: Subscription) => ({
-      queryKey: ["programassignments", subscription.id],
-      queryFn: async () =>
-        await fetchClient(`client/user/assignment/${user_id}`, {
-          ...axios_config,
-          params: {
-            program_id: subscription.program_id,
-          },
-        }),
-    })),
-  });
-
-  const feedbacksResults = useQueries({
-    queries: subscriptionsData.data.map((subscription: Subscription) => ({
-      queryKey: ["programfeedbacks", subscription.id],
-      queryFn: async () =>
-        await fetchClient(`client/user/feedback/${user_id}`, {
-          ...axios_config,
-          params: {
-            program_id: subscription.program_id,
-          },
-        }),
-    })),
-  });
+  const handleManualRefetch = () => {
+    teachersResults.forEach((query) => query.refetch());
+  };
 
   const subaccountsResults = useQueries({
     queries: subscriptionsData.data.map((subscription: Subscription) => ({
@@ -454,35 +414,14 @@ export const Programs = ({
     <div className="grid grid-cols-1 gap-8">
       {subscriptionsData?.data?.map(
         (subscription: Subscription, index: number) => {
-          const reportResult = reportsResults[index];
-          const reportData: { data: any[] } = hasDataArray(reportResult?.data)
-            ? reportResult.data
-            : { data: [] };
-          const isLoadingReport = reportResult?.isLoading;
 
-          const appointmentResult = appointmentsResults[index];
-          const appointmentData: { data: any[] } = hasDataArray(
-            appointmentResult?.data
+          const teacherResult = teachersResults[index];
+          const teacherData: { data: any[] } = hasDataArray(
+            teacherResult?.data
           )
-            ? appointmentResult.data
+            ? teacherResult.data
             : { data: [] };
-          const isLoadingappointment = appointmentResult?.isLoading;
-
-          const assignmentResult = assignmentsResults[index];
-          const assignmentData: { data: any[] } = hasDataArray(
-            assignmentResult?.data
-          )
-            ? assignmentResult.data
-            : { data: [] };
-          const isLoadingassignment = assignmentResult?.isLoading;
-
-          const feedbackResult = feedbacksResults[index];
-          const feedbackData: { data: any[] } = hasDataArray(
-            feedbackResult?.data
-          )
-            ? feedbackResult.data
-            : { data: [] };
-          const isLoadingfeedback = feedbackResult?.isLoading;
+          const isLoadingteacher = teacherResult?.isLoading;
 
           const subaccountResult = subaccountsResults[index];
           const subaccountData = subaccountResult?.data;
@@ -513,13 +452,7 @@ export const Programs = ({
               key={index}
               className="bg-main border border-stroke rounded-lg p-5"
             >
-              <ChangeTeacherModal
-                isOpen={modalOpen}
-                onClose={() => setModalOpen(false)}
-                student={subscription}
-                refetchSubscriptions={refetch}
-              />
-              <div className="grid grid-cols-4 gap-2 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-10">
                 <div className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke">
                   <div className="flex flex-col gap-4">
                     <span className="text-primary text-sm font-bold">
@@ -550,31 +483,13 @@ export const Programs = ({
                 <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background">
                   <div className="flex flex-col gap-4 w-1/2">
                     <span className="text-primary text-sm font-bold">
-                      الإسم
+                      عدد الطلاب المشتركين 
                     </span>
-                    <div className="flex items-center gap-2">
-                      <Avatar
-                        size="sm"
-                        src={
-                          selectedInstructors[subscription.id]?.image ||
-                          subscription.instructor?.image
-                        }
-                      />
-                      <span className="text-black-text font-bold text-[15px]">
-                        {selectedInstructors[subscription.id]?.name_en ||
-                          subscription.instructor?.name}
-                      </span>
-                    </div>
+                    {subaccountData?.data ?
+                      <div className="text-black-text font-bold text-[15px]">
+                        {subaccountData?.data?.length} من {subscription.student_number}
+                      </div> : <Loader />}
                   </div>
-                  <Link
-                    href="#"
-                    onClick={() => setModalOpen(true)}
-                    className="flex items-center gap-1"
-                  >
-                    <span className="text-sm font-bold text-primary">
-                      تغير المعلم
-                    </span>
-                  </Link>
                 </div>
 
                 <div className="flex items-end justify-between bg-background p-5 rounded-2xl border border-stroke">
@@ -582,9 +497,15 @@ export const Programs = ({
                     <span className="text-primary text-sm font-bold">
                       حالة الإشتراك
                     </span>
-                    <div className="text-black-text font-bold text-[15px]">
-                      {subscription.subscription_status}
-                    </div>
+                    <Chip
+                      className="capitalize px-4 min-w-24 text-center"
+                      color={subscription?.subscription_status?.color}
+                      variant="flat"
+                    >
+                      <span className={`text-${subscription?.subscription_status?.color} font-bold`}>
+                        {subscription?.subscription_status?.label}
+                      </span>
+                    </Chip>
                   </div>
                 </div>
               </div>
@@ -605,7 +526,7 @@ export const Programs = ({
                       title="تفاصيل الإشتراك و التجديد"
                       className="w-full"
                     >
-                      <div className="flex items-center justify-between gap-2 w-full">
+                      <div className="flex items-center justify-between gap-2 w-full overflow-x-auto">
                         <div className="flex-1">
                           <Progress
                             className="min-w-96 w-full"
@@ -616,29 +537,29 @@ export const Programs = ({
                               track: "bg-primary/30",
                             }}
                           />
-                          <div className="flex items-center justify-between mt-3">
-                            <div className="text-sm font-semibold text-title">
+                          <div className="flex items-center justify-between mt-3 gap-2">
+                            <div className="text-sm font-semibold text-title whitespace-nowrap">
                               تاريخ الإشتراك
                               <br />
                               {subscription.subscription_date}
                             </div>
 
                             <div className="flex gap-4">
-                              <div className="text-sm font-semibold text-title text-center">
+                              <div className="text-sm font-semibold text-title text-center whitespace-nowrap">
                                 عدد الحصص الفائتة
                                 <br />
                                 <span className="text-primary">
                                   {subscription.missed_sessions}
                                 </span>
                               </div>
-                              <div className="text-sm font-semibold text-title text-center">
+                              <div className="text-sm font-semibold text-title text-center whitespace-nowrap">
                                 عدد الحصص المكتملة
                                 <br />
                                 <span className="text-primary">
                                   {subscription.completed_sessions}
                                 </span>
                               </div>
-                              <div className="text-sm font-semibold text-title text-center">
+                              <div className="text-sm font-semibold text-title text-center whitespace-nowrap">
                                 عدد الطلاب
                                 <br />
                                 <span className="text-primary">
@@ -647,7 +568,7 @@ export const Programs = ({
                               </div>
                             </div>
 
-                            <div className="text-sm font-semibold text-title">
+                            <div className="text-sm font-semibold text-title whitespace-nowrap">
                               تاريخ الإنتهاء
                               <br />
                               {subscription.expire_date}
@@ -658,47 +579,19 @@ export const Programs = ({
                           id={subscription.program_id}
                           user_id={user_id}
                           children_users={subscription.children_users}
-                          subscription_status={subscription.subscription_status}
+                          subscription_status={subscription.subscription_status.key}
                           refetchSubscriptions={refetch}
                         />
                       </div>
                     </Tab>
                   )}
 
-                  {appointmentData.data.length > 0 && (
-                    <Tab className="w-full" key="appointments" title="المواعيد">
-                      <Appointments
-                        appointmentData={appointmentData}
-                        isLoadingappointment={isLoadingappointment}
-                      />
-                    </Tab>
-                  )}
-
-                  {assignmentData.data.length > 0 && (
-                    <Tab className="w-full" key="assignments" title="التسليمات">
-                      <Assignments
-                        isLoadingassignment={isLoadingassignment}
-                        assignmentData={assignmentData}
-                      />
-                    </Tab>
-                  )}
-
-                  {reportData.data.length > 0 && (
-                    <Tab className="w-full" key="reports" title="التقارير">
-                      <Reports
-                        isLoadingReport={isLoadingReport}
-                        reportData={reportData}
-                      />
-                    </Tab>
-                  )}
-
-                  {feedbackData.data.length > 0 && (
-                    <Tab className="w-full" key="feedbacks" title="الملاحظات">
-                      <Feedbacks
-                        isLoadingfeedback={isLoadingfeedback}
-                        feedbackData={feedbackData}
-                        client_id={client_id}
-                        refetchFeedbacks={feedbackResult?.refetch}
+                  {teacherData.data.length > 0 && (
+                    <Tab className="w-full" key="teachers" title="المعلمين">
+                      <Teachers
+                        teachersData={teacherData}
+                        isLoadingteachers={isLoadingteacher}
+                        handleManualRefetch={handleManualRefetch}
                       />
                     </Tab>
                   )}
@@ -706,7 +599,7 @@ export const Programs = ({
                   <Tab
                     className="w-full"
                     key="subaccounts"
-                    title="الحسابات الفرعية"
+                    title="الطلاب"
                   >
                     <Subaccounts
                       subaccountData={subaccountData}
@@ -714,6 +607,7 @@ export const Programs = ({
                       program_id={subscription?.program_id}
                       refetchSubaccounts={subaccountResult?.refetch}
                       data={data}
+                      student_number={subscription.student_number}
                     />
                   </Tab>
                 </Tabs>

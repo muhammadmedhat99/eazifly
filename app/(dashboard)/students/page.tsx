@@ -25,16 +25,16 @@ export default function page() {
   return (
     <div>
       <BreadCrumb items={BreadCrumbItems}>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="#"
-            className="text-title font-semibold text-sm px-6 py-2 rounded-md bg-input"
+            className="text-title font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-input"
           >
             تصدير البيانات
-          </Link>
+          </Link>  
           <Link
             href="/students/create"
-            className="text-white font-semibold text-sm px-6 py-2 rounded-md bg-primary"
+            className="text-white font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-primary"
           >
             أضافة طالب جديد
           </Link>

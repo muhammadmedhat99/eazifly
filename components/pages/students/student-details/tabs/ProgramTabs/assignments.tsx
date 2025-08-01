@@ -26,7 +26,7 @@ export const Assignments = ({ assignmentData, isLoadingassignment }: assignments
                 assignmentData.data.map((appointment: any, appointmentIndex: number) => (
                     <div
                         key={appointmentIndex}
-                        className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke ${appointment.is_uploaded ? "cursor-pointer hover:bg-gray-100" : ""
+                        className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8 ${appointment.is_uploaded ? "cursor-pointer hover:bg-gray-100" : ""
                             }`}
                         onClick={() => {
                             if (appointment.is_uploaded) {
@@ -35,20 +35,20 @@ export const Assignments = ({ assignmentData, isLoadingassignment }: assignments
                             }
                         }}
                     >
-                        <div className="flex items-center gap-20">
-                            <div className="flex flex-col gap-4 items-center">
+                        <div className="flex items-center gap-20 whitespace-nowrap">
+                            <div className="flex flex-1 flex-col gap-4 items-center">
                                 <span className="text-[#5E5E5E] text-sm font-bold">اسم التسليم</span>
                                 <span className="text-black-text font-bold text-[15px]">
                                     {appointment.title}
                                 </span>
                             </div>
-                            <div className="flex flex-col gap-4 items-center">
+                            <div className="flex flex-1 flex-col gap-4 items-center">
                                 <span className="text-[#5E5E5E] text-sm font-bold">موعد التسليم</span>
                                 <span className="text-black-text font-bold text-[15px]">
                                     {formatDate(appointment.deadline)} 
                                 </span>
                             </div>
-                            <div className="flex flex-col gap-4 items-center">
+                            <div className="flex flex-1 flex-col gap-4 items-center">
                                 <span className="text-[#5E5E5E] text-sm font-bold">حالة التسليم</span>
                                     {appointment.is_uploaded ? (
                                         <span className="text-center text-[#0A9C71] text-sm font-bold">

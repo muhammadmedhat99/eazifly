@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   Avatar,
   AvatarGroup,
+  Button,
   CardBody,
   Chip,
   Dropdown,
@@ -32,6 +33,8 @@ import { formatDate } from "@/lib/helper";
 import { CustomPagination } from "@/components/global/Pagination";
 import { User } from "@heroui/react";
 import { Reports } from "@/components/pages/students/student-details/tabs/ProgramTabs/reports";
+import AddTeacherModal from "@/components/pages/programs/details/tabs/AddTeacherModal";
+import AddProgram from "./AddProgram";
 
 const columns = [
   { name: "", uid: "avatar" },
@@ -74,6 +77,7 @@ const OptionsComponent = () => {
 };
 
 export const Programs = () => {
+  const [modalOpen, setModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const params = useParams();
   const instructor_id = params.id;
@@ -433,7 +437,7 @@ export const Programs = () => {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="p-4 grid grid-cols-1 gap-5">
+        data.data.length > 0 && <div className="p-4 grid grid-cols-1 gap-5">
           {data.data.map((program: Program, index: number) => (
             <div
               key={index}
@@ -448,7 +452,7 @@ export const Programs = () => {
                     {program.title}
                   </span>
                 </div>
-                <div className="py-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
                     <div className="flex flex-col gap-4">
                       <span className="text-[#5E5E5E] text-sm font-bold text-primary">
@@ -638,10 +642,10 @@ export const Programs = () => {
                             (assignment, index) => (
                               <div
                                 key={index}
-                                className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke}`}
+                                className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8}`}
                               >
-                                <div className="flex items-center gap-20 w-full">
-                                  <div className="flex items-center gap-20 w-1/2">
+                                <div className="flex items-center gap-20 w-full whitespace-nowrap">
+                                  <div className="flex items-center gap-20 md:w-1/2">
                                     <div className="flex flex-col gap-4 items-center w-1/3">
                                       <span className="text-[#5E5E5E] text-sm font-bold">
                                         اسم التسليم
@@ -677,7 +681,7 @@ export const Programs = () => {
                                       </span>
                                     </div>
                                   </div>
-                                  <div className="flex justify-end w-1/2">
+                                  <div className="flex justify-end md:w-1/2">
                                     <User
                                       avatarProps={{
                                         radius: "full",
@@ -723,9 +727,9 @@ export const Programs = () => {
                           {tabsState[program.id]?.exams?.map((exam, index) => (
                             <div
                               key={index}
-                              className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke`}
+                              className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8`}
                             >
-                              <div className="flex flex-col gap-4 w-full">
+                              <div className="flex flex-col gap-4 w-full whitespace-nowrap">
                                 <div className="flex items-center justify-between">
                                   <span className="text-black-text text-sm font-bold">
                                     {exam.quiz_title || "null"}
@@ -769,7 +773,20 @@ export const Programs = () => {
             </div>
           ))}
         </div>
+ 
       )}
+      <div className="flex justify-end p-4">
+        <Button
+          onPress={() => setModalOpen(true)}
+          className="text-white font-semibold text-sm px-6 py-2 rounded-md bg-primary"
+        >
+          إضافة برنامج
+        </Button>
+      </div>
+      <AddProgram
+        isOpen={modalOpen}
+        onClose={()=>setModalOpen(false)}
+      /> 
     </>
   );
 };

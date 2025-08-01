@@ -79,11 +79,11 @@ export const Feedbacks = ({
     <div className="flex flex-col gap-2">
       {isLoadingfeedback ? (
         <Loader />
-      ) : feedbackData.data && feedbackData.data.length > 0 ? (
-        feedbackData.data.map((feedback: any, feedbackIndex: number) => (
+      ) : feedbackData?.data && feedbackData?.data.length > 0 ? (
+        feedbackData?.data.map((feedback: any, feedbackIndex: number) => (
           <div
             key={feedbackIndex}
-            className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke"
+            className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8"
           >
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
