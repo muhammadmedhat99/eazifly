@@ -61,8 +61,8 @@ export const InformationForm = ({
   setActiveStep,
   onProgramCreated,
   initialData,
-  mode
-}: InformationFormProps) => {  
+  mode,
+}: InformationFormProps) => {
   function mapInitialDataToDefaultValues(data: any): InformationFormData {
     return {
       localizedFields: {
@@ -82,29 +82,26 @@ export const InformationForm = ({
       slug: data.data.slug || "",
       limit_users: Number(data.data.limit_users || 0),
       specialization_id: data.data.specialization_id
-      ? String(data.data.specialization_id)
-      : "",
-      meeting_host_id: data.data.host.id 
-      ? String(data.data.host.id) 
-      : "",
+        ? String(data.data.specialization_id)
+        : "",
+      meeting_host_id: data.data.host.id ? String(data.data.host.id) : "",
       special_for: data.data.special_for || "",
       image: data.data.image
         ? [
-          {
-            name: "image",
-            preview: data.data.image,
-          },
-        ]
+            {
+              name: "image",
+              preview: data.data.image,
+            },
+          ]
         : [],
       cover: data.data.cover
         ? [
-          {
-            name: "cover",
-            preview: data.data.cover,
-          },
-        ]
+            {
+              name: "cover",
+              preview: data.data.cover,
+            },
+          ]
         : [],
-
     };
   }
 
@@ -138,13 +135,11 @@ export const InformationForm = ({
     }
   );
 
-  const { data: hosts, isLoading: loadingHosts } = useQuery(
-    {
-      queryFn: async (): Promise<{ data: Specialization[] }> =>
-        await fetchClient(`client/program/hosts`, axios_config),
-      queryKey: AllQueryKeys.GetAllHost,
-    }
-  );
+  const { data: hosts, isLoading: loadingHosts } = useQuery({
+    queryFn: async (): Promise<{ data: Specialization[] }> =>
+      await fetchClient(`client/program/hosts`, axios_config),
+    queryKey: AllQueryKeys.GetAllHost,
+  });
 
   const createFormData = (submitData: InformationFormData): FormData => {
     const formdata = new FormData();
@@ -181,7 +176,6 @@ export const InformationForm = ({
     ) {
       formdata.append("cover", submitData.cover[0]);
     }
-
 
     return formdata;
   };
@@ -226,7 +220,11 @@ export const InformationForm = ({
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
 
       const formdata = createFormData(submitData);
-      return postData(`client/program/update/${initialData?.data.id}`, formdata, myHeaders);
+      return postData(
+        `client/program/update/${initialData?.data.id}`,
+        formdata,
+        myHeaders
+      );
     },
     onSuccess: (data: any) => {
       if (data.status !== 200 && data.status !== 201) {
@@ -440,9 +438,7 @@ export const InformationForm = ({
               }}
             >
               {hosts?.data?.map((host: host) => (
-                <SelectItem key={host.id}>
-                  {host.title}
-                </SelectItem>
+                <SelectItem key={host.id}>{host.title}</SelectItem>
               )) ?? []}
             </Select>
           )}
@@ -457,10 +453,14 @@ export const InformationForm = ({
           render={({ field, fieldState }) => (
             <DropzoneField
               value={field.value ? Array.from(field.value) : []}
-              onChange={(files: File[]) => {
-                // Convert File[] back to FileList-like object
+              onChange={(files) => {
+                // Convert FileWithPreview[] back to FileList-like object
                 const dt = new DataTransfer();
-                files.forEach((file) => dt.items.add(file));
+                files.forEach((file) => {
+                  if (file instanceof File) {
+                    dt.items.add(file);
+                  }
+                });
                 field.onChange(dt.files);
               }}
               error={fieldState.error?.message}
@@ -478,10 +478,14 @@ export const InformationForm = ({
           render={({ field, fieldState }) => (
             <DropzoneField
               value={field.value ? Array.from(field.value) : []}
-              onChange={(files: File[]) => {
-                // Convert File[] back to FileList-like object
+              onChange={(files) => {
+                // Convert FileWithPreview[] back to FileList-like object
                 const dt = new DataTransfer();
-                files.forEach((file) => dt.items.add(file));
+                files.forEach((file) => {
+                  if (file instanceof File) {
+                    dt.items.add(file);
+                  }
+                });
                 field.onChange(dt.files);
               }}
               error={fieldState.error?.message}

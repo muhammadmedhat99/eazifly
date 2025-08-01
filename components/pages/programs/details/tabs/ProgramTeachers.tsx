@@ -72,12 +72,10 @@ type InstructorsProps = {
 };
 
 export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
-
   const [modalOpen, setModalOpen] = useState(false);
   const params = useParams();
   const programId = params.id;
   const queryClient = useQueryClient();
-
 
   const [confirmAction, setConfirmAction] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -90,17 +88,23 @@ export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
 
       const formdata = new FormData();
-      formdata.append("program_id", programId.toString());
+      formdata.append("program_id", programId?.toString() || "");
       formdata.append("instructor_id", item.id); // من الـ item
 
-      return postData("client/program/remove/assign/instructor", formdata, myHeaders);
+      return postData(
+        "client/program/remove/assign/instructor",
+        formdata,
+        myHeaders
+      );
     },
     onSuccess: (data) => {
       if (data.message !== "success") {
         addToast({ title: "error", color: "danger" });
       } else {
         addToast({ title: data?.message, color: "success" });
-        queryClient.invalidateQueries({ queryKey: ["GetProgramDetails", programId] });
+        queryClient.invalidateQueries({
+          queryKey: ["GetProgramDetails", programId],
+        });
       }
     },
     onError: () => {
@@ -116,23 +120,24 @@ export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
     }
   };
 
-  const tableData = teachersData?.map((item: any) => ({
-    id: item.id,
-    avatar: item.image,
-    name: item.name_ar || item.name_en,
-    phone: item.phone,
-    email: item.email,
-    amount_per_hour: item.amount_per_hour,
-    created_at: new Date(item.created_at).toLocaleDateString("ar-EG"),
-    specializations:
+  const tableData =
+    teachersData?.map((item: any) => ({
+      id: item.id,
+      avatar: item.image,
+      name: item.name_ar || item.name_en,
+      phone: item.phone,
+      email: item.email,
+      amount_per_hour: item.amount_per_hour,
+      created_at: new Date(item.created_at).toLocaleDateString("ar-EG"),
+      specializations:
         item.specializations?.length > 0
           ? `${item.specializations[0]?.title}${item.specializations.length > 1 ? ` (+${item.specializations.length})` : ""}`
           : "N/A",
-    status: {
-      name: item.status.label || "N/A",
-      color: item?.status?.color ,
-    },
-  })) ?? [];;
+      status: {
+        name: item.status.label || "N/A",
+        color: item?.status?.color,
+      },
+    })) ?? [];
 
   return (
     <div className="bg-main">
@@ -155,7 +160,7 @@ export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
       />
       <div className="flex justify-end p-4">
         <Button
-        onPress={()=>setModalOpen(true)}
+          onPress={() => setModalOpen(true)}
           className="text-white font-semibold text-sm px-6 py-2 rounded-md bg-primary"
         >
           إضافة معلم
@@ -163,7 +168,7 @@ export const ProgramTeachers = ({ teachersData }: InstructorsProps) => {
       </div>
       <AddTeacherModal
         isOpen={modalOpen}
-        onClose={()=>setModalOpen(false)}
+        onClose={() => setModalOpen(false)}
         tableTeachers={tableData}
       />
     </div>
