@@ -46,21 +46,21 @@ export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => {
     });
 
     return (
-        <>
+        <div className="flex flex-col gap-2">
             {isLoadingReport ? (
                 <Loader />
             ) : reportData.data && reportData.data.length > 0 ? (
                 reportData.data.map((report: any, reportIndex: number) => (
                     <div
                         key={reportIndex}
-                        className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke cursor-pointer hover:bg-gray-100`}
+                        className={`flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8 cursor-pointer hover:bg-gray-100`}
                         onClick={() => {
                             setSelectedAssignment(report);
                             setIsModalOpen(true);
                         }}
                     >
                         <div className="flex flex-col gap-4 w-full">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-8 whitespace-nowrap">
                                 <span className="text-black-text text-sm font-bold">
                                     {
                                         report.report_maker_type === "instructor"
@@ -143,6 +143,6 @@ export const Reports = ({ reportData, isLoadingReport }: ReportsProps) => {
                     )}
                 </ModalContent>
             </Modal>
-        </>
+        </div>
     );
 };

@@ -23,6 +23,7 @@ import { fetchClient, postData } from "@/lib/utils";
 import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
 import { getCookie } from "cookies-next";
+import { useParams } from 'next/navigation';
 
 const weekDays = [
   { key: "sunday", label: "الأحد" },
@@ -91,6 +92,20 @@ export default function AddSubaccountModal({
       queryFn: async () => await fetchClient(`client/subscription/details?program_id=${program_id}&user_id=${programData.data.id}`, axios_config),
     });
 
+    const { data: programContent, isLoading: loadingProgramContent } = useQuery(
+        {
+          queryFn: async () =>
+            await fetchClient(`client/program/contents/${program_id}`, axios_config),
+          queryKey: ["GetProgramContent"],
+        }
+      );
+
+  const params = useParams();
+  const user_id = params.id;
+  const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
+  const [availableInstructors, setAvailableInstructors] = useState([]);
+  const [appointmentsList, setAppointmentsList] = useState([]);
+
   const AddWeeklyAppointment = useMutation({
     mutationFn: async () => {
       const headers = new Headers();
@@ -120,6 +135,7 @@ export default function AddSubaccountModal({
           appointments: response.data,
         };
 
+        setAppointmentsList(response.data);
         const formData = new FormData();
         formData.append("program_id", String(availabilitiesPayload.program_id));
         availabilitiesPayload.appointments.forEach((appointment: any, index: number) => {
@@ -136,6 +152,10 @@ export default function AddSubaccountModal({
           formData,
           formHeaders
         );
+        if (availabilitiesResponse?.message === "success" && Array.isArray(availabilitiesResponse?.data)) {
+          setAvailableInstructors(availabilitiesResponse.data);
+        }
+
       }
 
       return response;
@@ -163,6 +183,54 @@ export default function AddSubaccountModal({
       });
     },
   });
+
+  const handleSaveSession = async () => {
+    if (!selectedInstructor) return;
+
+    const headers = new Headers();
+    headers.append("Authorization", `Bearer ${getCookie("token")}`);
+    headers.append("local", "ar");
+
+    const formData = new FormData();
+    formData.append("program_id", String(program_id));
+    formData.append("instructor_id", String(selectedInstructor));
+    formData.append("user_id", String(selectedChildId));
+    formData.append("parent_id", String(user_id));
+    formData.append("duration", String(subscriptionDetails?.data?.duration));
+    formData.append("program_content_id", String(getValues("program_content_id")));
+
+    appointmentsList.forEach((appointment: any, index: number) => {
+      formData.append(`appointments[${index}][start]`, appointment.start);
+      formData.append(`appointments[${index}][end]`, appointment.end);
+    });
+
+    try {
+      const response = await postData(
+        "client/create/meeting/session",
+        formData,
+        headers
+      );
+
+      if (response?.message === "success") {
+        addToast({
+          title: response.message,
+          color: "success",
+        });
+        onClose()
+      } else {
+        addToast({
+          title: response.message,
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      addToast({
+        title: "حدث خطأ أثناء حفظ الجلسات",
+        color: "danger",
+      });
+    }
+  };
 
   const GetAppointments = () => {
     AddWeeklyAppointment.mutate()
@@ -422,69 +490,94 @@ export default function AddSubaccountModal({
 
               {/* STEP 3 */}
               {step === 3 && (
-                <>
-                  <div className="flex flex-col gap-4">
-                    <span className="text-lg font-bold text-title mb-4">
-                      إضافة معلم
-                    </span>
-
-                    {/* <Controller
-                      name={`teachers`}
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          selectedKeys={field.value ? [field.value] : [""]}
-                          onSelectionChange={(keys) => {
-                            field.onChange(Array.from(keys)[0]);
-                          }}
-                          label="أختر المعلم"
-                          labelPlacement="outside"
-                          placeholder="حدد المعلم المناسب"
-                          // isInvalid={!!errors.teachers?.[index]?.teacher_id?.message}
-                          // errorMessage={errors.teachers?.[index]?.teacher_id?.message}
-                          // isLoading={instructorsLoading}
-                          classNames={{
-                            label: "text-[#272727] font-bold text-sm",
-                            base: "mb-4",
-                            value: "text-[#87878C] text-sm",
-                          }}
-                          scrollShadowProps={{
-                            isEnabled: false,
-                          }}
-                          maxListboxHeight={200}
-                        >
-                          {instructors?.data?.map(
-                            (item: { id: string; name_ar: string }) => (
-                                <SelectItem key={item.id}>{item.name_ar}</SelectItem>
-                            )
-                            )}
-                        </Select>
+                <form onSubmit={handleSubmit(handleSaveSession)}>
+                  <div className="grid grid-cols-1 gap-4 p-5">
+                    <div className="grid grid-cols-3 gap-3">
+                      {availableInstructors.length > 0 ? (
+                        availableInstructors.map((instructor: any) => (
+                          <Button
+                            key={instructor.id}
+                            id={String(instructor.id)}
+                            variant="flat"
+                            color={
+                              selectedInstructor === String(instructor.id)
+                                ? "primary"
+                                : undefined
+                            }
+                            className={`h-[170px] font-semibold border flex flex-col justify-center items-center ${selectedInstructor === String(instructor.id)
+                                ? "border-primary"
+                                : "border-gray-300"
+                              }`}
+                            onPress={(e) => setSelectedInstructor(e.target.id)}
+                          >
+                            <Avatar
+                              src={instructor.image}
+                              size="lg"
+                              radius="md"
+                              alt={instructor.name_ar}
+                            />
+                            <span className="text-start font-bold">
+                              {instructor.name_ar}
+                            </span>
+                          </Button>
+                        ))
+                      ) : (
+                        <span className="text-gray-500">لا يوجد معلمين متاحين</span>
                       )}
-                    /> */}
-
-                    <div className="flex justify-end gap-4 py-4">
-                      <Button
-                        type="button"
-                        onPress={() => setStep(2)}
-                        variant="solid"
-                        color="primary"
-                        className="text-white"
-                      >
-                        رحوع
-                      </Button>
-                      <Button
-                        type="submit"
-                        variant="solid"
-                        color="primary"
-                        className="text-white"
-                        isDisabled={selectedChildId === null}
-                      >
-                        حفظ
-                      </Button>
                     </div>
                   </div>
-                </>
+
+                  <Controller
+                    name="program_content_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        selectedKeys={field.value ? [String(field.value)] : []}
+                        onSelectionChange={(keys) => {
+                          const selectedKey = Array.from(keys)[0];
+                          field.onChange(selectedKey);
+                        }}
+                        label="المحتوي"
+                        labelPlacement="outside"
+                        placeholder="اختر المحتوي"
+                        isLoading={loadingProgramContent}
+                        classNames={{
+                          label: "text-[#272727] font-bold text-sm",
+                          base: "mb-4",
+                          value: "text-[#87878C] text-sm",
+                        }}
+                      >
+                        {programContent?.data?.map((specialization: any) => (
+                          <SelectItem key={specialization.id}>
+                            {specialization.title}
+                          </SelectItem>
+                        )) ?? []}
+                      </Select>
+                    )}
+                  />
+
+                  <div className="flex justify-end gap-4 py-4">
+                    <Button
+                      type="button"
+                      onPress={() => setStep(1)}
+                      variant="solid"
+                      color="primary"
+                      className="text-white"
+                    >
+                      رجوع
+                    </Button>
+
+                    <Button
+                      type="submit"
+                      variant="solid"
+                      color="primary"
+                      className="text-white"
+                      isDisabled={!selectedInstructor || !selectedChildId}
+                    >
+                      حفظ
+                    </Button>
+                  </div>
+                </form>
               )}
             </ModalBody>
           </>

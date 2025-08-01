@@ -126,7 +126,7 @@ export const AllStudentsSubscriptions = () => {
       },
       type: item?.subscription_type || "N/A",
       courses: item.order_details[0]?.program || "N/A",
-      price: `${item.total_after_discount} ${item.currency}`,
+      price: `${item.total_after_discount} ${item.currency || ""}`,
       created_at: formatDate(item?.created_at) || "N/A",
       order_status: {
         name: item.status.label || "N/A",
@@ -134,7 +134,7 @@ export const AllStudentsSubscriptions = () => {
         color: item.status.color,
       },
       avatar: item.image || "N/A",
-    })) || [];
+    })).reverse() || [];
 
   const filteredData = useMemo(() => {
     return formattedData.filter((item: SubscriptionItem) => {
@@ -222,9 +222,9 @@ export const AllStudentsSubscriptions = () => {
 
   return (
     <div>
-      <div className="p-4 flex items-center justify-between flex-wrap">
+      <div className="p-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2">
-          <div className="relative min-w-80">
+          <div className="relative md:min-w-80 w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <SearchNormal1
                 size="18"

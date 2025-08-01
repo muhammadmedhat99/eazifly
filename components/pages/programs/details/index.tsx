@@ -19,6 +19,10 @@ import { ProgramSubscriptions } from "./tabs/ProgramSubscriptions";
 import { ProgramContent } from "./tabs/ProgramContent";
 import { ProgramGoals } from "./tabs/ProgramGoals";
 import { ProgramStatistics } from "./tabs/ProgramStatistics";
+import { axios_config } from "@/lib/const";
+import { fetchClient } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 
 type ProgramDetailsProps = {
   data: {
@@ -89,7 +93,13 @@ type ProgramDetailsProps = {
   };
 };
 
-export const ProgramDetails = ({ data }: ProgramDetailsProps) => {
+export const ProgramDetails = () => {
+    const params = useParams();
+    const programId = params.id;
+    const { data, isLoading, refetch } = useQuery({
+      queryKey: ["GetProgramDetails", programId],
+      queryFn: async () => await fetchClient(`client/program/show/${programId}`, axios_config),
+    });
   const [search, setSearch] = useState("");
   return (
     <div className="flex w-full flex-col">
@@ -105,13 +115,13 @@ export const ProgramDetails = ({ data }: ProgramDetailsProps) => {
         }}
       >
         <Tab key="info" title="بيانات البرنامج">
-          <MainInformation data={data.data} />
+          <MainInformation data={data?.data} refetch={refetch} />
         </Tab>
         <Tab key="program_teachers" title="المعلمين المشتركين">
-          <ProgramTeachers teachersData={data.data.instructors} />
+          <ProgramTeachers teachersData={data?.data.instructors} />
         </Tab>
         <Tab key="subscriptions" title="أنواع الأشتراكات">
-          <ProgramSubscriptions subscriptionsData={data.data.plans} />
+          <ProgramSubscriptions subscriptionsData={data?.data.plans} />
         </Tab>
         <Tab key="content" title="محتوي البرنامج">
           <ProgramContent data={data?.data} />

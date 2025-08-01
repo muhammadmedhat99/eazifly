@@ -9,7 +9,7 @@ import { routes } from "@/lib/const";
 
 export const Sidebar = () => {
   return (
-    <div className="w-[200px] bg-main border-e border-stroke min-h-screen">
+    <div className="md:w-[200px] bg-main md:border-e md:border-stroke min-h-screen">
       <Image
         src="/img/logo/logo.svg"
         alt="logo"

@@ -1,7 +1,7 @@
 "use client";
 import { Add, ArrowLeft2, ArrowRight2, Trash } from "iconsax-reactjs";
 import { Loader } from "@/components/global/Loader";
-import { addToast, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs } from "@heroui/react";
+import { addToast, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs, toast } from "@heroui/react";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
@@ -19,6 +19,7 @@ type appointmentsProps = {
   isLoadingsubaccount: boolean;
   program_id: number;
   refetchSubaccounts?: () => void;
+  student_number: number;
   data: {
     data: {
       id: number;
@@ -64,6 +65,7 @@ export const Subaccounts = ({
   program_id,
   refetchSubaccounts,
   data,
+  student_number
 }: appointmentsProps) => {
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -89,13 +91,27 @@ export const Subaccounts = ({
   const { data: appointmentData, isLoading: isLoadingappointment } = useQuery({
     queryKey: ["subaccountAppointments", currentStudent?.id, program_id],
     queryFn: async () =>
+      await fetchClient(`client/user/upcoming/appointments/${currentStudent.id}`, {
+        ...axios_config,
+        params: {
+          program_id: program_id,
+          per_page: 5,
+        },
+      }),
+    enabled: selectedTab === "appointments" && hasCurrentStudent,
+  });
+
+  const { data: allAppointmentData, isLoading: isLoadingAllAppointment } = useQuery({
+    queryKey: ["subaccountAllAppointments", currentStudent?.id, program_id],
+    queryFn: async () =>
       await fetchClient(`client/user/appointments/${currentStudent.id}`, {
         ...axios_config,
         params: {
           program_id: program_id,
+          per_page: 5,
         },
       }),
-    enabled: selectedTab === "appointments" && hasCurrentStudent,
+    enabled: selectedTab === "allAppointments" && hasCurrentStudent,
   });
 
   const { data: reportData, isLoading: isLoadingReport } = useQuery({
@@ -183,7 +199,7 @@ export const Subaccounts = ({
       ) : students.length > 0 ? (
         <div className="rounded-2xl border border-stroke flex flex-col">
           {/* Header Section */}
-          <div className="flex items-center justify-between bg-background px-5 py-3 border-b">
+          <div className="flex items-center justify-between bg-background px-5 py-3 border-b flex-wrap gap-4">
             {/* Students & Pagination */}
             <div className="flex flex-col gap-3 items-center">
               <span className="text-sm font-bold">الطلاب</span>
@@ -233,7 +249,7 @@ export const Subaccounts = ({
             </div>
 
             {/* Tabs */}
-            <div>
+            <div className="overflow-x-auto">
               <Tabs
                 selectedKey={selectedTab}
                 onSelectionChange={(key) => setSelectedTab(key.toString())}
@@ -247,6 +263,7 @@ export const Subaccounts = ({
                 }}
               >
                 <Tab key="appointments" title="المواعيد" />
+                <Tab key="allAppointments" title="المحاضرات" />
                 <Tab key="assignments" title="التسليمات" />
                 <Tab key="reports" title="التقارير" />
                 <Tab key="feedbacks" title="الملاحظات" />
@@ -260,6 +277,12 @@ export const Subaccounts = ({
               <Appointments
                 appointmentData={appointmentData}
                 isLoadingappointment={isLoadingappointment}
+              />
+            )}
+            {selectedTab === "allAppointments" && (
+              <Appointments
+                appointmentData={allAppointmentData}
+                isLoadingappointment={isLoadingAllAppointment}
               />
             )}
             {selectedTab === "assignments" && (
@@ -290,11 +313,20 @@ export const Subaccounts = ({
       )}
       <button
         className="flex justify-end items-center gap-1 pt-4"
-        onClick={()=> setModalOpen(true)}
+        onClick={() => {
+          if (students.length >= student_number) {
+            addToast({
+              title: `لقد وصلت إلى الحد الأقصى لعدد الطلاب المسموح به في هذا البرنامج`,
+              color: "warning",
+            });
+            return;
+          }
+          setModalOpen(true);
+        }}
       >
         <Add size="24" variant="Outline" className="text-primary" />
         <span className="text-center justify-start text-primary text-sm font-bold">
-          إضافة حساب فرعي
+          إضافة طالب 
         </span>
       </button>
       <ConfirmModal

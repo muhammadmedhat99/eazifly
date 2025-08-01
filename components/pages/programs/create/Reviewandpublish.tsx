@@ -135,7 +135,7 @@ export const Reviewandpublish = ({
           myHeaders.append("Accept", "application/json");
           myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
 
-          return postData(`client/program/publish/${programId}`, null, myHeaders);
+          return postData(`client/program/change/status/${programId}?status=published`, null, myHeaders);
         },
         onSuccess: (data: any) => {
           if (data.status !== 200 && data.status !== 201) {

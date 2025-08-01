@@ -507,7 +507,7 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
         </div>
       </div>
 
-      <div className="col-span-2 flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
+      <div className="md:col-span-2 flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
         <div className="flex flex-col gap-4 w-full">
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">مواعيد العمل</span>
           <WeeklyWorkingHours/>

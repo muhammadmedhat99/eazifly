@@ -105,7 +105,7 @@ export const AllTeachers = () => {
         color:
           item?.status?.color || "",
       },
-    })) || [];
+    })).reverse() || [];
 
   const STATUS_GROUPS: any = {
     active: ["active", "available", "medium", "fully_booked"],
@@ -131,9 +131,9 @@ export const AllTeachers = () => {
 
   return (
     <>
-      <div className="p-4 flex items-center justify-between flex-wrap">
+      <div className="p-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2">
-          <div className="relative w-48">
+          <div className="relative md:w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
             </div>
@@ -146,7 +146,7 @@ export const AllTeachers = () => {
             />
           </div>
 
-          <div className="relative w-48">
+          <div className="relative md:w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
             </div>
