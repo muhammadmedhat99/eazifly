@@ -18,13 +18,31 @@ export const paymentFormSchema = yup.object({
     .required(),
 
   image: yup
-    .mixed<FileList>()
-    .test("fileType", "الرجاء تحميل صورة صحيحة", (value) => value && value.length > 0)
+    .mixed()
+    .test("file-required", "الرجاء تحميل صورة صحيحة", (value) => {
+      if (!value) return false;
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      if (typeof value === "object" && value !== null) {
+        return Object.keys(value).length > 0;
+      }
+      return false;
+    })
     .required("الرجاء تحميل صورة"),
 
   how_to_use: yup
-    .mixed<FileList>()
-    .test("fileType", "الرجاء تحميل ملف الاستخدام", (value) => value && value.length > 0)
+    .mixed()
+    .test("file-required", "الرجاء تحميل ملف الاستخدام", (value) => {
+      if (!value) return false;
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      if (typeof value === "object" && value !== null) {
+        return Object.keys(value).length > 0;
+      }
+      return false;
+    })
     .required("الرجاء تحميل ملف الاستخدام"),
 });
 

@@ -163,6 +163,7 @@ export const InformationForm = ({
     // Add image if exists
     if (
       submitData.image &&
+      Array.isArray(submitData.image) &&
       submitData.image.length > 0 &&
       submitData.image[0] instanceof File
     ) {
@@ -171,6 +172,7 @@ export const InformationForm = ({
 
     if (
       submitData.cover &&
+      Array.isArray(submitData.cover) &&
       submitData.cover.length > 0 &&
       submitData.cover[0] instanceof File
     ) {
@@ -452,16 +454,15 @@ export const InformationForm = ({
           control={control}
           render={({ field, fieldState }) => (
             <DropzoneField
-              value={field.value ? Array.from(field.value) : []}
+              value={
+                field.value && Array.isArray(field.value) ? field.value : []
+              }
               onChange={(files) => {
-                // Convert FileWithPreview[] back to FileList-like object
-                const dt = new DataTransfer();
-                files.forEach((file) => {
-                  if (file instanceof File) {
-                    dt.items.add(file);
-                  }
-                });
-                field.onChange(dt.files);
+                // Convert FileWithPreview[] to array of Files
+                const fileArray = files.filter(
+                  (file) => file instanceof File
+                ) as File[];
+                field.onChange(fileArray);
               }}
               error={fieldState.error?.message}
               label="صورة البرنامج"
@@ -477,16 +478,15 @@ export const InformationForm = ({
           control={control}
           render={({ field, fieldState }) => (
             <DropzoneField
-              value={field.value ? Array.from(field.value) : []}
+              value={
+                field.value && Array.isArray(field.value) ? field.value : []
+              }
               onChange={(files) => {
-                // Convert FileWithPreview[] back to FileList-like object
-                const dt = new DataTransfer();
-                files.forEach((file) => {
-                  if (file instanceof File) {
-                    dt.items.add(file);
-                  }
-                });
-                field.onChange(dt.files);
+                // Convert FileWithPreview[] to array of Files
+                const fileArray = files.filter(
+                  (file) => file instanceof File
+                ) as File[];
+                field.onChange(fileArray);
               }}
               error={fieldState.error?.message}
               label="صورة الغلاف"
