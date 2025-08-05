@@ -108,6 +108,10 @@ export const routes = [
     name: "الإعدادات",
     route: "/settings",
     icon: Setting,
+    sub_routes: [
+      { id: 1, name: "الإعدادات العامة", route: "/general" },
+      { id: 2, name: "الدول", route: "/countries" },
+    ],
   },
 ];
 
