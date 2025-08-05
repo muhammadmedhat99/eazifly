@@ -32,52 +32,52 @@ export const Subscriptions = ({
   setActiveStep,
   programId,
   initialData,
-  mode
+  mode,
 }: {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   programId: string;
   initialData?: any;
   mode?: string;
-  }) => {
-  
+}) => {
   const mappedDefaults = {
-    subscriptions: initialData?.data?.plans.length > 0
-      ? initialData?.data?.plans.map(plan => ({
-        localizedFields: {
-          ar: {
-            title: plan.title || "",
-            label: plan.label || "",
-            description: plan.description || "",
-          },
-          en: {
-            title: "",
-            label: "",
-            description: "",
-          },
-        },
-        subscription_plan: plan.subscripe_days || "",
-        subscription_type: plan.type || "",
-        subscription_price: plan.price || "",
-        sell_price: plan.discount_price || "",
-        number_of_lessons: plan.number_of_session_per_week || "",
-        lesson_duration: plan.duration || "",
-        is_special_plan:  plan.is_special_plan === true ? "true" : "false",
-      }))
-      : [
-        {
-          localizedFields: {
-            ar: { title: "", label: "", description: "" },
-            en: { title: "", label: "", description: "" },
-          },
-          subscription_plan: "",
-          subscription_type: "",
-          subscription_price: "",
-          sell_price: "",
-          number_of_lessons: "",
-          lesson_duration: "",
-          is_special_plan: "",
-        }
-      ],
+    subscriptions:
+      initialData?.data?.plans.length > 0
+        ? initialData?.data?.plans.map((plan: any) => ({
+            localizedFields: {
+              ar: {
+                title: plan.title || "",
+                label: plan.label || "",
+                description: plan.description || "",
+              },
+              en: {
+                title: "",
+                label: "",
+                description: "",
+              },
+            },
+            subscription_plan: plan.subscripe_days || "",
+            subscription_type: plan.type || "",
+            subscription_price: plan.price || "",
+            sell_price: plan.discount_price || "",
+            number_of_lessons: plan.number_of_session_per_week || "",
+            lesson_duration: plan.duration || "",
+            is_special_plan: plan.is_special_plan === true ? "true" : "false",
+          }))
+        : [
+            {
+              localizedFields: {
+                ar: { title: "", label: "", description: "" },
+                en: { title: "", label: "", description: "" },
+              },
+              subscription_plan: "",
+              subscription_type: "",
+              subscription_price: "",
+              sell_price: "",
+              number_of_lessons: "",
+              lesson_duration: "",
+              is_special_plan: "",
+            },
+          ],
   };
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -105,7 +105,7 @@ export const Subscriptions = ({
     control,
   } = useForm<SubscriptionsFormData>({
     resolver: yupResolver(subscriptionsSchema),
-    defaultValues: mappedDefaults
+    defaultValues: mappedDefaults,
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -140,7 +140,9 @@ export const Subscriptions = ({
     if (duplicates.length > 0) {
       const uniqueDuplicates = Array.from(new Set(duplicates));
       setDuplicateIndexes(uniqueDuplicates);
-      setDuplicateError("يوجد اشتراكان مكرران بنفس البيانات، يرجى تعديل أحدهما.");
+      setDuplicateError(
+        "يوجد اشتراكان مكرران بنفس البيانات، يرجى تعديل أحدهما."
+      );
       return;
     }
 

@@ -25,20 +25,34 @@ export const informationFormSchema = yup.object({
     )
     .required(),
   image: yup
-    .mixed<FileList>()
-    .test(
-      "fileType",
-      "الرجاء تحميل ملف صحيح",
-      (value) => value && value.length > 0
-    )
+    .mixed()
+    .test("file-required", "الرجاء تحميل ملف", (value) => {
+      if (!value) return false;
+      // Handle both array and object formats
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      if (typeof value === "object" && value !== null) {
+        // Check if it's a FileList-like object
+        return Object.keys(value).length > 0;
+      }
+      return false;
+    })
     .required("الرجاء تحميل ملف"),
-    cover: yup
-    .mixed<FileList>()
-    .test(
-      "fileType",
-      "الرجاء تحميل ملف صحيح",
-      (value) => value && value.length > 0
-    )
+  cover: yup
+    .mixed()
+    .test("file-required", "الرجاء تحميل ملف", (value) => {
+      if (!value) return false;
+      // Handle both array and object formats
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      if (typeof value === "object" && value !== null) {
+        // Check if it's a FileList-like object
+        return Object.keys(value).length > 0;
+      }
+      return false;
+    })
     .required("الرجاء تحميل ملف"),
   special_for: yup
     .string()
