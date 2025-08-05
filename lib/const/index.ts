@@ -111,6 +111,7 @@ export const routes = [
     sub_routes: [
       { id: 1, name: "الإعدادات العامة", route: "/general" },
       { id: 2, name: "الدول", route: "/countries" },
+      { id: 3, name: "التخصصات", route: "/specializations" },
     ],
   },
 ];
