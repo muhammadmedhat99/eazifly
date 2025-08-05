@@ -147,7 +147,7 @@ const ActionsComponent = ({
   id: number;
   user_id: any;
   children_users: ChildUser[];
-    subscription_status: string;
+  subscription_status: string;
   refetchSubscriptions: () => void;
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -384,7 +384,10 @@ export const Programs = ({
     queries: subscriptionsData.data.map((subscription: Subscription) => ({
       queryKey: ["programteachers", subscription.main_subscription_id],
       queryFn: async () =>
-        await fetchClient(`client/subscription/user/instructors/${subscription.main_subscription_id}`, axios_config),
+        await fetchClient(
+          `client/subscription/user/instructors/${subscription.main_subscription_id}`,
+          axios_config
+        ),
     })),
   });
 
@@ -414,11 +417,8 @@ export const Programs = ({
     <div className="grid grid-cols-1 gap-8">
       {subscriptionsData?.data?.map(
         (subscription: Subscription, index: number) => {
-
           const teacherResult = teachersResults[index];
-          const teacherData: { data: any[] } = hasDataArray(
-            teacherResult?.data
-          )
+          const teacherData: { data: any[] } = hasDataArray(teacherResult?.data)
             ? teacherResult.data
             : { data: [] };
           const isLoadingteacher = teacherResult?.isLoading;
@@ -483,12 +483,16 @@ export const Programs = ({
                 <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background">
                   <div className="flex flex-col gap-4 w-1/2">
                     <span className="text-primary text-sm font-bold">
-                      عدد الطلاب المشتركين 
+                      عدد الطلاب المشتركين
                     </span>
-                    {subaccountData?.data ?
+                    {(subaccountData as any)?.data ? (
                       <div className="text-black-text font-bold text-[15px]">
-                        {subaccountData?.data?.length} من {subscription.student_number}
-                      </div> : <Loader />}
+                        {(subaccountData as any)?.data?.length} من{" "}
+                        {subscription.student_number}
+                      </div>
+                    ) : (
+                      <Loader />
+                    )}
                   </div>
                 </div>
 
@@ -499,10 +503,12 @@ export const Programs = ({
                     </span>
                     <Chip
                       className="capitalize px-4 min-w-24 text-center"
-                      color={subscription?.subscription_status?.color}
+                      color={subscription?.subscription_status?.color as any}
                       variant="flat"
                     >
-                      <span className={`text-${subscription?.subscription_status?.color} font-bold`}>
+                      <span
+                        className={`text-${subscription?.subscription_status?.color} font-bold`}
+                      >
                         {subscription?.subscription_status?.label}
                       </span>
                     </Chip>
@@ -579,7 +585,9 @@ export const Programs = ({
                           id={subscription.program_id}
                           user_id={user_id}
                           children_users={subscription.children_users}
-                          subscription_status={subscription.subscription_status.key}
+                          subscription_status={
+                            subscription.subscription_status.key
+                          }
                           refetchSubscriptions={refetch}
                         />
                       </div>
@@ -596,11 +604,7 @@ export const Programs = ({
                     </Tab>
                   )}
 
-                  <Tab
-                    className="w-full"
-                    key="subaccounts"
-                    title="الطلاب"
-                  >
+                  <Tab className="w-full" key="subaccounts" title="الطلاب">
                     <Subaccounts
                       subaccountData={subaccountData}
                       isLoadingsubaccount={isLoadingsubaccount}

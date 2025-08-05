@@ -23,7 +23,7 @@ import { fetchClient, postData } from "@/lib/utils";
 import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
 import { getCookie } from "cookies-next";
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 
 const weekDays = [
   { key: "sunday", label: "الأحد" },
@@ -52,6 +52,7 @@ type FormData = {
     date: string;
     time: string;
   }[];
+  program_content_id: string;
 };
 
 export default function AddSubaccountModal({
@@ -87,22 +88,27 @@ export default function AddSubaccountModal({
     setSelectedChildId(childId);
   };
 
-    const { data: subscriptionDetails, isLoading : isSubscriptionDetailsLoading } = useQuery({
+  const { data: subscriptionDetails, isLoading: isSubscriptionDetailsLoading } =
+    useQuery({
       queryKey: ["GetsubscriptionDetails", programData, program_id],
-      queryFn: async () => await fetchClient(`client/subscription/details?program_id=${program_id}&user_id=${programData.data.id}`, axios_config),
+      queryFn: async () =>
+        await fetchClient(
+          `client/subscription/details?program_id=${program_id}&user_id=${programData.data.id}`,
+          axios_config
+        ),
     });
 
-    const { data: programContent, isLoading: loadingProgramContent } = useQuery(
-        {
-          queryFn: async () =>
-            await fetchClient(`client/program/contents/${program_id}`, axios_config),
-          queryKey: ["GetProgramContent"],
-        }
-      );
+  const { data: programContent, isLoading: loadingProgramContent } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/program/contents/${program_id}`, axios_config),
+    queryKey: ["GetProgramContent"],
+  });
 
   const params = useParams();
   const user_id = params.id;
-  const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
+  const [selectedInstructor, setSelectedInstructor] = useState<string | null>(
+    null
+  );
   const [availableInstructors, setAvailableInstructors] = useState([]);
   const [appointmentsList, setAppointmentsList] = useState([]);
 
@@ -117,8 +123,14 @@ export default function AddSubaccountModal({
       formData.append("user_id", String(selectedChildId));
       formData.append("start_date", String(watch("start_date")));
       formData.append("duration", String(subscriptionDetails?.data?.duration));
-      formData.append("subscripe_days", String(subscriptionDetails?.data?.subscripe_days));
-      formData.append("number_of_sessions", String(subscriptionDetails?.data?.number_of_sessions));
+      formData.append(
+        "subscripe_days",
+        String(subscriptionDetails?.data?.subscripe_days)
+      );
+      formData.append(
+        "number_of_sessions",
+        String(subscriptionDetails?.data?.number_of_sessions)
+      );
 
       const fixedSessions = getValues("fixed_sessions") || [];
       fixedSessions.forEach((session: { weekday: string; time: string }) => {
@@ -127,7 +139,11 @@ export default function AddSubaccountModal({
         }
       });
 
-      const response = await postData("client/add/weekly/appointments", formData, headers);
+      const response = await postData(
+        "client/add/weekly/appointments",
+        formData,
+        headers
+      );
 
       if (response?.message === "success" && Array.isArray(response?.data)) {
         const availabilitiesPayload = {
@@ -138,10 +154,12 @@ export default function AddSubaccountModal({
         setAppointmentsList(response.data);
         const formData = new FormData();
         formData.append("program_id", String(availabilitiesPayload.program_id));
-        availabilitiesPayload.appointments.forEach((appointment: any, index: number) => {
-          formData.append(`appointments[${index}][start]`, appointment.start);
-          formData.append(`appointments[${index}][end]`, appointment.end);
-        });
+        availabilitiesPayload.appointments.forEach(
+          (appointment: any, index: number) => {
+            formData.append(`appointments[${index}][start]`, appointment.start);
+            formData.append(`appointments[${index}][end]`, appointment.end);
+          }
+        );
 
         const formHeaders = new Headers();
         formHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
@@ -152,10 +170,12 @@ export default function AddSubaccountModal({
           formData,
           formHeaders
         );
-        if (availabilitiesResponse?.message === "success" && Array.isArray(availabilitiesResponse?.data)) {
+        if (
+          availabilitiesResponse?.message === "success" &&
+          Array.isArray(availabilitiesResponse?.data)
+        ) {
           setAvailableInstructors(availabilitiesResponse.data);
         }
-
       }
 
       return response;
@@ -197,7 +217,10 @@ export default function AddSubaccountModal({
     formData.append("user_id", String(selectedChildId));
     formData.append("parent_id", String(user_id));
     formData.append("duration", String(subscriptionDetails?.data?.duration));
-    formData.append("program_content_id", String(getValues("program_content_id")));
+    formData.append(
+      "program_content_id",
+      String(getValues("program_content_id"))
+    );
 
     appointmentsList.forEach((appointment: any, index: number) => {
       formData.append(`appointments[${index}][start]`, appointment.start);
@@ -216,7 +239,7 @@ export default function AddSubaccountModal({
           title: response.message,
           color: "success",
         });
-        onClose()
+        onClose();
       } else {
         addToast({
           title: response.message,
@@ -233,9 +256,9 @@ export default function AddSubaccountModal({
   };
 
   const GetAppointments = () => {
-    AddWeeklyAppointment.mutate()
-    setStep(3)
-  }
+    AddWeeklyAppointment.mutate();
+    setStep(3);
+  };
 
   return (
     <Modal
@@ -357,7 +380,11 @@ export default function AddSubaccountModal({
                       tabList: "bg-[#EAF0FD] w-full",
                     }}
                   >
-                    <Tab key="fixed" title="مواعيد ثابتة" className="w-full p-5">
+                    <Tab
+                      key="fixed"
+                      title="مواعيد ثابتة"
+                      className="w-full p-5"
+                    >
                       <Input
                         label="تاريخ البدء"
                         placeholder="نص الكتابه"
@@ -369,11 +396,18 @@ export default function AddSubaccountModal({
                           base: "mb-4",
                         }}
                         {...register("start_date")}
-                        defaultValue={subscriptionDetails?.data?.start_date?.split("T")[0]}
+                        defaultValue={
+                          subscriptionDetails?.data?.start_date?.split("T")[0]
+                        }
                       />
 
                       {(subscriptionDetails?.data?.number_of_session_per_week
-                        ? Array.from({ length: Number(subscriptionDetails.data.number_of_session_per_week) })
+                        ? Array.from({
+                            length: Number(
+                              subscriptionDetails.data
+                                .number_of_session_per_week
+                            ),
+                          })
                         : []
                       ).map((_, index) => (
                         <div key={index} className="flex gap-4 mt-4">
@@ -385,12 +419,19 @@ export default function AddSubaccountModal({
                               <Select
                                 {...field}
                                 selectedKeys={field.value ? [field.value] : []}
-                                onSelectionChange={(keys) => field.onChange(Array.from(keys)[0])}
+                                onSelectionChange={(keys) =>
+                                  field.onChange(Array.from(keys)[0])
+                                }
                                 label="اليوم"
                                 labelPlacement="outside"
                                 placeholder="اختر اليوم"
-                                isInvalid={!!errors?.fixed_sessions?.[index]?.weekday}
-                                errorMessage={errors?.fixed_sessions?.[index]?.weekday?.message}
+                                isInvalid={
+                                  !!errors?.fixed_sessions?.[index]?.weekday
+                                }
+                                errorMessage={
+                                  errors?.fixed_sessions?.[index]?.weekday
+                                    ?.message
+                                }
                                 classNames={{
                                   label: "text-[#272727] font-bold text-sm",
                                   base: "mb-4",
@@ -398,7 +439,9 @@ export default function AddSubaccountModal({
                                 }}
                               >
                                 {weekDays.map((day) => (
-                                  <SelectItem key={day.key}>{day.label}</SelectItem>
+                                  <SelectItem key={day.key}>
+                                    {day.label}
+                                  </SelectItem>
                                 ))}
                               </Select>
                             )}
@@ -411,7 +454,9 @@ export default function AddSubaccountModal({
                             type="time"
                             {...register(`fixed_sessions.${index}.time`)}
                             isInvalid={!!errors?.fixed_sessions?.[index]?.time}
-                            errorMessage={errors?.fixed_sessions?.[index]?.time?.message}
+                            errorMessage={
+                              errors?.fixed_sessions?.[index]?.time?.message
+                            }
                             labelPlacement="outside"
                             classNames={{
                               label: "text-[#272727] font-bold text-sm",
@@ -423,10 +468,17 @@ export default function AddSubaccountModal({
                       ))}
                     </Tab>
 
-
-                    <Tab key="flexible" title="مواعيد مرنة" className="w-full p-5">
+                    <Tab
+                      key="flexible"
+                      title="مواعيد مرنة"
+                      className="w-full p-5"
+                    >
                       {(subscriptionDetails?.data?.number_of_sessions
-                        ? Array.from({ length: Number(subscriptionDetails.data.number_of_sessions) })
+                        ? Array.from({
+                            length: Number(
+                              subscriptionDetails.data.number_of_sessions
+                            ),
+                          })
                         : []
                       ).map((_, index) => (
                         <div key={index} className="flex gap-4 mt-4">
@@ -435,8 +487,12 @@ export default function AddSubaccountModal({
                             placeholder="نص الكتابه"
                             type="date"
                             {...register(`flexible_sessions.${index}.date`)}
-                            isInvalid={!!errors?.flexible_sessions?.[index]?.date}
-                            errorMessage={errors?.flexible_sessions?.[index]?.date?.message}
+                            isInvalid={
+                              !!errors?.flexible_sessions?.[index]?.date
+                            }
+                            errorMessage={
+                              errors?.flexible_sessions?.[index]?.date?.message
+                            }
                             labelPlacement="outside"
                             classNames={{
                               label: "text-[#272727] font-bold text-sm",
@@ -449,8 +505,12 @@ export default function AddSubaccountModal({
                             placeholder="نص الكتابه"
                             type="time"
                             {...register(`flexible_sessions.${index}.time`)}
-                            isInvalid={!!errors?.flexible_sessions?.[index]?.time}
-                            errorMessage={errors?.flexible_sessions?.[index]?.time?.message}
+                            isInvalid={
+                              !!errors?.flexible_sessions?.[index]?.time
+                            }
+                            errorMessage={
+                              errors?.flexible_sessions?.[index]?.time?.message
+                            }
                             labelPlacement="outside"
                             classNames={{
                               label: "text-[#272727] font-bold text-sm",
@@ -461,7 +521,6 @@ export default function AddSubaccountModal({
                         </div>
                       ))}
                     </Tab>
-
                   </Tabs>
 
                   <div className="flex justify-end gap-4 py-4">
@@ -504,10 +563,11 @@ export default function AddSubaccountModal({
                                 ? "primary"
                                 : undefined
                             }
-                            className={`h-[170px] font-semibold border flex flex-col justify-center items-center ${selectedInstructor === String(instructor.id)
+                            className={`h-[170px] font-semibold border flex flex-col justify-center items-center ${
+                              selectedInstructor === String(instructor.id)
                                 ? "border-primary"
                                 : "border-gray-300"
-                              }`}
+                            }`}
                             onPress={(e) => setSelectedInstructor(e.target.id)}
                           >
                             <Avatar
@@ -522,7 +582,9 @@ export default function AddSubaccountModal({
                           </Button>
                         ))
                       ) : (
-                        <span className="text-gray-500">لا يوجد معلمين متاحين</span>
+                        <span className="text-gray-500">
+                          لا يوجد معلمين متاحين
+                        </span>
                       )}
                     </div>
                   </div>
