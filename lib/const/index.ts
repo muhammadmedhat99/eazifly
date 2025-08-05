@@ -112,6 +112,7 @@ export const routes = [
       { id: 1, name: "الإعدادات العامة", route: "/general" },
       { id: 2, name: "الدول", route: "/countries" },
       { id: 3, name: "التخصصات", route: "/specializations" },
+      { id: 4, name: "وسائل الدفع", route: "/payment-methods" },
     ],
   },
 ];
