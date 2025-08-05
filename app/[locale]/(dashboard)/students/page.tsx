@@ -3,11 +3,17 @@ import Link from "next/link";
 
 import { BreadCrumb } from "@/components/global/BreadCrumb";
 import { AllStudents } from "@/components/pages/students";
+import { getTranslations } from "next-intl/server";
 
-const BreadCrumbItems = [
+
+
+export default async function page() {
+  const t = await getTranslations('StudentsPage');
+
+  const BreadCrumbItems = [
   {
     id: 1,
-    name: "الرئيسية",
+    name: t("home.title"),
     link: "/",
   },
   {
@@ -21,7 +27,6 @@ const BreadCrumbItems = [
   },
 ];
 
-export default function page() {
   return (
     <div>
       <BreadCrumb items={BreadCrumbItems}>
