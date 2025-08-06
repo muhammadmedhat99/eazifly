@@ -113,6 +113,7 @@ export const routes = [
       { id: 2, name: "الدول", route: "/countries" },
       { id: 3, name: "التخصصات", route: "/specializations" },
       { id: 4, name: "وسائل الدفع", route: "/payment-methods" },
+      { id: 5, name: "أسباب إلغاء محاضرة", route: "/cancel-sessions" },
     ],
   },
 ];
