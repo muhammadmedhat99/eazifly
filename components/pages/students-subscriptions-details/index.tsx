@@ -283,7 +283,7 @@ export const StudentsSubscriptionDetails = ({
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  {data?.data.order_details[0].plan_title}
+                  {data?.data.order_details[0]?.plan_title}
                 </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
@@ -292,7 +292,7 @@ export const StudentsSubscriptionDetails = ({
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  {data?.data.order_details[0].duration} دقيقة
+                  {data?.data.order_details[0]?.duration} دقيقة
                 </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
@@ -301,7 +301,7 @@ export const StudentsSubscriptionDetails = ({
                 </span>
 
                 <span className="text-black-text font-bold text-[15px]">
-                  {data?.data.order_details[0].number_of_session_per_week}
+                  {data?.data.order_details[0]?.number_of_session_per_week}
                 </span>
               </div>
               <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
@@ -310,7 +310,7 @@ export const StudentsSubscriptionDetails = ({
                 </span>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-primary font-bold text-[15px]">
-                    {data?.data.order_details[0].discount_price}
+                    {data?.data.order_details[0]?.discount_price}
                   </span>
                   <span className="text-primary font-bold text-[15px]">
                     ج.م
