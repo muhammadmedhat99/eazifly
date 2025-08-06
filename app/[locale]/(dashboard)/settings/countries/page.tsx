@@ -2,7 +2,8 @@ import React from "react";
 import Link from "next/link";
 
 import { BreadCrumb } from "@/components/global/BreadCrumb";
-import { AllStudents } from "@/components/pages/students";
+import { Settings } from "@/components/pages/settings/Settings";
+import { AllCountries } from "@/components/pages/settings/countries";
 
 const BreadCrumbItems = [
   {
@@ -12,12 +13,12 @@ const BreadCrumbItems = [
   },
   {
     id: 2,
-    name: "الطلاب",
+    name: "الإعدادات",
+    link: "/settings/general"
   },
   {
     id: 3,
-    name: "بيانات الطلاب",
-    link: "/students",
+    name: "إعدادات الدول",
   },
 ];
 
@@ -25,23 +26,17 @@ export default function page() {
   return (
     <div>
       <BreadCrumb items={BreadCrumbItems}>
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
           <Link
-            href="#"
-            className="text-title font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-input"
-          >
-            تصدير البيانات
-          </Link>  
-          <Link
-            href="/students/create"
+            href="/settings/countries/create"
             className="text-white font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-primary"
           >
-            أضافة طالب جديد
+            أضافة دولة 
           </Link>
         </div>
       </BreadCrumb>
 
-      <AllStudents />
+      <AllCountries />
     </div>
   );
 }

@@ -60,21 +60,21 @@ export const ProgramContent = ({ data }: MainInformationProps) => {
       {/* descriptiuon  */}
       <div className="col-span-3">
         <h2 className="text-right text-primary font-bold mb-4">وصف البرنامج</h2>
-
-        <div className="mb-6">
-          <p className="text-title text-sm">{data.description}</p>
-        </div>
+        <div
+          className="mb-6 text-sm text-title leading-relaxed rtl [&>*]:!block [&>*]:mb-2 flex flex-col items-start gap-4"
+          dir="rtl"
+          dangerouslySetInnerHTML={{ __html: data.content }}
+        />
       </div>
 
       {/* Program goals Section */}
       <div className="col-span-3">
-        <h2 className="text-right text-primary font-bold mb-4">
-          أهداف البرنامج
-        </h2>
-
-        <div className="mb-6">
-          <p className="text-title text-sm">{data.goals}</p>
-        </div>
+        <h2 className="text-right text-primary font-bold mb-4">أهداف البرنامج</h2>
+        <div
+          className="mb-6 text-sm text-title leading-relaxed rtl [&>*]:!block [&>*]:mb-2 flex flex-col items-start gap-4"
+          dir="rtl"
+          dangerouslySetInnerHTML={{ __html: data.goals }}
+        />
       </div>
     </div>
   );

@@ -8,13 +8,13 @@ import {
   Tab,
   Tabs,
 } from "@heroui/react";
-import { GeneralSettings } from "./tabs/GeneralSettings";
-import { FinancialSettings } from "./tabs/FinancialSettings";
-import { Permissions } from "./tabs/Permissions";
-import { SubscriptionSettings } from "./tabs/SubscriptionSettings";
-import { LearningResources } from "./tabs/LearningResources";
-import { AdsAndVisibility } from "./tabs/AdsAndVisibility";
-import { ExternalServices } from "./tabs/ExternalServices";
+import { GeneralSettings } from "../tabs/GeneralSettings";
+import { FinancialSettings } from "../tabs/FinancialSettings";
+import { Permissions } from "../tabs/Permissions";
+import { SubscriptionSettings } from "../tabs/SubscriptionSettings";
+import { LearningResources } from "../tabs/LearningResources";
+import { AdsAndVisibility } from "../tabs/AdsAndVisibility";
+import { ExternalServices } from "../tabs/ExternalServices";
 
 export const Settings = () => {
   const [search, setSearch] = useState("");
