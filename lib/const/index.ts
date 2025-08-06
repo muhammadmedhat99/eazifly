@@ -114,6 +114,7 @@ export const routes = [
       { id: 3, name: "التخصصات", route: "/specializations" },
       { id: 4, name: "وسائل الدفع", route: "/payment-methods" },
       { id: 5, name: "أسباب إلغاء محاضرة", route: "/cancel-sessions" },
+      { id: 6, name: "ردود الطلاب", route: "/user-responses" },
     ],
   },
 ];
