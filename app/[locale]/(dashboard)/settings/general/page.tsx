@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 
 import { BreadCrumb } from "@/components/global/BreadCrumb";
-import { Settings } from "@/components/pages/settings";
+import { Settings } from "@/components/pages/settings/Settings";
 
 const BreadCrumbItems = [
   {
@@ -13,7 +13,7 @@ const BreadCrumbItems = [
   {
     id: 2,
     name: "الإعدادات",
-    link: "/settings"
+    link: "/settings/general"
   },
 ];
 

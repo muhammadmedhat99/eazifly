@@ -1,10 +1,15 @@
 import { Button, Input, Select, SelectItem } from "@heroui/react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { JoditInput } from "@/components/global/JoditInput";
+import { DropzoneField } from "@/components/global/DropZoneField";
+import { useQuery } from "@tanstack/react-query";
+import { fetchClient } from "@/lib/utils";
+import { axios_config } from "@/lib/const";
+import { AllQueryKeys } from "@/keys";
 
 const colorPalettes = [
   ["#d5e8d4", "#b7dbb4", "#9cc69b", "#7dbf8e"],     
@@ -19,16 +24,20 @@ const colorPalettes = [
 
 const schema = yup
   .object({
+    main_logo: yup
+      .mixed<File[]>()
+      .test("fileType", "الرجاء تحميل ملف صحيح", (value) => value && value.length > 0)
+      .required("الرجاء تحميل ملف"),
     selectedPalette: yup
       .number()
       .typeError("برجاء اختيار ألوان المنصة")
       .required("برجاء اختيار ألوان المنصة"),
-    platform_name: yup
+    brand_name: yup
       .string()
       .required("ادخل إسم المنصة")
       .min(3, "إسم المنصة لا يجب ان يقل عن ٣ احرف"),
-    font: yup.string().required("إختر نوع الخط"),
-    platform_description: yup.string().required("ادخل تعريف مختصر للمنصة"),
+    main_font_url: yup.string().required("إختر نوع الخط"),
+    bio: yup.string().required("ادخل تعريف مختصر للمنصة"),
     email: yup
       .string()
       .email("ادخل بريد إلكتروني صحيح")
@@ -43,22 +52,40 @@ type FormData = yup.InferType<typeof schema>;
 
 export const GeneralSettings = () => {
   const {
-  register,
-  handleSubmit,
-  formState: { errors },
-  reset,
-  control,
-} = useForm<FormData>({
-  resolver: yupResolver(schema),
-  defaultValues: {
-    selectedPalette: 0, 
-  },
-});
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    control,
+    setValue,
+  } = useForm<FormData>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      selectedPalette: 0,
+    },
+  });
+
+  useEffect(() => {
+    const fetchImageAsFile = async () => {
+      const response = await fetch("/img/logo/logo.svg");
+      const blob = await response.blob();
+      const file = new File([blob], "logo.svg", { type: blob.type });
+      setValue("main_logo", [file]);
+    };
+
+    fetchImageAsFile();
+  }, [setValue]);
 
   const onSubmit = (data: FormData) => {
     console.log("data:", data);
   };
 
+  const { data: settingsData, isLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/setting`, axios_config),
+    queryKey: AllQueryKeys.GetAllSettings,
+  });
+  console.log(settingsData)
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-6 md:grid-cols-2 p-8">
       <div>
@@ -67,11 +94,18 @@ export const GeneralSettings = () => {
         </label>
         <div className="w-96 p-2 bg-[#F0F0F0] rounded-2xl inline-flex flex-col justify-start items-start gap-3">
           <div className="self-stretch h-40 relative bg-white rounded-lg overflow-hidden flex justify-center items-center">
-            <Image
-              src="/img/logo/logo.svg"
-              alt="logo"
-              width={180}
-              height={50}
+            <Controller
+              name="main_logo"
+              control={control}
+              render={({ field, fieldState }) => (
+                <DropzoneField
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                  label="الصورة"
+                  description="تحميل صورة"
+                />
+              )}
             />
           </div>
         </div>
@@ -112,9 +146,9 @@ export const GeneralSettings = () => {
         label="إسم المنصة"
         placeholder="نص الكتابه"
         type="text"
-        {...register("platform_name")}
-        isInvalid={!!errors.platform_name?.message}
-        errorMessage={errors.platform_name?.message}
+        {...register("brand_name")}
+        isInvalid={!!errors.brand_name?.message}
+        errorMessage={errors.brand_name?.message}
         labelPlacement="outside"
         classNames={{
           label: "text-[#272727] font-bold text-sm",
@@ -123,7 +157,7 @@ export const GeneralSettings = () => {
         }}
       />
       <Controller
-        name="font"
+        name="main_font_url"
         control={control}
         render={({ field }) => (
           <Select
@@ -133,8 +167,8 @@ export const GeneralSettings = () => {
             label="نوع الخط"
             labelPlacement="outside"
             placeholder="اختر نوع الخط"
-            isInvalid={!!errors.font?.message}
-            errorMessage={errors.font?.message}
+            isInvalid={!!errors.main_font_url?.message}
+            errorMessage={errors.main_font_url?.message}
             classNames={{
               label: "text-[#272727] font-bold text-sm",
               base: "mb-4",
@@ -152,7 +186,7 @@ export const GeneralSettings = () => {
       />
       <div className="col-span-2">
         <Controller
-        name="platform_description"
+        name="bio"
         control={control}
         render={({ field, fieldState }) => (
           <JoditInput

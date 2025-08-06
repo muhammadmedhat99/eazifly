@@ -1,22 +1,13 @@
-"use client";
-
 import React from "react";
-import {
-  Drawer,
-  DrawerContent,
-  useDisclosure,
-} from "@heroui/react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { HamburgerMenu } from "iconsax-reactjs";
+import { ClientActions } from "@/components/layout/ClientActions";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
   return (
     <div className="flex">
       {/* Sidebar for large screens */}
@@ -24,24 +15,10 @@ export default function DashboardLayout({
         <Sidebar />
       </div>
 
-      {/* Drawer for mobile screens */}
-      <Drawer
-        placement="right"
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        size="xs"
-      >
-        <DrawerContent>
-          <Sidebar />
-        </DrawerContent>
-      </Drawer>
-
       <div className="flex flex-col w-full">
         {/* Header with mobile menu toggle */}
         <Header>
-          <button className="block md:hidden p-2" onClick={onOpen}>
-            <HamburgerMenu size={24} />
-          </button>
+          <ClientActions />
         </Header>
 
         <div className="relative">{children}</div>
