@@ -15,292 +15,322 @@ import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 
 type CountryDetailsProps = {
+  data: {
     data: {
-        data: {
-            id: number;
-            name_ar: string;
-            name_en: string;
-            country_code: string;
-            phone_code: string;
-            image: string;
-            created_at: string
-        };
+      id: number;
+      name_ar: string;
+      name_en: string;
+      country_code: string;
+      phone_code: string;
+      image: string;
+      created_at: string;
     };
+  };
 };
 
 const schema = yup
-    .object({
-        name_ar: yup
-            .string()
-            .required("ادخل الاسم بالعربية")
-            .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
+  .object({
+    name_ar: yup
+      .string()
+      .required("ادخل الاسم بالعربية")
+      .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
 
-        name_en: yup
-            .string()
-            .required("ادخل الاسم بالإنجليزية")
-            .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
+    name_en: yup
+      .string()
+      .required("ادخل الاسم بالإنجليزية")
+      .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
 
-        country_code: yup
-            .string()
-            .required("ادخل كود الدولة"),
+    country_code: yup.string().required("ادخل كود الدولة"),
 
-        phone_code: yup
-            .string()
-            .required("ادخل مفتاح الدولة")
-            .matches(/^[0-9]+$/, "يجب أن يحتوي على أرقام فقط"),
+    phone_code: yup
+      .string()
+      .required("ادخل مفتاح الدولة")
+      .matches(/^[0-9]+$/, "يجب أن يحتوي على أرقام فقط"),
 
-        image: yup
-            .mixed<FileList>()
-            .test(
-                "fileType",
-                "الرجاء تحميل ملف صحيح",
-                (value) => value && value.length > 0
-            )
-            .required("الرجاء تحميل ملف"),
-    })
-    .required();
-
+    image: yup
+      .mixed<FileList>()
+      .test(
+        "fileType",
+        "الرجاء تحميل ملف صحيح",
+        (value) => value && value.length > 0
+      )
+      .required("الرجاء تحميل ملف"),
+  })
+  .required();
 
 type FormData = yup.InferType<typeof schema>;
 
 export const CountryDetails = ({ data }: CountryDetailsProps) => {
-    const params = useParams();
-    const id = params.id;
-    const queryClient = useQueryClient();
-    const [editField, setEditField] = useState<string | null>(null);
-    const { control, handleSubmit, watch } = useForm<FormData>({
-        defaultValues: {
-            name_ar: data?.data?.name_ar || "",
-            name_en: data?.data?.name_en || "",
-            country_code: data?.data?.country_code || "",
-            phone_code: data?.data?.phone_code || "",
-        },
-    });
+  const params = useParams();
+  const id = params.id;
+  const queryClient = useQueryClient();
+  const [editField, setEditField] = useState<string | null>(null);
+  const { control, handleSubmit, watch } = useForm<FormData>({
+    defaultValues: {
+      name_ar: data?.data?.name_ar || "",
+      name_en: data?.data?.name_en || "",
+      country_code: data?.data?.country_code || "",
+      phone_code: data?.data?.phone_code || "",
+    },
+  });
 
-    const { data: countryData, isLoading } = useQuery({
-        queryKey: ['country', id],
-        queryFn: async () => await fetchClient(`client/country/show/${id}`, axios_config),
-    });
+  const { data: countryData, isLoading } = useQuery({
+    queryKey: ["country", id],
+    queryFn: async () =>
+      await fetchClient(`client/country/show/${id}`, axios_config),
+  });
 
-    const onSubmit = (data: FormData) => UpdateStudent.mutate(data);
+  const onSubmit = (data: FormData) => UpdateStudent.mutate(data);
 
-    const UpdateStudent = useMutation({
-        mutationFn: (submitData: FormData) => {
-            var myHeaders = new Headers();
-            myHeaders.append("local", "ar");
-            myHeaders.append("Accept", "application/json");
-            myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
-            var formdata = new FormData();
-            formdata.append("ar[name]", submitData.name_ar);
-            formdata.append("en[name]", submitData.name_en);
-            formdata.append("country_code", submitData.country_code);
-            formdata.append("phone_code", `+${submitData.phone_code.replace(/^\+/, "")}`);
+  const UpdateStudent = useMutation({
+    mutationFn: (submitData: FormData) => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      var formdata = new FormData();
+      formdata.append("ar[name]", submitData.name_ar);
+      formdata.append("en[name]", submitData.name_en);
+      formdata.append("country_code", submitData.country_code);
+      formdata.append(
+        "phone_code",
+        `+${submitData.phone_code.replace(/^\+/, "")}`
+      );
 
-            if (submitData.image?.length) {
-                formdata.append("image", submitData.image[0]);
-            }
+      if (submitData.image?.length) {
+        formdata.append("image", submitData.image[0]);
+      }
 
-            return postData(
-                `client/country/update/${data.data.id}`,
-                formdata,
-                myHeaders
-            );
-        },
-        onSuccess: (data) => {
-            if (data.message !== "success") {
-                addToast({
-                    title: "error",
-                    color: "danger",
-                });
-            } else {
-                addToast({
-                    title: data?.message,
-                    color: "success",
-                });
-                queryClient.invalidateQueries({ queryKey: ['country', id] });
-            }
-            setEditField(null);
-        },
-        onError: (error) => {
-            console.log(" error ===>>", error);
-            addToast({
-                title: "عذرا حدث خطأ ما",
-                color: "danger",
-            });
-        },
-    });
+      return postData(
+        `client/country/update/${data.data.id}`,
+        formdata,
+        myHeaders
+      );
+    },
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+        queryClient.invalidateQueries({ queryKey: ["country", id] });
+      }
+      setEditField(null);
+    },
+    onError: (error) => {
+      console.log(" error ===>>", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
 
-     return isLoading ? (
-        <Loader />
-    ) : (
-        <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5"
-        >
-            <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
-                <div className="flex flex-col gap-4">
-                    <span className="text-[#5E5E5E] text-sm font-bold">الاسم</span>
-                    {editField === "name" ? (
-                        <div className="flex flex-col md:flex-row gap-4 w-full">
-                            <div className="flex flex-col gap-2 w-full">
-                                <Controller
-                                    name="name_ar"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input {...field} placeholder="الاسم بالعربية" size="sm" />
-                                    )}
-                                />
-                                <Controller
-                                    name="name_en"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input {...field} placeholder="الاسم بالإنجليزية" size="sm" />
-                                    )}
-                                />
-                            </div>
-                        </div>
-                    ) : (
-                        <span className="text-black-text font-bold text-[15px]">
-                            {`${countryData?.data?.name_ar} / ${countryData?.data?.name_en}`}
-                        </span>
-                    )}
-                </div>
-
-                {editField === "name" ? (
-                    <Button size="sm" color="primary" variant="solid" className="text-white" type="submit">
-                        حفظ
-                    </Button>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={() => setEditField("name")}
-                        className="flex items-center gap-1 text-sm font-bold"
-                    >
-                        <Edit2 size={18} />
-                        تعديل
-                    </button>
-                )}
+  return isLoading ? (
+    <Loader />
+  ) : (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+        <div className="flex flex-col gap-4">
+          <span className="text-[#5E5E5E] text-sm font-bold">الاسم</span>
+          {editField === "name" ? (
+            <div className="flex flex-col md:flex-row gap-4 w-full">
+              <div className="flex flex-col gap-2 w-full">
+                <Controller
+                  name="name_ar"
+                  control={control}
+                  render={({ field }) => (
+                    <Input {...field} placeholder="الاسم بالعربية" size="sm" />
+                  )}
+                />
+                <Controller
+                  name="name_en"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      placeholder="الاسم بالإنجليزية"
+                      size="sm"
+                    />
+                  )}
+                />
+              </div>
             </div>
+          ) : (
+            <span className="text-black-text font-bold text-[15px]">
+              {`${countryData?.data?.name_ar} / ${countryData?.data?.name_en}`}
+            </span>
+          )}
+        </div>
 
-            <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
-                <div className="flex flex-col gap-4">
-                    <span className="text-[#5E5E5E] text-sm font-bold">كود الدولة</span>
-                    {editField === "country_code" ? (
-                        <Controller
-                            name="country_code"
-                            control={control}
-                            render={({ field }) => (
-                                <Input {...field} placeholder="كود الدولة" size="sm" />
-                            )}
-                        />
-                    ) : (
-                        <span className="text-black-text font-bold text-[15px]">
-                            {countryData?.data?.country_code}
-                        </span>
-                    )}
-                </div>
+        {editField === "name" ? (
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            type="submit"
+          >
+            حفظ
+          </Button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditField("name")}
+            className="flex items-center gap-1 text-sm font-bold"
+          >
+            <Edit2 size={18} />
+            تعديل
+          </button>
+        )}
+      </div>
 
-                {editField === "country_code" ? (
-                    <Button size="sm" color="primary" variant="solid" className="text-white" type="submit">
-                        حفظ
-                    </Button>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={() => setEditField("country_code")}
-                        className="flex items-center gap-1 text-sm font-bold"
-                    >
-                        <Edit2 size={18} />
-                        تعديل
-                    </button>
-                )}
-            </div>
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+        <div className="flex flex-col gap-4">
+          <span className="text-[#5E5E5E] text-sm font-bold">كود الدولة</span>
+          {editField === "country_code" ? (
+            <Controller
+              name="country_code"
+              control={control}
+              render={({ field }) => (
+                <Input {...field} placeholder="كود الدولة" size="sm" />
+              )}
+            />
+          ) : (
+            <span className="text-black-text font-bold text-[15px]">
+              {countryData?.data?.country_code}
+            </span>
+          )}
+        </div>
 
-            <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
-                <div className="flex flex-col gap-4">
-                    <span className="text-[#5E5E5E] text-sm font-bold">مفتاح الدولة</span>
-                    {editField === "phone_code" ? (
-                        <Controller
-                            name="phone_code"
-                            control={control}
-                            render={({ field }) => (
-                                <Input {...field} placeholder="مفتاح الدولة" size="sm" />
-                            )}
-                        />
-                    ) : (
-                        <span className="text-black-text font-bold text-[15px]">
-                            {countryData?.data?.phone_code}
-                        </span>
-                    )}
-                </div>
+        {editField === "country_code" ? (
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            type="submit"
+          >
+            حفظ
+          </Button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditField("country_code")}
+            className="flex items-center gap-1 text-sm font-bold"
+          >
+            <Edit2 size={18} />
+            تعديل
+          </button>
+        )}
+      </div>
 
-                {editField === "phone_code" ? (
-                    <Button size="sm" color="primary" variant="solid" className="text-white" type="submit">
-                        حفظ
-                    </Button>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={() => setEditField("phone_code")}
-                        className="flex items-center gap-1 text-sm font-bold"
-                    >
-                        <Edit2 size={18} />
-                        تعديل
-                    </button>
-                )}
-            </div>
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+        <div className="flex flex-col gap-4">
+          <span className="text-[#5E5E5E] text-sm font-bold">مفتاح الدولة</span>
+          {editField === "phone_code" ? (
+            <Controller
+              name="phone_code"
+              control={control}
+              render={({ field }) => (
+                <Input {...field} placeholder="مفتاح الدولة" size="sm" />
+              )}
+            />
+          ) : (
+            <span className="text-black-text font-bold text-[15px]">
+              {countryData?.data?.phone_code}
+            </span>
+          )}
+        </div>
 
-            <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
-                <div className="flex flex-col gap-4">
-                    <span className="text-[#5E5E5E] text-sm font-bold">الصورة</span>
-                    {editField === "image" ? (
-                        <Controller
-                            name="image"
-                            control={control}
-                            render={({ field }) => (
-                                <DropzoneField
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    description="تحميل صورة جديدة"
-                                />
-                            )}
-                        />
-                    ) : (
-                        <Avatar
-                            size="lg"
-                            radius="sm"
-                            showFallback
-                            src={countryData?.data?.image}
-                            name={countryData?.data?.name}
-                        />
-                    )}
-                </div>
+        {editField === "phone_code" ? (
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            type="submit"
+          >
+            حفظ
+          </Button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditField("phone_code")}
+            className="flex items-center gap-1 text-sm font-bold"
+          >
+            <Edit2 size={18} />
+            تعديل
+          </button>
+        )}
+      </div>
 
-                {editField === "image" ? (
-                    <Button size="sm" color="primary" variant="solid" className="text-white" type="submit">
-                        حفظ
-                    </Button>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={() => setEditField("image")}
-                        className="flex items-center gap-1 text-sm font-bold"
-                    >
-                        <Edit2 size={18} />
-                        تعديل
-                    </button>
-                )}
-            </div>
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+        <div className="flex flex-col gap-4">
+          <span className="text-[#5E5E5E] text-sm font-bold">الصورة</span>
+          {editField === "image" ? (
+            <Controller
+              name="image"
+              control={control}
+              render={({ field }) => (
+                <DropzoneField
+                  value={field.value as any}
+                  onChange={field.onChange}
+                  description="تحميل صورة جديدة"
+                />
+              )}
+            />
+          ) : (
+            <Avatar
+              size="lg"
+              radius="sm"
+              showFallback
+              src={countryData?.data?.image}
+              name={countryData?.data?.name}
+            />
+          )}
+        </div>
 
-            <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
-                <div className="flex flex-col gap-4">
-                    <span className="text-[#5E5E5E] text-sm font-bold">تاريخ الإنشاء</span>
-                    <span className="text-black-text font-bold text-[15px]">
-                        {formatDate(countryData?.data?.created_at)}
-                    </span>
-                </div>
-            </div>
+        {editField === "image" ? (
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            type="submit"
+          >
+            حفظ
+          </Button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditField("image")}
+            className="flex items-center gap-1 text-sm font-bold"
+          >
+            <Edit2 size={18} />
+            تعديل
+          </button>
+        )}
+      </div>
 
-        </form>
-    );
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+        <div className="flex flex-col gap-4">
+          <span className="text-[#5E5E5E] text-sm font-bold">
+            تاريخ الإنشاء
+          </span>
+          <span className="text-black-text font-bold text-[15px]">
+            {formatDate(countryData?.data?.created_at)}
+          </span>
+        </div>
+      </div>
+    </form>
+  );
 };
