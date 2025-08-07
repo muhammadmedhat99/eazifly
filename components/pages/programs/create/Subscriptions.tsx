@@ -45,16 +45,16 @@ export const Subscriptions = ({
       initialData?.data?.plans.length > 0
         ? initialData?.data?.plans.map((plan: any) => ({
             localizedFields: {
-              ar: {
-                title: plan.title || "",
-                label: plan.label || "",
-                description: plan.description || "",
-              },
-              en: {
-                title: "",
-                label: "",
-                description: "",
-              },
+            ar: {
+              title: plan.title_ar || "",
+              label: plan.label_ar || "",
+              description: plan.description_ar || "",
+            },
+            en: {
+              title: plan.title_en || "",
+              label: plan.label_en || "",
+              description: plan.description_en || "",
+            },
             },
             subscription_plan: plan.subscripe_days || "",
             subscription_type: plan.type || "",
@@ -82,6 +82,7 @@ export const Subscriptions = ({
   };
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const [selectedValues, setSelectedValues] = useState<{
     [key: number]: Set<string>;
@@ -117,11 +118,14 @@ export const Subscriptions = ({
   const [duplicateIndexes, setDuplicateIndexes] = useState<number[]>([]);
   const [duplicateError, setDuplicateError] = useState<string | null>(null);
 
+  const [modalValidationError, setModalValidationError] = useState(false);
+
   const onSubmit = async (data: SubscriptionsFormData) => {
     const rows = data.subscriptions;
     const duplicates: number[] = [];
     const seen = new Map<string, number>();
 
+    // تحقق التكرار
     rows.forEach((sub, index) => {
       const key = [
         sub.subscription_plan,
@@ -141,12 +145,37 @@ export const Subscriptions = ({
     if (duplicates.length > 0) {
       const uniqueDuplicates = Array.from(new Set(duplicates));
       setDuplicateIndexes(uniqueDuplicates);
-      setDuplicateError(
-        "يوجد اشتراكان مكرران بنفس البيانات، يرجى تعديل أحدهما."
-      );
+      setDuplicateError("يوجد اشتراكان مكرران بنفس البيانات، يرجى تعديل أحدهما.");
+      return;
+    } else {
+      setDuplicateIndexes([]);
+      setDuplicateError(null);
+    }
+
+    const specialPlanErrors: number[] = [];
+
+    rows.forEach((sub, index) => {
+      if (sub.is_special_plan === "true") {
+        const localized = sub.localizedFields || {};
+        const ar = localized.ar || {};
+
+        if (
+          !ar?.title?.trim() ||
+          !ar?.label?.trim() ||
+          !ar?.description?.trim()
+        ) {
+          specialPlanErrors.push(index);
+        }
+      }
+    });
+
+    if (specialPlanErrors.length > 0) {
+      setDuplicateError("يجب إدخال عنوان، وسم، ووصف للخطة المميزة.");
+      setDuplicateIndexes(specialPlanErrors);
       return;
     }
 
+    // إذا كل شيء تمام
     setDuplicateIndexes([]);
     setDuplicateError(null);
 
@@ -448,7 +477,10 @@ export const Subscriptions = ({
                     selectedKeys={[field.value]}
                     onSelectionChange={(keys) => {
                       field.onChange(Array.from(keys)[0]);
-                      keys?.currentKey === "true" && onOpen();
+                      if (Array.from(keys)[0] === "true") {
+                        setActiveIndex(index); 
+                        onOpen();
+                      }
                     }}
                     isInvalid={
                       !!errors.subscriptions?.[index]?.is_special_plan?.message
@@ -468,40 +500,6 @@ export const Subscriptions = ({
                 )}
               />
 
-              <Modal
-                isOpen={isOpen}
-                onOpenChange={onOpenChange}
-                backdrop="blur"
-                size="4xl"
-              >
-                <ModalContent>
-                  {(onClose) => (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-5">
-                      <LocalizedField
-                        control={control}
-                        name={`subscriptions.${index}.localizedFields`}
-                        fieldName="title"
-                        label="Title"
-                      />
-
-                      <LocalizedField
-                        control={control}
-                        name={`subscriptions.${index}.localizedFields`}
-                        fieldName="label"
-                        label="Label"
-                      />
-
-                      <LocalizedTextArea
-                        control={control}
-                        name={`subscriptions.${index}.localizedFields`}
-                        fieldName="description"
-                        label="Description"
-                        className=""
-                      />
-                    </div>
-                  )}
-                </ModalContent>
-              </Modal>
 
               {fields.length > 1 && (
                 <div className="text-center min-w-[140px]">
@@ -527,6 +525,61 @@ export const Subscriptions = ({
           </React.Fragment>
         ))}
       </div>
+      {modalValidationError && (
+        <div className="text-red-600 text-sm mt-4 font-semibold text-center">
+          يجب إدخال عنوان ووصف واسم للخطة المميزة قبل المتابعة.
+        </div>
+      )}
+      {isOpen && activeIndex !== null && (
+        <div className="overflow-x-hidden">
+          <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur" size="4xl" className="overflow-x-hidden">
+          <ModalContent className="overflow-x-hidden">
+            {() => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-5 max-h-[500px] max-w-full overflow-x-hidden">
+                <LocalizedField
+                  control={control}
+                  name={`subscriptions.${activeIndex}.localizedFields`}
+                  fieldName="title"
+                  label="Title"
+                />
+                <LocalizedField
+                  control={control}
+                  name={`subscriptions.${activeIndex}.localizedFields`}
+                  fieldName="label"
+                  label="Label"
+                />
+                <LocalizedTextArea
+                  control={control}
+                  name={`subscriptions.${activeIndex}.localizedFields`}
+                  fieldName="description"
+                  label="Description"
+                />
+                <div className="flex items-center justify-end gap-4 mt-8 md:col-span-2">
+                  <Button
+                    type="button"
+                    onPress={onOpenChange}
+                    variant="bordered"
+                    color="primary"
+                    isDisabled={addSubscriptionToProgram.isPending}
+                  >
+                    إلغاء
+                  </Button>
+                  <Button
+                    onPress={onOpenChange}
+                    variant="solid"
+                    color="primary"
+                    className="text-white"
+                  >
+                    حفظ
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+          </ModalContent>
+        </Modal>
+        </div>
+      )}
 
       {duplicateError && (
         <div className="text-red-600 text-sm mt-4 font-semibold text-center">
