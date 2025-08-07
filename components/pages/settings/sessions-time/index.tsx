@@ -22,8 +22,9 @@ import { Loader } from "@/components/global/Loader";
 import { formatDate } from "@/lib/helper";
 
 const columns = [
-    { name: "الصورة", uid: "avatar" },
-    { name: "وسيلة الدفع", uid: "name" },
+  { name: "#", uid: "index" },
+  { name: "العنوان", uid: "title" },
+  { name: "مدة المحاضرة", uid: "time" },
 ];
 
 const OptionsComponent = ({ id }: { id: number }) => {
@@ -47,7 +48,7 @@ const OptionsComponent = ({ id }: { id: number }) => {
   );
 };
 
-export const AllPaymentMethods = () => {
+export const AllSessionsTime = () => {
   const [nameSearch, setNameSearch] = useState("");
   const debouncedNameSearch = useDebounce(nameSearch, 500);
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -61,21 +62,21 @@ export const AllPaymentMethods = () => {
     params.name = debouncedNameSearch;
   }
 
-  const { data: paymentMethodsData, isLoading } = useQuery({
+  const { data: sessionsTimeData, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/payment/method`, {
+      await fetchClient(`client/plan/session/time`, {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllPaymentMethods
+    queryKey: AllQueryKeys.GetAllSpecializations
   });
 
   const formattedData =
-    paymentMethodsData?.data?.map((item: any) => ({
+    sessionsTimeData?.data?.map((item: any) => ({
       id: item.id,
-      avatar: item.image,
-      name: item.title || "N/A",
-      created_at: formatDate(item.created_at) || "N/A",
+      index: item.id,
+      time: `${item.time} دقيقة`,
+      title: item.title || "N/A",
     })) || [];
 
   return (
@@ -88,7 +89,7 @@ export const AllPaymentMethods = () => {
             </div>
             <input
               type="text"
-              placeholder="بحث بالاسم..."
+              placeholder="بحث..."
               className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
               value={nameSearch}
               onChange={(e) => setNameSearch(e.target.value)}
@@ -157,8 +158,8 @@ export const AllPaymentMethods = () => {
         <CustomPagination
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
-          last_page={paymentMethodsData?.meta?.last_page}
-          total={paymentMethodsData?.meta?.total}
+          last_page={sessionsTimeData?.meta?.last_page}
+          total={sessionsTimeData?.meta?.total}
         />
       </div>
     </>

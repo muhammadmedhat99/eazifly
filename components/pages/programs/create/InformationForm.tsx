@@ -25,6 +25,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { informationFormSchema, type InformationFormData } from "./schemas";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { getCookie } from "cookies-next";
+import { useRouter } from "next/navigation";
 
 const locales = ["ar", "en"] as const;
 
@@ -260,8 +261,14 @@ export const InformationForm = ({
     }
   };
 
+  const router = useRouter();
+
   const handleReset = () => {
-    reset(defaultValues);
+    if (initialData?.data?.id) {
+      router.push(`/programs/${initialData.data.id}`);
+    } else {
+      reset(defaultValues);
+    }
   };
 
   return (
@@ -276,7 +283,7 @@ export const InformationForm = ({
       <LocalizedField control={control} name="label" label="عنوان البرنامج" />
 
       {/* Slug Field */}
-      <div className="col-span-2">
+      <div className="md:col-span-2">
         <Input
           {...register("slug")}
           label="Slug"
@@ -293,7 +300,7 @@ export const InformationForm = ({
       </div>
 
       {/* Limit Users Field */}
-      <div className="col-span-2">
+      <div className="md:col-span-2">
         <Input
           {...register("limit_users", { valueAsNumber: true })}
           type="number"
@@ -312,7 +319,7 @@ export const InformationForm = ({
       </div>
 
       {/* Program Content */}
-      <div className="col-span-2">
+      <div className="md:col-span-2">
         <LocalizedTextArea
           control={control}
           name="content"
@@ -321,7 +328,7 @@ export const InformationForm = ({
       </div>
 
       {/* Program Goals */}
-      <div className="col-span-2">
+      <div className="md:col-span-2">
         <LocalizedTextArea
           control={control}
           name="goals"
@@ -330,7 +337,7 @@ export const InformationForm = ({
       </div>
 
       {/* Specialization Select */}
-      <div className="col-span-2">
+      <div className="md:col-span-2">
         <Controller
           name="specialization_id"
           control={control}
@@ -365,7 +372,7 @@ export const InformationForm = ({
       </div>
 
       {/* Special For Radio Group */}
-      <div className="col-span-2">
+      <div className="md:col-span-2">
         <Controller
           name="special_for"
           control={control}
@@ -415,7 +422,7 @@ export const InformationForm = ({
       </div>
 
       {/* hosts Select */}
-      <div className="col-span-4">
+      <div className="md:col-span-4">
         <Controller
           name="meeting_host_id"
           control={control}
@@ -448,7 +455,7 @@ export const InformationForm = ({
       </div>
 
       {/* Program Image */}
-      <div className="col-span-2">
+      <div className="md:col-span-2">
         <Controller
           name="image"
           control={control}
@@ -472,7 +479,7 @@ export const InformationForm = ({
       </div>
 
       {/* Program cover */}
-      <div className="col-span-2">
+      <div className="md:col-span-2">
         <Controller
           name="cover"
           control={control}
@@ -496,7 +503,7 @@ export const InformationForm = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-4 mt-8 col-span-4">
+      <div className="flex items-center justify-end gap-4 mt-8 md:col-span-4">
         <Button
           type="button"
           onPress={handleReset}
