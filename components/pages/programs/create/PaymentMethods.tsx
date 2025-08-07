@@ -14,6 +14,7 @@ import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 import { getCookie } from "cookies-next";
 import { EmptyWalletChange, Wallet } from "iconsax-reactjs";
+import { useRouter } from "next/navigation";
 
 // Helper to generate dynamic schema based on fetched payment methods
 const createPaymentMethodsSchema = (data: any[]) => {
@@ -143,6 +144,16 @@ console.log('defaultValues', defaultValues);
     },
   });
 
+  const router = useRouter();
+
+  const handleReset = () => {
+    if (initialData?.data?.id) {
+      router.push(`/programs/${initialData.data.id}`);
+    } else {
+      reset(defaultValues);
+    }
+  };
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -219,7 +230,7 @@ console.log('defaultValues', defaultValues);
       <div className="flex items-center justify-end gap-4 mt-8">
         <Button
           type="button"
-          onPress={handleCancel}
+          onPress={handleReset}
           variant="bordered"
           color="primary"
         >

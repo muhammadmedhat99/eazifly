@@ -25,6 +25,7 @@ import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { AddSquare, Trash } from "iconsax-reactjs";
 import { getCookie } from "cookies-next";
+import { useRouter } from "next/navigation";
 
 const locales = ["ar", "en"] as const;
 
@@ -243,18 +244,28 @@ export const Subscriptions = ({
     },
   });
 
+  const router = useRouter();
+
+  const handleReset = () => {
+    if (initialData?.data?.id) {
+      router.push(`/programs/${initialData.data.id}`);
+    } else {
+      reset();
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-5">
-      <div className="flex flex-col">
+      <div className="flex flex-col overflow-x-auto whitespace-nowrap">
         <div className="flex items-center *:bg-primary/15  *:flex-1 *:px-4 *:py-5 *:border *:border-primary *:text-primary *:text-xs *:font-semibold">
-          <div>خطة الإشتراك</div>
-          <div>نوع الإشتراك</div>
-          <div>سعر الإشتراك</div>
-          <div>سعر البيع </div>
-          <div> عدد الحصص الإسبوعية </div>
-          <div>مدة المحاضرة </div>
-          <div>خطة مميزه؟ </div>
-          {fields.length > 1 && <div>الإجراءات</div>}
+          <div className="min-w-[140px]">خطة الإشتراك</div>
+          <div className="min-w-[140px]">نوع الإشتراك</div>
+          <div className="min-w-[140px]">سعر الإشتراك</div>
+          <div className="min-w-[140px]">سعر البيع </div>
+          <div className="min-w-[140px]"> عدد الحصص الإسبوعية </div>
+          <div className="min-w-[140px]">مدة المحاضرة </div>
+          <div className="min-w-[140px]">خطة مميزه؟ </div>
+          {fields.length > 1 && <div className="min-w-[140px]">الإجراءات</div>}
         </div>
         {fields.map((item, index) => (
           <React.Fragment key={item.id}>
@@ -286,7 +297,7 @@ export const Subscriptions = ({
                     radius="none"
                     classNames={{
                       trigger:
-                        "bg-white shadow-none data-[hover=true]:bg-white",
+                        "bg-white shadow-none data-[hover=true]:bg-white min-w-[106px]",
                     }}
                   >
                     {subscriptionPeriods?.data?.map((period: any) => (
@@ -315,7 +326,7 @@ export const Subscriptions = ({
                     radius="none"
                     classNames={{
                       trigger:
-                        "bg-white shadow-none data-[hover=true]:bg-white",
+                        "bg-white shadow-none data-[hover=true]:bg-white min-w-[106px]",
                     }}
                   >
                     <SelectItem key="single">فردي</SelectItem>
@@ -336,7 +347,7 @@ export const Subscriptions = ({
                 }
                 classNames={{
                   inputWrapper:
-                    "bg-white shadow-none data-[hover=true]:bg-white",
+                    "bg-white shadow-none data-[hover=true]:bg-white min-w-[106px]",
                 }}
                 endContent={
                   <span className="text-black-text font-bold text-sm">ج.م</span>
@@ -354,7 +365,7 @@ export const Subscriptions = ({
                 }
                 classNames={{
                   inputWrapper:
-                    "bg-white shadow-none data-[hover=true]:bg-white",
+                    "bg-white shadow-none data-[hover=true]:bg-white min-w-[106px]",
                 }}
                 endContent={
                   <span className="text-black-text font-bold text-sm">ج.م</span>
@@ -374,7 +385,7 @@ export const Subscriptions = ({
                 }
                 classNames={{
                   inputWrapper:
-                    "bg-white shadow-none data-[hover=true]:bg-white",
+                    "bg-white shadow-none data-[hover=true]:bg-white min-w-[106px]",
                 }}
                 radius="none"
                 endContent={
@@ -403,7 +414,7 @@ export const Subscriptions = ({
                     }
                     classNames={{
                       trigger:
-                        "bg-white shadow-none data-[hover=true]:bg-white",
+                        "bg-white shadow-none data-[hover=true]:bg-white min-w-[106px]",
                     }}
                     radius="none"
                     renderValue={(selectedItems) => {
@@ -448,7 +459,7 @@ export const Subscriptions = ({
                     radius="none"
                     classNames={{
                       trigger:
-                        "bg-white shadow-none data-[hover=true]:bg-white",
+                        "bg-white shadow-none data-[hover=true]:bg-white min-w-[106px]",
                     }}
                   >
                     <SelectItem key="true">نعم</SelectItem>
@@ -493,7 +504,7 @@ export const Subscriptions = ({
               </Modal>
 
               {fields.length > 1 && (
-                <div className="text-center">
+                <div className="text-center min-w-[140px]">
                   <Button
                     type="button"
                     color="danger"
@@ -533,7 +544,7 @@ export const Subscriptions = ({
       <div className="flex items-center justify-end gap-4 mt-8">
         <Button
           type="button"
-          onPress={handleCancel}
+          onPress={handleReset}
           variant="bordered"
           color="primary"
           isDisabled={addSubscriptionToProgram.isPending}
