@@ -22,6 +22,7 @@ import { Loader } from "@/components/global/Loader";
 import { formatDate } from "@/lib/helper";
 
 const columns = [
+  { name: "#", uid: "index" },
   { name: "إسم التخصص", uid: "name" },
 ];
 
@@ -72,6 +73,7 @@ export const AllSpecializations = () => {
   const formattedData =
     specializationsData?.data?.map((item: any) => ({
       id: item.id,
+      index: item.id,
       name: item.title || "N/A",
       created_at: formatDate(item.created_at) || "N/A",
     })) || [];

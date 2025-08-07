@@ -10,6 +10,7 @@ import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { getCookie } from "cookies-next";
+import { useRouter } from "next/navigation";
 
 interface TeacherAndContentProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
@@ -132,6 +133,16 @@ export const TeacherAndContent = ({
       });
     },
   });
+
+  const router = useRouter();
+
+  const handleReset = () => {
+    if (initialData?.data?.id) {
+      router.push(`/programs/${initialData.data.id}`);
+    } else {
+      reset(defaultValues);
+    }
+  };
 
   return (
     <form
@@ -268,7 +279,7 @@ export const TeacherAndContent = ({
       <div className="flex items-center justify-end gap-4 mt-8 col-span-3">
         <Button
           type="button"
-          onPress={() => reset()}
+          onPress={handleReset}
           variant="bordered"
           color="primary"
           isDisabled={assignInstructorsMutation.isPending}

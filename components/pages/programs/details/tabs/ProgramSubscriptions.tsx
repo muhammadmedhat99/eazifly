@@ -12,6 +12,7 @@ import {
 
 const plansColumns = [
   { name: "خطة الاشتراك", uid: "subscription_plan" },
+  { name: "العنوان", uid: "subscription_title" },
   { name: "سعر الاشتراك", uid: "price" },
   { name: "سعر البيع", uid: "discount_price" },
   { name: "عدد الحصص", uid: "number_of_session_per_week" },
@@ -66,6 +67,7 @@ export const ProgramSubscriptions = ({ subscriptionsData }: subscriptionsProps) 
   const plansTableData = subscriptionsData?.map((item: any) => ({
     id: item.id,
     type: item.type,
+    subscription_title: item.title || "لا يوجد",
     discount_price: item.discount_price + " ج.م",
     price: item.price + " ج.م",
     number_of_session_per_week: item.number_of_session_per_week,
