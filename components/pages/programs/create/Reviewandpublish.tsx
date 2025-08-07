@@ -160,6 +160,12 @@ export const Reviewandpublish = ({
         },
       });
 
+  const handleReset = () => {
+    if (programId) {
+      router.push(`/programs/${programId}`);
+    }
+  };
+
     return isLoading ? (
         <Loader />
   ) : (
@@ -284,8 +290,9 @@ export const Reviewandpublish = ({
                        variant="solid"
                        color="primary"
                        className="text-white"
+                        onPress={handleReset}
                      >
-                       السابق
+                       إلغاء
                      </Button>
                      <Button
                        type="button"
