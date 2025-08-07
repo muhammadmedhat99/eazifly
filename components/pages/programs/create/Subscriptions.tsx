@@ -45,16 +45,16 @@ export const Subscriptions = ({
       initialData?.data?.plans.length > 0
         ? initialData?.data?.plans.map((plan: any) => ({
             localizedFields: {
-            ar: {
-              title: plan.title_ar || "",
-              label: plan.label_ar || "",
-              description: plan.description_ar || "",
-            },
-            en: {
-              title: plan.title_en || "",
-              label: plan.label_en || "",
-              description: plan.description_en || "",
-            },
+              ar: {
+                title: plan.title_ar || "",
+                label: plan.label_ar || "",
+                description: plan.description_ar || "",
+              },
+              en: {
+                title: plan.title_en || "",
+                label: plan.label_en || "",
+                description: plan.description_en || "",
+              },
             },
             subscription_plan: plan.subscripe_days || "",
             subscription_type: plan.type || "",
@@ -145,7 +145,9 @@ export const Subscriptions = ({
     if (duplicates.length > 0) {
       const uniqueDuplicates = Array.from(new Set(duplicates));
       setDuplicateIndexes(uniqueDuplicates);
-      setDuplicateError("يوجد اشتراكان مكرران بنفس البيانات، يرجى تعديل أحدهما.");
+      setDuplicateError(
+        "يوجد اشتراكان مكرران بنفس البيانات، يرجى تعديل أحدهما."
+      );
       return;
     } else {
       setDuplicateIndexes([]);
@@ -156,8 +158,8 @@ export const Subscriptions = ({
 
     rows.forEach((sub, index) => {
       if (sub.is_special_plan === "true") {
-        const localized = sub.localizedFields || {};
-        const ar = localized.ar || {};
+        const localized = sub.localizedFields;
+        const ar = localized?.ar;
 
         if (
           !ar?.title?.trim() ||
@@ -478,7 +480,7 @@ export const Subscriptions = ({
                     onSelectionChange={(keys) => {
                       field.onChange(Array.from(keys)[0]);
                       if (Array.from(keys)[0] === "true") {
-                        setActiveIndex(index); 
+                        setActiveIndex(index);
                         onOpen();
                       }
                     }}
@@ -499,7 +501,6 @@ export const Subscriptions = ({
                   </Select>
                 )}
               />
-
 
               {fields.length > 1 && (
                 <div className="text-center min-w-[140px]">
@@ -532,52 +533,57 @@ export const Subscriptions = ({
       )}
       {isOpen && activeIndex !== null && (
         <div className="overflow-x-hidden">
-          <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur" size="4xl" className="overflow-x-hidden">
-          <ModalContent className="overflow-x-hidden">
-            {() => (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-5 max-h-[500px] max-w-full overflow-x-hidden">
-                <LocalizedField
-                  control={control}
-                  name={`subscriptions.${activeIndex}.localizedFields`}
-                  fieldName="title"
-                  label="Title"
-                />
-                <LocalizedField
-                  control={control}
-                  name={`subscriptions.${activeIndex}.localizedFields`}
-                  fieldName="label"
-                  label="Label"
-                />
-                <LocalizedTextArea
-                  control={control}
-                  name={`subscriptions.${activeIndex}.localizedFields`}
-                  fieldName="description"
-                  label="Description"
-                />
-                <div className="flex items-center justify-end gap-4 mt-8 md:col-span-2">
-                  <Button
-                    type="button"
-                    onPress={onOpenChange}
-                    variant="bordered"
-                    color="primary"
-                    isDisabled={addSubscriptionToProgram.isPending}
-                  >
-                    إلغاء
-                  </Button>
-                  <Button
-                    onPress={onOpenChange}
-                    variant="solid"
-                    color="primary"
-                    className="text-white"
-                  >
-                    حفظ
-                  </Button>
+          <Modal
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+            backdrop="blur"
+            size="4xl"
+            className="overflow-x-hidden"
+          >
+            <ModalContent className="overflow-x-hidden">
+              {() => (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-5 max-h-[500px] max-w-full overflow-x-hidden">
+                  <LocalizedField
+                    control={control}
+                    name={`subscriptions.${activeIndex}.localizedFields`}
+                    fieldName="title"
+                    label="Title"
+                  />
+                  <LocalizedField
+                    control={control}
+                    name={`subscriptions.${activeIndex}.localizedFields`}
+                    fieldName="label"
+                    label="Label"
+                  />
+                  <LocalizedTextArea
+                    control={control}
+                    name={`subscriptions.${activeIndex}.localizedFields`}
+                    fieldName="description"
+                    label="Description"
+                  />
+                  <div className="flex items-center justify-end gap-4 mt-8 md:col-span-2">
+                    <Button
+                      type="button"
+                      onPress={onOpenChange}
+                      variant="bordered"
+                      color="primary"
+                      isDisabled={addSubscriptionToProgram.isPending}
+                    >
+                      إلغاء
+                    </Button>
+                    <Button
+                      onPress={onOpenChange}
+                      variant="solid"
+                      color="primary"
+                      className="text-white"
+                    >
+                      حفظ
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-            
-          </ModalContent>
-        </Modal>
+              )}
+            </ModalContent>
+          </Modal>
         </div>
       )}
 
