@@ -1,19 +1,13 @@
-import { Select, SelectItem } from "@heroui/react";
-import React from "react";
+import { addToast, Button, Select, SelectItem, Spinner } from "@heroui/react";
+import React, { useEffect, useState } from "react";
 import { PermissionCollapse } from "../PermissionCollapse";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
-import { fetchClient } from "@/lib/utils";
+import { fetchClient, fetchData, postData } from "@/lib/utils";
 import { Controller, useForm } from "react-hook-form";
 import { Loader } from "@/components/global/Loader";
-
-const permissionsList = [
-  { title: "Admin", permissions: ["Create", "Delete", "Update", "View"] },
-  { title: "User", permissions: ["Create", "Delete", "Update", "View"] },
-  { title: "Roles", permissions: ["Create", "Delete", "Update", "View"] },
-  { title: "Newsletter", permissions: ["Create", "Delete", "Update", "View"] },
-];
+import { getCookie } from "cookies-next";
 
 export const Permissions = () => {
   const {
@@ -34,11 +28,91 @@ export const Permissions = () => {
       await fetchClient(`client/get/permission`, axios_config),
     queryKey: AllQueryKeys.GetAllPermissions,
   });
-  console.log(permissionsData);
 
   const { data: actionsData, isLoading: isActionsLoading } = useQuery({
     queryFn: async () => await fetchClient("client/get/actions", axios_config),
     queryKey: AllQueryKeys.GetAllActions,
+  });
+
+
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+
+  const { data: rolePermissions , isFetching: isRolePermissionsLoading } = useQuery({
+    queryKey: ["rolePermissions", selectedRoleId],
+    queryFn: async () => {
+      if (!selectedRoleId) return [];
+      const res = await fetchClient(`client/get/role/permission/${selectedRoleId}`, axios_config);
+      return res.data?.map((perm: any) => perm.name) ?? [];
+    },
+    enabled: !!selectedRoleId,
+  });
+
+  const [allCheckedPermissions, setAllCheckedPermissions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!selectedRoleId) return;
+
+    fetchClient(`client/get/role/permission/${selectedRoleId}`, axios_config)
+      .then((res: any) => {
+        const rolePermissions = res.data?.permissions?.map((p: any) => p.name) || [];
+        setAllCheckedPermissions(rolePermissions);
+      })
+      .catch(console.error);
+  }, [selectedRoleId]);
+
+
+  const handlePermissionsChange = (updated: string[]) => {
+    setAllCheckedPermissions((prev) => {
+      const merged = [...prev.filter((p) => !updated.some((u) => u.startsWith(p.split("_")[0]))), ...updated];
+      return merged;
+    });
+  };
+
+  const updateRole = useMutation({
+    mutationFn: () => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      var formdata = new FormData();
+      formdata.append("role_id", selectedRoleId);
+      allCheckedPermissions.forEach((perm) => {
+        formdata.append("permissions[]", perm);
+      });
+
+      return postData("client/update/role/permission", formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.message && typeof data.message === "object" && !Array.isArray(data.message)) {
+        const messagesObj = data.message as Record<string, string[]>;
+
+        Object.entries(messagesObj).forEach(([field, messages]) => {
+          messages.forEach((msg) => {
+            addToast({
+              title: `${field}: ${msg}`,
+              color: "danger",
+            });
+          });
+        });
+      } else if (data.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+      }
+    },
+    onError: (error) => {
+      console.log(" error ===>>", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
   });
 
   return (
@@ -60,9 +134,11 @@ export const Permissions = () => {
               <Select
                 {...field}
                 aria-label="الوظيفة"
-                selectedKeys={field.value ? [field.value] : [""]}
+                selectedKeys={field.value ? [field.value] : []}
                 onSelectionChange={(keys) => {
-                  field.onChange(Array.from(keys)[0]);
+                  const roleId = Array.from(keys)[0] as string;
+                  field.onChange(roleId);
+                  setSelectedRoleId(roleId); // نخزن الـ role المختار
                 }}
                 placeholder="اختر الوظيفة"
                 classNames={{
@@ -83,7 +159,7 @@ export const Permissions = () => {
         </div>
         <span className="text-[#272727] text-sm font-bold "> الصلاحيات</span>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {isPermissionsLoading || isActionsLoading ? (
+          {isPermissionsLoading || isActionsLoading || isRolePermissionsLoading ? (
             <Loader />
           ) : (
             permissionsData?.data?.map((permission: string) => (
@@ -91,9 +167,25 @@ export const Permissions = () => {
                 key={permission}
                 title={permission}
                 permissions={actionsData?.data ?? []}
+                defaultChecked={rolePermissions ?? []}
+                onChange={handlePermissionsChange}
               />
             ))
           )}
+        </div>
+        <div className="flex items-center justify-end gap-4 mt-8 col-span-2">
+
+          <Button
+            type="submit"
+            variant="solid"
+            color="primary"
+            className="text-white"
+            onPress={() => updateRole.mutate()}
+            isDisabled={updateRole?.isPending}
+          >
+            {updateRole?.isPending && <Spinner color="white" size="sm" />}
+            تعديل
+          </Button>
         </div>
       </div>
     </div>
