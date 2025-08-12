@@ -10,6 +10,10 @@ import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { informationFormSchema } from "./schemas";
 import { Reviewandpublish } from "./Reviewandpublish";
+import { fetchClient, fetchData } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { axios_config } from "@/lib/const";
+import { useParams } from "next/navigation";
 
 interface CreateProgramProps {
   initialData?: any; 
@@ -17,12 +21,20 @@ interface CreateProgramProps {
 }
 
 export const CreateProgram = ({
-  initialData,
   mode = "create",
 }: CreateProgramProps) => {
   const [activeStep, setActiveStep] = useState(0);
   const [programId, setProgramId] = useState<string>("");
   const [specializationId, setSpecializationId] = useState<string>("");
+
+  const params = useParams();
+  const program_id = params.id;
+  
+  const { data: initialData } = useQuery({
+    queryKey: ['programData', program_id],
+    queryFn: () => fetchClient(`client/program/show/${program_id}`, axios_config),
+    enabled: !!program_id
+  });
 
   const methods = useForm({
     resolver: yupResolver(informationFormSchema),
