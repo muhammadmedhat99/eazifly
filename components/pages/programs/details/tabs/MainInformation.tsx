@@ -19,6 +19,7 @@ import { getCookie } from "cookies-next";
 import { postData } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import SpecializationUpdateModal from "./SpecializationUpdateModal";
+import HostUpdateModal from "./HostsUpdateModal";
 
 type MainInformationProps = {
   data: {
@@ -55,6 +56,7 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [specializationmodalOpen, setSpecializationModalOpen] = useState(false);
+  const [hostmodalOpen, setHostModalOpen] = useState(false);
   const handleCopy = async (textToCopy: string) => {
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -117,6 +119,11 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
           <SpecializationUpdateModal
             isOpen={specializationmodalOpen}
             onClose={() => setSpecializationModalOpen(false)}
+            initialData={data}
+          />
+          <HostUpdateModal
+            isOpen={hostmodalOpen}
+            onClose={() => setHostModalOpen(false)}
             initialData={data}
           />
           {/* Main Card  */}
@@ -227,14 +234,23 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
           </div>
           {/* Main Card  */}
           {/* Main Card  */}
-          <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
-            <div className="text-primary font-bold">الاستضافة</div>
+          <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex items-center justify-between">
+            <div className="flex flex-col gap-2">
+              <div className="text-primary font-bold">الاستضافة</div>
             {data?.host && <div
               className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm w-fit"
               key={data?.host?.id}
             >
               {data?.host?.title}
-            </div>}
+              </div>}
+            </div>
+            <Button
+              onPress={() => setHostModalOpen(true)}
+              className="flex items-center gap-1 text-primary bg-transparent hover:bg-transparent active:bg-transparent shadow-none border-none"
+            >
+              <Edit2 size={18} />
+              <span className="text-sm font-bold">تعديل</span>
+            </Button>
           </div>
           {/* Main Card  */}
 
