@@ -115,8 +115,6 @@ export default function PaymentMethodsUpdateModal({
         assignPaymentMethodsMutation.mutate(data);
     };
 
-    const handleCancel = () => reset(defaultValues);
-
     const assignPaymentMethodsMutation = useMutation({
         mutationFn: (submitData: PaymentMethodsFormData) => {
             const myHeaders = new Headers();
@@ -248,7 +246,7 @@ export default function PaymentMethodsUpdateModal({
                               <div className="flex items-center justify-end gap-4 mt-8">
                                   <Button
                                       type="button"
-                                      onPress={handleCancel}
+                                      onPress={onClose}
                                       variant="bordered"
                                       color="primary"
                                   >
