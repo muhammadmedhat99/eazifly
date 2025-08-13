@@ -19,4 +19,5 @@ export const AllQueryKeys = {
   GetAllRoles: ["GetAllRoles", axios_config],
   GetAllPermissions: ["GetAllPermissions", axios_config],
   GetAllActions: ["GetAllActions", axios_config],
+  GetAllProgramContents: ["GetAllProgramContents", axios_config],
 };
