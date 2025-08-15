@@ -19,13 +19,13 @@ import {
   LocalizedField,
   LocalizedTextArea,
 } from "@/components/global/LocalizedField";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { AddSquare, Trash } from "iconsax-reactjs";
 import { getCookie } from "cookies-next";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 const locales = ["ar", "en"] as const;
 
@@ -208,6 +208,10 @@ export const Subscriptions = ({
     });
   };
 
+  const params = useParams();
+  const program_id = params.id;
+  const queryClient = useQueryClient();
+
   const addSubscriptionToProgram = useMutation({
     mutationFn: (submitData: SubscriptionsFormData) => {
       const myHeaders = new Headers();
@@ -264,6 +268,7 @@ export const Subscriptions = ({
           title: data?.message,
           color: "success",
         });
+        queryClient.invalidateQueries({ queryKey: ['programData', program_id] });
       }
     },
     onError: (error: Error) => {

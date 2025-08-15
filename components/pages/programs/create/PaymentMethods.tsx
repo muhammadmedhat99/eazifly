@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 
 import { fetchClient, postData } from "@/lib/utils";
@@ -14,7 +14,7 @@ import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 import { getCookie } from "cookies-next";
 import { EmptyWalletChange, Wallet } from "iconsax-reactjs";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 // Helper to generate dynamic schema based on fetched payment methods
 const createPaymentMethodsSchema = (data: any[]) => {
@@ -100,6 +100,10 @@ console.log('defaultValues', defaultValues);
   const handleCancel = () => reset(defaultValues);
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
+  const params = useParams();
+  const program_id = params.id;
+  const queryClient = useQueryClient();
+
   const assignPaymentMethodsMutation = useMutation({
     mutationFn: (submitData: PaymentMethodsFormData) => {
       const myHeaders = new Headers();
@@ -133,6 +137,7 @@ console.log('defaultValues', defaultValues);
           title: data?.message,
           color: "success",
         });
+        queryClient.invalidateQueries({ queryKey: ['programData', program_id] });
       }
     },
     onError: (error: Error) => {

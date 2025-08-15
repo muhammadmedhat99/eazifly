@@ -116,6 +116,10 @@ export const routes = [
       { id: 5, name: "أسباب إلغاء محاضرة", route: "/cancel-sessions" },
       { id: 6, name: "ردود الطلاب", route: "/user-responses" },
       { id: 7, name: "مدة المحاضرات", route: "/sessions-time" },
+      { id: 8, name: "كوبونات الخصم", route: "/coupons" },
+      { id: 9, name: "أسئلة التقارير", route: "/report-questions" },
+      { id: 10, name: "الموظفين", route: "/clients" },
+      { id: 11, name: "الوظائف", route: "/roles" },
     ],
   },
 ];

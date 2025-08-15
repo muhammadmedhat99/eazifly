@@ -118,10 +118,10 @@ export const ProgramDetails = () => {
           <MainInformation data={data?.data} refetch={refetch} />
         </Tab>
         <Tab key="program_teachers" title="المعلمين المشتركين">
-          <ProgramTeachers teachersData={data?.data.instructors} />
+          <ProgramTeachers teachersData={data?.data?.instructors} />
         </Tab>
         <Tab key="subscriptions" title="أنواع الأشتراكات">
-          <ProgramSubscriptions subscriptionsData={data?.data.plans} />
+          <ProgramSubscriptions subscriptionsData={data?.data?.plans} />
         </Tab>
         <Tab key="content" title="محتوي البرنامج">
           <ProgramContent data={data?.data} />
