@@ -34,36 +34,46 @@ export const Permissions = () => {
     queryKey: AllQueryKeys.GetAllActions,
   });
 
-
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
 
-  const { data: rolePermissions , isFetching: isRolePermissionsLoading } = useQuery({
-    queryKey: ["rolePermissions", selectedRoleId],
-    queryFn: async () => {
-      if (!selectedRoleId) return [];
-      const res = await fetchClient(`client/get/role/permission/${selectedRoleId}`, axios_config);
-      return res.data?.map((perm: any) => perm.name) ?? [];
-    },
-    enabled: !!selectedRoleId,
-  });
+  const { data: rolePermissions, isFetching: isRolePermissionsLoading } =
+    useQuery({
+      queryKey: ["rolePermissions", selectedRoleId],
+      queryFn: async () => {
+        if (!selectedRoleId) return [];
+        const res = await fetchClient(
+          `client/get/role/permission/${selectedRoleId}`,
+          axios_config
+        );
+        return res.data?.map((perm: any) => perm.name) ?? [];
+      },
+      enabled: !!selectedRoleId,
+    });
 
-  const [allCheckedPermissions, setAllCheckedPermissions] = useState<string[]>([]);
+  const [allCheckedPermissions, setAllCheckedPermissions] = useState<string[]>(
+    []
+  );
 
   useEffect(() => {
     if (!selectedRoleId) return;
 
     fetchClient(`client/get/role/permission/${selectedRoleId}`, axios_config)
       .then((res: any) => {
-        const rolePermissions = res.data?.permissions?.map((p: any) => p.name) || [];
+        const rolePermissions =
+          res.data?.permissions?.map((p: any) => p.name) || [];
         setAllCheckedPermissions(rolePermissions);
       })
       .catch(console.error);
   }, [selectedRoleId]);
 
-
   const handlePermissionsChange = (updated: string[]) => {
     setAllCheckedPermissions((prev) => {
-      const merged = [...prev.filter((p) => !updated.some((u) => u.startsWith(p.split("_")[0]))), ...updated];
+      const merged = [
+        ...prev.filter(
+          (p) => !updated.some((u) => u.startsWith(p.split("_")[0]))
+        ),
+        ...updated,
+      ];
       return merged;
     });
   };
@@ -75,7 +85,7 @@ export const Permissions = () => {
       myHeaders.append("Accept", "application/json");
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
       var formdata = new FormData();
-      formdata.append("role_id", selectedRoleId);
+      formdata.append("role_id", selectedRoleId ?? "");
       allCheckedPermissions.forEach((perm) => {
         formdata.append("permissions[]", perm);
       });
@@ -83,7 +93,11 @@ export const Permissions = () => {
       return postData("client/update/role/permission", formdata, myHeaders);
     },
     onSuccess: (data) => {
-      if (data.message && typeof data.message === "object" && !Array.isArray(data.message)) {
+      if (
+        data.message &&
+        typeof data.message === "object" &&
+        !Array.isArray(data.message)
+      ) {
         const messagesObj = data.message as Record<string, string[]>;
 
         Object.entries(messagesObj).forEach(([field, messages]) => {
@@ -159,7 +173,9 @@ export const Permissions = () => {
         </div>
         <span className="text-[#272727] text-sm font-bold "> الصلاحيات</span>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {isPermissionsLoading || isActionsLoading || isRolePermissionsLoading ? (
+          {isPermissionsLoading ||
+          isActionsLoading ||
+          isRolePermissionsLoading ? (
             <Loader />
           ) : (
             permissionsData?.data?.map((permission: string) => (
@@ -174,7 +190,6 @@ export const Permissions = () => {
           )}
         </div>
         <div className="flex items-center justify-end gap-4 mt-8 col-span-2">
-
           <Button
             type="submit"
             variant="solid"
