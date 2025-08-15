@@ -21,11 +21,11 @@ import {
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { informationFormSchema, type InformationFormData } from "./schemas";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { getCookie } from "cookies-next";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 const locales = ["ar", "en"] as const;
 
@@ -216,6 +216,10 @@ export const InformationForm = ({
     },
   });
 
+  const params = useParams();
+  const program_id = params.id;
+  const queryClient = useQueryClient();
+
   const updateProgramMutation = useMutation({
     mutationFn: (submitData: InformationFormData) => {
       const myHeaders = new Headers();
@@ -242,6 +246,7 @@ export const InformationForm = ({
           title: data?.message,
           color: "success",
         });
+        queryClient.invalidateQueries({ queryKey: ['programData', program_id] });
       }
     },
     onError: (error: Error) => {

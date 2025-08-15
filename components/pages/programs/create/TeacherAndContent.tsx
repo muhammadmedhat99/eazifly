@@ -5,12 +5,12 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { addToast, Button, Input, Select, SelectItem } from "@heroui/react";
 import { TeacherAndContentFormData, teacherAndContentSchema } from "./schemas";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { getCookie } from "cookies-next";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 interface TeacherAndContentProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
@@ -89,6 +89,10 @@ export const TeacherAndContent = ({
     assignInstructorsMutation.mutate(data);
   };
 
+  const params = useParams();
+  const program_id = params.id;
+  const queryClient = useQueryClient();
+
   const assignInstructorsMutation = useMutation({
     mutationFn: (submitData: TeacherAndContentFormData) => {
       const myHeaders = new Headers();
@@ -123,6 +127,7 @@ export const TeacherAndContent = ({
           title: data?.message,
           color: "success",
         });
+        queryClient.invalidateQueries({ queryKey: ['programData', program_id] });
       }
     },
     onError: (error: Error) => {
