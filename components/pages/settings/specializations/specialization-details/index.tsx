@@ -13,6 +13,9 @@ import * as yup from "yup";
 import { useParams } from "next/navigation";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
+import { LocalizedField } from "@/components/global/LocalizedField";
+import { useLanguages } from "@/lib/hooks/useLanguages";
+import { title } from "process";
 
 type SpecializationDetailsProps = {
     data: {
@@ -26,32 +29,43 @@ type SpecializationDetailsProps = {
     };
 };
 
-const schema = yup
-    .object({
-        title_en: yup
-            .string()
-            .required("ادخل الاسم بالعربية")
-            .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
-
-        title_ar: yup
-            .string()
-            .required("ادخل الاسم بالإنجليزية")
-            .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
-    })
-    .required();
-
-
-type FormData = yup.InferType<typeof schema>;
-
 export const SpecializationDetails = ({ data }: SpecializationDetailsProps) => {
+    const { languages } = useLanguages();
+
+    const schema = yup
+        .object({
+            localizedFields: yup
+                .object()
+                .shape(
+                    Object.fromEntries(
+                        languages.map((lang: string) => [
+                            lang,
+                            yup.object({
+                                title: yup.string().required("ادخل الاسم"),
+                            }),
+                        ])
+                    )
+                )
+        })
+        .required();
+
+
+    type FormData = yup.InferType<typeof schema>;
+
     const params = useParams();
     const id = params.id;
     const queryClient = useQueryClient();
     const [editField, setEditField] = useState<string | null>(null);
     const { control, handleSubmit, watch } = useForm<FormData>({
         defaultValues: {
-            title_ar: data?.data?.title_ar || "",
-            title_en: data?.data?.title_en || "",
+            localizedFields: {
+                ar: {
+                    title: data.data.title_ar || "",
+                },
+                en: {
+                    title: data.data.title_en || "",
+                },
+            },
         },
     });
 
@@ -69,9 +83,10 @@ export const SpecializationDetails = ({ data }: SpecializationDetailsProps) => {
             myHeaders.append("Accept", "application/json");
             myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
             var formdata = new FormData();
-            formdata.append("ar[title]", submitData.title_ar);
-            formdata.append("en[title]", submitData.title_en);
-
+            languages.forEach((locale: string) => {
+                const localeData = submitData.localizedFields[locale];
+                formdata.append(`${locale}[title]`, localeData.title);
+            });
 
             return postData(
                 `client/Specialization/update/${data.data.id}`,
@@ -114,27 +129,10 @@ export const SpecializationDetails = ({ data }: SpecializationDetailsProps) => {
                 <div className="flex flex-col gap-4">
                     <span className="text-[#5E5E5E] text-sm font-bold">الاسم</span>
                     {editField === "name" ? (
-                        <div className="flex flex-col md:flex-row gap-4 w-full">
-                            <div className="flex flex-col gap-2 w-full">
-                                <Controller
-                                    name="title_ar"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input {...field} placeholder="الاسم بالعربية" size="sm" />
-                                    )}
-                                />
-                                <Controller
-                                    name="title_en"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input {...field} placeholder="الاسم بالإنجليزية" size="sm" />
-                                    )}
-                                />
-                            </div>
-                        </div>
+                        <LocalizedField control={control} name="title" label="الاسم" />
                     ) : (
                         <span className="text-black-text font-bold text-[15px]">
-                            {`${specializationData?.data?.title_ar} / ${specializationData?.data?.title_en}`}
+                            {`${specializationData?.data?.title}`}
                         </span>
                     )}
                 </div>

@@ -64,7 +64,7 @@ export const AllStudents = () => {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const params: Record<string, string | number> = {
+  const params: Record<string, string | number | boolean> = {
     page: currentPage,
   };
 
@@ -74,6 +74,10 @@ export const AllStudents = () => {
 
   if (debouncedPhoneSearch) {
     params.phone = debouncedPhoneSearch;
+  }
+
+  if (!debouncedNameSearch && !debouncedPhoneSearch) {
+    params.parent = 'true'; 
   }
 
   const { data: studentsData, isLoading } = useQuery({
@@ -96,9 +100,7 @@ export const AllStudents = () => {
       avatar: item.image,
       phone: item.phone,
       email: item.email,
-      programs:
-        `${item.programs[0]?.title} ${item.programs.length > 1 ? `(+${item.programs.length})` : ""}` ||
-        "N/A",
+      programs: item.programs_subscriptions.length > 0 ? `${item.programs_subscriptions[0]?.title} ${item.programs_subscriptions.length > 1 ? `(+${item.programs_subscriptions.length})` : ""}` : "لا يوجد اشتراك",
       renew_date: formatDate(item.created_at) || "N/A",
       last_active: item.last_active_at || "N/A",
       status: {
