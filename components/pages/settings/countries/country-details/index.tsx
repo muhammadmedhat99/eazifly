@@ -13,6 +13,8 @@ import * as yup from "yup";
 import { useParams } from "next/navigation";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
+import { LocalizedField } from "@/components/global/LocalizedField";
+import { useLanguages } from "@/lib/hooks/useLanguages";
 
 type CountryDetailsProps = {
   data: {
@@ -28,47 +30,60 @@ type CountryDetailsProps = {
   };
 };
 
-const schema = yup
-  .object({
-    name_ar: yup
-      .string()
-      .required("ادخل الاسم بالعربية")
-      .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
-
-    name_en: yup
-      .string()
-      .required("ادخل الاسم بالإنجليزية")
-      .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
-
-    country_code: yup.string().required("ادخل كود الدولة"),
-
-    phone_code: yup
-      .string()
-      .required("ادخل مفتاح الدولة")
-      .matches(/^[0-9]+$/, "يجب أن يحتوي على أرقام فقط"),
-
-    image: yup
-      .mixed<FileList>()
-      .test(
-        "fileType",
-        "الرجاء تحميل ملف صحيح",
-        (value) => value && value.length > 0
-      )
-      .required("الرجاء تحميل ملف"),
-  })
-  .required();
-
-type FormData = yup.InferType<typeof schema>;
 
 export const CountryDetails = ({ data }: CountryDetailsProps) => {
+  const { languages } = useLanguages();
+
+  const schema = yup
+    .object({
+      localizedFields: yup
+        .object()
+        .shape(
+          Object.fromEntries(
+            languages.map((lang: string) => [
+              lang,
+              yup.object({
+                name: yup.string().required("ادخل الاسم"),
+              }),
+            ])
+          )
+        )
+        .required(),
+
+      country_code: yup.string().required("ادخل كود الدولة"),
+
+      phone_code: yup
+        .string()
+        .required("ادخل مفتاح الدولة")
+        .matches(/^[0-9]+$/, "يجب أن يحتوي على أرقام فقط"),
+
+      image: yup
+        .mixed<FileList>()
+        .test(
+          "fileType",
+          "الرجاء تحميل ملف صحيح",
+          (value) => value && value.length > 0
+        )
+        .required("الرجاء تحميل ملف"),
+    })
+    .required();
+
+  type FormData = yup.InferType<typeof schema>;
+
   const params = useParams();
   const id = params.id;
   const queryClient = useQueryClient();
   const [editField, setEditField] = useState<string | null>(null);
   const { control, handleSubmit, watch } = useForm<FormData>({
     defaultValues: {
-      name_ar: data?.data?.name_ar || "",
-      name_en: data?.data?.name_en || "",
+      localizedFields: {
+        ar: {
+          name: data.data.name_ar || "",
+        },
+        en: {
+          name: data.data.name_en || "",
+        },
+      },
       country_code: data?.data?.country_code || "",
       phone_code: data?.data?.phone_code || "",
     },
@@ -89,8 +104,10 @@ export const CountryDetails = ({ data }: CountryDetailsProps) => {
       myHeaders.append("Accept", "application/json");
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
       var formdata = new FormData();
-      formdata.append("ar[name]", submitData.name_ar);
-      formdata.append("en[name]", submitData.name_en);
+      languages.forEach((locale: string) => {
+        const localeData = submitData.localizedFields[locale];
+        formdata.append(`${locale}[name]`, localeData.name);
+      });
       formdata.append("country_code", submitData.country_code);
       formdata.append(
         "phone_code",
@@ -144,29 +161,12 @@ export const CountryDetails = ({ data }: CountryDetailsProps) => {
           {editField === "name" ? (
             <div className="flex flex-col md:flex-row gap-4 w-full">
               <div className="flex flex-col gap-2 w-full">
-                <Controller
-                  name="name_ar"
-                  control={control}
-                  render={({ field }) => (
-                    <Input {...field} placeholder="الاسم بالعربية" size="sm" />
-                  )}
-                />
-                <Controller
-                  name="name_en"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      placeholder="الاسم بالإنجليزية"
-                      size="sm"
-                    />
-                  )}
-                />
+                <LocalizedField control={control} name="name" label="الاسم" />
               </div>
             </div>
           ) : (
             <span className="text-black-text font-bold text-[15px]">
-              {`${countryData?.data?.name_ar} / ${countryData?.data?.name_en}`}
+              {countryData?.data?.name}
             </span>
           )}
         </div>
