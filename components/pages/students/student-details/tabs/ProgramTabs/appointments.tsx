@@ -212,6 +212,14 @@ export const Appointments = ({
                   </span>
                 </div>
                 <div className="flex flex-col gap-4 items-center">
+                  <span className="text-[#5E5E5E] text-sm font-bold">اليوم</span>
+                  <span className="text-black-text font-bold text-[15px]">
+                    {new Date(appointment.session_date).toLocaleDateString("ar-EG", {
+                      weekday: "long",
+                    })}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-4 items-center">
                   <span className="text-[#5E5E5E] text-sm font-bold">
                     وقت المحاضرة
                   </span>
