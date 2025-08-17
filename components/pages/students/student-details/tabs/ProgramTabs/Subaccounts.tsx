@@ -19,6 +19,7 @@ type appointmentsProps = {
   isLoadingsubaccount: boolean;
   program_id: number;
   refetchSubaccounts?: () => void;
+  refetchTeachers?: () => void;
   student_number: number;
   data: {
     data: {
@@ -64,6 +65,7 @@ export const Subaccounts = ({
   isLoadingsubaccount,
   program_id,
   refetchSubaccounts,
+  refetchTeachers,
   data,
   student_number
 }: appointmentsProps) => {
@@ -176,6 +178,7 @@ export const Subaccounts = ({
           color: "success",
         });
         refetchSubaccounts?.();
+        refetchTeachers?.();
       }
     },
     onError: (error) => {
@@ -337,7 +340,7 @@ export const Subaccounts = ({
         onCancel={() => setConfirmAction(false)}
       />
       <AddSubaccountModal isOpen={modalOpen}
-        onClose={() => setModalOpen(false)} data={data} program_id={program_id} />
+        onClose={() => setModalOpen(false)} data={data} program_id={program_id} refetchSubaccounts={refetchSubaccounts} refetchTeachers={refetchTeachers} />
     </div>
   );
 };

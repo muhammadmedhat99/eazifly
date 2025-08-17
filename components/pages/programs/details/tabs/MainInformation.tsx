@@ -109,7 +109,7 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
 
   return (
     <>
-      {Object.keys(data || {}).length > 0 ? (
+      {Object.keys(data || {}) ? (
         <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
           <PaymentMethodsUpdateModal
             isOpen={modalOpen}
@@ -130,7 +130,7 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
           <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
             <div className="text-primary font-bold">إسم البرنامج</div>
             <div className="text-black-text font-bold text-[15px]">
-              {data.title}
+              {data?.title}
             </div>
           </div>
           {/* Main Card  */}
@@ -185,7 +185,7 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
           <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
             <div className="text-primary font-bold">عنوان البرنامج</div>
             <div className="text-black-text font-bold text-[15px]">
-              {data.label}
+              {data?.label}
             </div>
           </div>
           {/* Main Card  */}
@@ -196,7 +196,7 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
               <div className="text-primary font-bold">التخصص</div>
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm">
-                  {data.specialization}
+                  {data?.specialization}
                 </div>
               </div>
             </div>
@@ -214,7 +214,7 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
             <div className="flex flex-col gap-2">
               <div className="text-primary font-bold">وسائل الدفع</div>
               <div className="flex items-center gap-3 flex-wrap">
-                {data.payment_methods.map((method) => (
+                {data?.payment_methods.map((method) => (
                   <div
                     className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm"
                     key={method.id}
