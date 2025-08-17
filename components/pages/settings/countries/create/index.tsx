@@ -23,28 +23,32 @@ import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { LocalizedField } from "@/components/global/LocalizedField";
+import { useLanguages } from "@/lib/hooks/useLanguages";
 
-const schema = yup
-    .object({
-        name_ar: yup
-            .string()
-            .required("ادخل الاسم بالعربية")
-            .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
 
-        name_en: yup
-            .string()
-            .required("ادخل الاسم بالإنجليزية")
-            .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
+export const CreateCountries = () => {
+    const { languages } = useLanguages();
 
-        country_code: yup
-            .string()
-            .required("ادخل كود الدولة"),
-
+    const schema = yup.object({
+        localizedFields: yup
+            .object()
+            .shape(
+                Object.fromEntries(
+                    languages.map((lang: string) => [
+                        lang,
+                        yup.object({
+                            name: yup.string().required("ادخل الاسم"),
+                        }),
+                    ])
+                )
+            )
+            .required(),
+        country_code: yup.string().required("ادخل كود الدولة"),
         phone_code: yup
             .string()
             .required("ادخل مفتاح الدولة")
             .matches(/^[0-9]+$/, "يجب أن يحتوي على أرقام فقط"),
-
         image: yup
             .mixed<FileList>()
             .test(
@@ -53,12 +57,10 @@ const schema = yup
                 (value) => value && value.length > 0
             )
             .required("الرجاء تحميل ملف"),
-    })
-    .required();
+    });
 
-type FormData = yup.InferType<typeof schema>;
+    type FormData = yup.InferType<typeof schema>;
 
-export const CreateCountries = () => {
     const {
         register,
         handleSubmit,
@@ -79,8 +81,10 @@ export const CreateCountries = () => {
             myHeaders.append("Accept", "application/json");
             myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
             const formdata = new FormData();
-            formdata.append("ar[name]", submitData.name_ar);
-            formdata.append("en[name]", submitData.name_en);
+            languages.forEach((locale: string) => {
+                const localeData = submitData.localizedFields[locale];
+                formdata.append(`${locale}[name]`, localeData.name);
+            });
             formdata.append("country_code", submitData.country_code);
             formdata.append("phone_code", `+${submitData.phone_code.replace(/^\+/, "")}`);
 
@@ -137,34 +141,7 @@ export const CreateCountries = () => {
             onSubmit={handleSubmit(onSubmit)}
             className="grid grid-cols-1 gap-4 md:grid-cols-2 py-14 px-8"
         >
-            <Input
-                label="الاسم بالعربية"
-                placeholder="نص الكتابه"
-                type="text"
-                {...register("name_ar")}
-                isInvalid={!!errors.name_ar?.message}
-                errorMessage={errors.name_ar?.message}
-                labelPlacement="outside"
-                classNames={{
-                    label: "text-[#272727] font-bold text-sm",
-                    inputWrapper: "shadow-none",
-                    base: "mb-4",
-                }}
-            />
-            <Input
-                label="الاسم بالإنجليزية"
-                placeholder="نص الكتابه"
-                type="text"
-                {...register("name_en")}
-                isInvalid={!!errors.name_en?.message}
-                errorMessage={errors.name_en?.message}
-                labelPlacement="outside"
-                classNames={{
-                    label: "text-[#272727] font-bold text-sm",
-                    inputWrapper: "shadow-none",
-                    base: "mb-4",
-                }}
-            />
+           <LocalizedField control={control} name="name" label="الاسم" />
             <Input
                 label="كود الدولة"
                 placeholder="نص الكتابه"

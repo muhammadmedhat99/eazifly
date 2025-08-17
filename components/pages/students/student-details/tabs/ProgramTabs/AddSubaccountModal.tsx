@@ -40,6 +40,8 @@ interface StudentModalProps {
   onClose: () => void;
   data: any;
   program_id: number;
+  refetchSubaccounts?: () => void;
+  refetchTeachers?: () => void;
 }
 
 type FormData = {
@@ -60,6 +62,8 @@ export default function AddSubaccountModal({
   onClose,
   data: programData,
   program_id,
+  refetchSubaccounts,
+  refetchTeachers,
 }: StudentModalProps) {
   const [scrollBehavior, setScrollBehavior] = useState<
     "inside" | "normal" | "outside"
@@ -240,6 +244,8 @@ export default function AddSubaccountModal({
           color: "success",
         });
         onClose();
+        refetchSubaccounts?.();
+        refetchTeachers?.();
       } else {
         addToast({
           title: response.message,
@@ -297,6 +303,43 @@ export default function AddSubaccountModal({
                     </div>
 
                     <div className="flex flex-col gap-4">
+                                                <div
+                            className="bg-background rounded-lg flex items-center justify-between p-4"
+                          >
+                            {/* Radio Button */}
+                            <div className="flex items-center gap-3 w-1/12">
+                              <input
+                                type="radio"
+                                name="selectedChild"
+                                checked={selectedChildId === programData.data.id}
+                                onChange={() => handleRadioChange(programData.data.id)}
+                                className="w-4 h-4 accent-primary"
+                              />
+                            </div>
+
+                            {/* Name */}
+                            <div className="flex flex-col gap-2 w-5/12">
+                              <span className="text-sm font-bold text-title">
+                                الإسم
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <Avatar size="sm" src={programData.data.image} />
+                                <span className="text-black-text font-bold text-[15px]">
+                                  {programData.data.first_name + " " + programData.data.last_name}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Age */}
+                            <div className="flex flex-col gap-2 w-5/12">
+                              <span className="text-sm font-bold text-title">
+                                السن
+                              </span>
+                              <span className="font-bold text-black-text">
+                                {programData.data.age} عام
+                              </span>
+                            </div>
+                          </div>
                       {programData.data?.childrens?.map(
                         (child: any, index: number) => (
                           <div
@@ -345,7 +388,7 @@ export default function AddSubaccountModal({
                   <div className="flex justify-end gap-4 py-4">
                     <Button
                       type="button"
-                      onPress={() => reset()}
+                      onPress={onClose}
                       variant="solid"
                       color="primary"
                       className="text-white"
@@ -531,7 +574,7 @@ export default function AddSubaccountModal({
                       color="primary"
                       className="text-white"
                     >
-                      رحوع
+                      رجوع
                     </Button>
                     <Button
                       type="button"
@@ -552,22 +595,31 @@ export default function AddSubaccountModal({
                 <form onSubmit={handleSubmit(handleSaveSession)}>
                   <div className="grid grid-cols-1 gap-4 p-5">
                     <div className="grid grid-cols-3 gap-3">
-                      {availableInstructors.length > 0 ? (
+                      {AddWeeklyAppointment.isPending ? (
+                        <div className="flex gap-4">
+                          {Array.from({ length: 3 }).map((_, idx) => (
+                            <div
+                              key={idx}
+                              className="h-[170px] w-[140px] border border-gray-300 rounded-lg flex flex-col items-center justify-center p-4 gap-3"
+                            >
+                              <div className="w-16 h-16 rounded-full bg-gray-200 animate-pulse" />
+                              <div className="w-20 h-4 bg-gray-200 rounded animate-pulse" />
+                            </div>
+                          ))}
+                        </div>
+                      ) : availableInstructors.length > 0 ? (
                         availableInstructors.map((instructor: any) => (
                           <Button
                             key={instructor.id}
                             id={String(instructor.id)}
                             variant="flat"
                             color={
-                              selectedInstructor === String(instructor.id)
-                                ? "primary"
-                                : undefined
+                              selectedInstructor === String(instructor.id) ? "primary" : undefined
                             }
-                            className={`h-[170px] font-semibold border flex flex-col justify-center items-center ${
-                              selectedInstructor === String(instructor.id)
+                            className={`h-[170px] font-semibold border flex flex-col justify-center items-center ${selectedInstructor === String(instructor.id)
                                 ? "border-primary"
                                 : "border-gray-300"
-                            }`}
+                              }`}
                             onPress={(e) => setSelectedInstructor(e.target.id)}
                           >
                             <Avatar
@@ -576,16 +628,13 @@ export default function AddSubaccountModal({
                               radius="md"
                               alt={instructor.name_ar}
                             />
-                            <span className="text-start font-bold">
-                              {instructor.name_ar}
-                            </span>
+                            <span className="text-start font-bold">{instructor.name_ar}</span>
                           </Button>
                         ))
                       ) : (
-                        <span className="text-gray-500">
-                          لا يوجد معلمين متاحين
-                        </span>
+                        <span className="text-gray-500">لا يوجد معلمين متاحين</span>
                       )}
+
                     </div>
                   </div>
 
@@ -621,7 +670,7 @@ export default function AddSubaccountModal({
                   <div className="flex justify-end gap-4 py-4">
                     <Button
                       type="button"
-                      onPress={() => setStep(1)}
+                      onPress={() => setStep(2)}
                       variant="solid"
                       color="primary"
                       className="text-white"

@@ -1,8 +1,10 @@
-import { Input } from "@heroui/react";
-
+import { Input, Spinner } from "@heroui/react";
 import { Control, Controller } from "react-hook-form";
 import { JoditInput } from "./JoditInput";
-const languages = ["ar", "en"] as const;
+import { useQuery } from "@tanstack/react-query";
+import { fetchClient } from "@/lib/utils";
+import { axios_config } from "@/lib/const";
+import { AllQueryKeys } from "@/keys";
 
 interface LocalizedFieldProps {
   control: Control<any>;
@@ -18,7 +20,19 @@ export const LocalizedField: React.FC<LocalizedFieldProps> = ({
   fieldName,
   label,
 }) => {
-  return languages.map((lang) => (
+  const { data: languagesData, isLoading } = useQuery({
+    queryFn: async () => await fetchClient(`client/lang/setting`, axios_config),
+    queryKey: AllQueryKeys.GetAllLanguages,
+  });
+
+  if (isLoading) return <Spinner/>;
+
+  const languages =
+    languagesData?.data
+      ?.filter((langObj: any) => langObj.status === "true")
+      ?.map((langObj: any) => langObj.lang) || [];
+
+  return languages.map((lang: string) => (
     <Controller
       key={fieldName ? `${lang}.${fieldName}` : `${lang}.${name}`}
       name={
@@ -54,7 +68,19 @@ export const LocalizedTextArea: React.FC<LocalizedFieldProps> = ({
   label,
   className,
 }) => {
-  return languages.map((lang) => (
+  const { data: languagesData, isLoading } = useQuery({
+    queryFn: async () => await fetchClient(`client/lang/setting`, axios_config),
+    queryKey: AllQueryKeys.GetAllLanguages,
+  });
+
+  if (isLoading) return <Spinner/>;
+
+  const languages =
+    languagesData?.data
+      ?.filter((langObj: any) => langObj.status === "true")
+      ?.map((langObj: any) => langObj.lang) || [];
+
+  return languages.map((lang: string) => (
     <Controller
       key={fieldName ? `${lang}.${fieldName}` : `${lang}.${name}`}
       name={

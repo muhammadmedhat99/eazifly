@@ -23,24 +23,31 @@ import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { LocalizedField } from "@/components/global/LocalizedField";
+import { useLanguages } from "@/lib/hooks/useLanguages";
 
-const schema = yup
+export const CreateSpecializations = () => {
+    const { languages } = useLanguages();
+
+    const schema = yup
     .object({
-        name_ar: yup
-            .string()
-            .required("ادخل الاسم بالعربية")
-            .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
-
-        name_en: yup
-            .string()
-            .required("ادخل الاسم بالإنجليزية")
-            .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
+        localizedFields: yup
+            .object()
+            .shape(
+                Object.fromEntries(
+                    languages.map((lang: string) => [
+                        lang,
+                        yup.object({
+                            title: yup.string().required("ادخل الاسم"),
+                        }),
+                    ])
+                )
+            )
     })
     .required();
 
-type FormData = yup.InferType<typeof schema>;
+    type FormData = yup.InferType<typeof schema>;
 
-export const CreateSpecializations = () => {
     const {
         register,
         handleSubmit,
@@ -61,8 +68,10 @@ export const CreateSpecializations = () => {
             myHeaders.append("Accept", "application/json");
             myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
             const formdata = new FormData();
-            formdata.append("ar[title]", submitData.name_ar);
-            formdata.append("en[title]", submitData.name_en);
+            languages.forEach((locale: string) => {
+                const localeData = submitData.localizedFields[locale];
+                formdata.append(`${locale}[title]`, localeData.title);
+            });
 
             return postData("client/Specialization/store", formdata, myHeaders);
         },
@@ -112,34 +121,7 @@ export const CreateSpecializations = () => {
             onSubmit={handleSubmit(onSubmit)}
             className="grid grid-cols-1 gap-4 md:grid-cols-2 py-14 px-8"
         >
-            <Input
-                label="الاسم بالعربية"
-                placeholder="نص الكتابه"
-                type="text"
-                {...register("name_ar")}
-                isInvalid={!!errors.name_ar?.message}
-                errorMessage={errors.name_ar?.message}
-                labelPlacement="outside"
-                classNames={{
-                    label: "text-[#272727] font-bold text-sm",
-                    inputWrapper: "shadow-none",
-                    base: "mb-4",
-                }}
-            />
-            <Input
-                label="الاسم بالإنجليزية"
-                placeholder="نص الكتابه"
-                type="text"
-                {...register("name_en")}
-                isInvalid={!!errors.name_en?.message}
-                errorMessage={errors.name_en?.message}
-                labelPlacement="outside"
-                classNames={{
-                    label: "text-[#272727] font-bold text-sm",
-                    inputWrapper: "shadow-none",
-                    base: "mb-4",
-                }}
-            />
+            <LocalizedField control={control} name="title" label="الاسم" />
 
             <div className="flex items-center justify-end gap-4 mt-8 col-span-2">
                 <Button
