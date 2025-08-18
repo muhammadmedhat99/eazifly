@@ -1,6 +1,14 @@
 "use client";
 
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button, ModalContent } from "@heroui/react";
+import {
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  ModalContent,
+} from "@heroui/react";
+import { Danger } from "iconsax-reactjs";
 
 export default function ConfirmModal({
   open,
@@ -16,19 +24,45 @@ export default function ConfirmModal({
   message?: string;
 }) {
   return (
-    <Modal isOpen={open} onOpenChange={(open) => !open && onCancel()} size="md">
+    <Modal
+      isOpen={open}
+      onOpenChange={(open) => !open && onCancel()}
+      size="md"
+      className="rounded-2xl"
+      placement="center"
+    >
       <ModalContent>
-        <ModalHeader className="text-lg font-bold text-[#272727] flex justify-center">
-          {title || "تأكيد"}
+        {/* العنوان */}
+        <ModalHeader className="flex flex-col items-center gap-2 text-center">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 text-red-500">
+            <Danger className="w-6 h-6" />
+          </div>
+          <h2 className="text-lg font-bold text-gray-800">
+            {title || "تأكيد"}
+          </h2>
         </ModalHeader>
-        <ModalBody className="text-[#272727] font-bold text-sm">
+
+        {/* الرسالة */}
+        <ModalBody className="text-center text-gray-600 font-medium text-sm">
           {message || "هل أنت متأكد من تنفيذ هذا الإجراء؟"}
         </ModalBody>
-        <ModalFooter>
-          <Button color="primary" variant="solid" className="text-white" onPress={onCancel}>
+
+        {/* الأزرار */}
+        <ModalFooter className="flex justify-center gap-4">
+          <Button
+            color="default"
+            variant="flat"
+            className="px-6 rounded-xl"
+            onPress={onCancel}
+          >
             إلغاء
           </Button>
-          <Button color="primary" variant="solid" className="text-white" onPress={onConfirm}>
+          <Button
+            color="danger"
+            variant="solid"
+            className="px-6 rounded-xl text-white"
+            onPress={onConfirm}
+          >
             تأكيد
           </Button>
         </ModalFooter>
