@@ -18,7 +18,7 @@ import { Add } from "iconsax-reactjs";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
 import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
@@ -73,6 +73,7 @@ export default function AddSubaccountModal({
   const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
   const [step, setStep] = useState(1);
   const [tabKey, setTabKey] = useState("fixed");
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -91,6 +92,12 @@ export default function AddSubaccountModal({
   const handleRadioChange = (childId: number) => {
     setSelectedChildId(childId);
   };
+
+  const { data: childerns, isLoading: loadingchilderns } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/user/show/${user_id}?program_id=${program_id}`, axios_config),
+    queryKey: ["GetChilderns"],
+  });
 
   const { data: subscriptionDetails, isLoading: isSubscriptionDetailsLoading } =
     useQuery({
@@ -246,6 +253,7 @@ export default function AddSubaccountModal({
         onClose();
         refetchSubaccounts?.();
         refetchTeachers?.();
+        queryClient.invalidateQueries({ queryKey: ["GetChilderns"] });
       } else {
         addToast({
           title: response.message,
@@ -303,7 +311,7 @@ export default function AddSubaccountModal({
                     </div>
 
                     <div className="flex flex-col gap-4">
-                                                <div
+                       {childerns.data.show=== "true" && <div
                             className="bg-background rounded-lg flex items-center justify-between p-4"
                           >
                             {/* Radio Button */}
@@ -311,8 +319,8 @@ export default function AddSubaccountModal({
                               <input
                                 type="radio"
                                 name="selectedChild"
-                                checked={selectedChildId === programData.data.id}
-                                onChange={() => handleRadioChange(programData.data.id)}
+                                checked={selectedChildId === childerns.data.id}
+                                onChange={() => handleRadioChange(childerns.data.id)}
                                 className="w-4 h-4 accent-primary"
                               />
                             </div>
@@ -323,9 +331,9 @@ export default function AddSubaccountModal({
                                 الإسم
                               </span>
                               <div className="flex items-center gap-2">
-                                <Avatar size="sm" src={programData.data.image} />
+                                <Avatar size="sm" src={childerns.data.image} />
                                 <span className="text-black-text font-bold text-[15px]">
-                                  {programData.data.first_name + " " + programData.data.last_name}
+                                  {childerns.data.first_name + " " + childerns.data.last_name}
                                 </span>
                               </div>
                             </div>
@@ -336,11 +344,11 @@ export default function AddSubaccountModal({
                                 السن
                               </span>
                               <span className="font-bold text-black-text">
-                                {programData.data.age} عام
+                                {childerns.data.age} عام
                               </span>
                             </div>
-                          </div>
-                      {programData.data?.childrens?.map(
+                          </div>}
+                      {childerns.data?.childrens?.map(
                         (child: any, index: number) => (
                           <div
                             key={index}
