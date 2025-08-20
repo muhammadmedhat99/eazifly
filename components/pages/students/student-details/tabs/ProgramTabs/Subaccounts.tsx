@@ -3,7 +3,7 @@ import { Add, ArrowLeft2, ArrowRight2, Trash } from "iconsax-reactjs";
 import { Loader } from "@/components/global/Loader";
 import { addToast, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs, toast } from "@heroui/react";
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { Appointments } from "./appointments";
@@ -73,6 +73,7 @@ export const Subaccounts = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [confirmAction, setConfirmAction] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const ClientId = getCookie("client_id") as string;
 
@@ -179,6 +180,7 @@ export const Subaccounts = ({
         });
         refetchSubaccounts?.();
         refetchTeachers?.();
+        queryClient.invalidateQueries({ queryKey: ["GetChilderns"] });
       }
     },
     onError: (error) => {
@@ -243,7 +245,7 @@ export const Subaccounts = ({
               </span>
               <div className="flex items-center gap-4">
                 <span className="text-sm font-bold">
-                  {currentStudent.first_name} {currentStudent.last_name}
+                  {currentStudent?.first_name} {currentStudent?.last_name}
                 </span>
                 <button onClick={() => setConfirmAction(true)}>
                   <Trash className="text-red-500" />
