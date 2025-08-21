@@ -24,6 +24,7 @@ import { formatDate } from "@/lib/helper";
 const columns = [
     { name: "#", uid: "index" },
     { name: "السبب", uid: "name" },
+    { name: "جهة العرض", uid: "type" },
 ];
 
 const OptionsComponent = ({ id }: { id: number }) => {
@@ -75,6 +76,14 @@ export const AllCancelSessionsReasons = () => {
       id: item.id,
       index: item.id,
       name: item.title || "N/A",
+      type:
+        item.type === "user"
+          ? "طالب"
+          : item.type === "instructor"
+            ? "معلم"
+            : item.type === "both"
+              ? "كلاهما"
+              : "N/A",
       created_at: formatDate(item.created_at) || "N/A",
     })) || [];
 
