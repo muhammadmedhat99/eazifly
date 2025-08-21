@@ -1,7 +1,7 @@
 "use client";
 import { Edit2 } from "iconsax-reactjs";
 import Link from "next/link";
-import { addToast, Avatar, Button, Input, Select, SelectItem, Spinner } from "@heroui/react";
+import { addToast, Avatar, AvatarGroup, Button, Input, Select, SelectItem, Spinner } from "@heroui/react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { DropzoneField } from "@/components/global/DropZoneField";
@@ -60,9 +60,9 @@ type RequestDetailsProps = {
   }
 };
 
-export const ProfileRequestDetails = ({ data }: RequestDetailsProps) => {
+export const SessionRequestDetails = ({ data }: RequestDetailsProps) => {    
   const [confirmAction, setConfirmAction] = useState(false);
-  const [action, setAction] = useState<"approved" | "rejected" | null>(null);
+  const [action, setAction] = useState<"approved" | "canceled" | null>(null);
   const router = useRouter();
 
   const { control, handleSubmit } = useForm();
@@ -84,7 +84,7 @@ export const ProfileRequestDetails = ({ data }: RequestDetailsProps) => {
       }
 
       return postData(
-        `client/instructor/update/profile/${data.data.id}`,
+        `client/change/session/request/${data.data.id}`,
         formdata,
         myHeaders
       );
@@ -100,7 +100,7 @@ export const ProfileRequestDetails = ({ data }: RequestDetailsProps) => {
           title: data?.message,
           color: "success",
         });
-        router.push(`/teachers/requests/info`);
+        router.push(`/teachers/requests/sessions`);
       }
     },
     onError: (error) => {
@@ -133,71 +133,96 @@ export const ProfileRequestDetails = ({ data }: RequestDetailsProps) => {
         }
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {fields.map((field, index) => {
-          const oldValue = data?.data?.instructor_data?.[field.key] ?? "-";
-          const newValue = data?.data?.[field.key] ?? "-";
-          const changed = oldValue !== newValue;
-
-          return (
-            <div
-              key={field.key}
-              className={`bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition hover:shadow-md 
-              ${index === fields.length - 1 ? "md:col-span-2" : ""}`}
-            >
-              {/* عنوان الحقل */}
-              <h3 className="text-sm font-bold text-gray-700 mb-3">
-                {field.label}
-              </h3>
-
-              {/* القيم */}
-              <div className="flex flex-col gap-1">
-                {changed && (
-                  <span className="text-gray-400 text-sm line-through">
-                    {oldValue}
-                  </span>
-                )}
-                <span
-                  className={`font-semibold ${changed ? "text-primary" : "text-gray-800"
-                    }`}
-                >
-                  {newValue}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-        {(data?.data?.image || data?.data?.instructor_data?.image) && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition hover:shadow-md col-span-2">
-            <h3 className="text-sm font-bold text-gray-700 mb-3">الصورة</h3>
-            <div className="flex gap-8">
-              {data?.data?.instructor_data?.image && (
-                <div className="flex flex-col items-center gap-2">
-                  <Image
-                    src={data.data.instructor_data.image}
-                    alt="Old Image"
-                    width={120}
-                    height={120}
-                    className="rounded-xl border border-gray-300 object-cover"
+        <div
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition hover:shadow-md"
+        >
+          <h3 className="text-sm font-bold text-gray-700 mb-3">
+            إسم المعلم
+          </h3>
+          <span
+            className="font-semibold text-gray-800"
+          >
+            {data.data.session.instructor}
+          </span>
+        </div>
+        {data.data.session?.users?.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition hover:shadow-md">
+            <h3 className="text-sm font-bold text-gray-700 mb-3">المستخدمين</h3>
+            <div className="flex flex-wrap gap-4">
+              <AvatarGroup isBordered max={3}>
+                {data.data.session?.users?.map((user: any) => (
+                  <Avatar
+                    title={user?.user_name}
+                    key={user?.id}
+                    src={user?.user_image}
+                    name={user?.user_name}
+                    showFallback
                   />
-                  <span className="text-xs font-semibold text-gray-600">القديمة</span>
-                </div>
-              )}
-
-              {data?.data?.image && (
-                <div className="flex flex-col items-center gap-2">
-                  <Image
-                    src={data.data.image}
-                    alt="New Image"
-                    width={120}
-                    height={120}
-                    className="rounded-xl border-2 border-green-500 object-cover"
-                  />
-                  <span className="text-xs font-semibold text-green-600">الجديدة</span>
-                </div>
-              )}
+                ))}
+              </AvatarGroup>
             </div>
           </div>
         )}
+        <div
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition hover:shadow-md"
+        >
+          <h3 className="text-sm font-bold text-gray-700 mb-3">
+          سبب الطلب
+          </h3>
+          <span
+            className="font-semibold text-gray-800"
+          >
+            {data.data.reason}
+          </span>
+        </div>
+        <div
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition hover:shadow-md"
+        >
+          <h3 className="text-sm font-bold text-gray-700 mb-3">
+          البرنامج
+          </h3>
+          <span
+            className="font-semibold text-gray-800"
+          >
+            {data.data.session.program_title}
+          </span>
+        </div>
+        <div
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition hover:shadow-md"
+        >
+          <h3 className="text-sm font-bold text-gray-700 mb-3">
+          تاريخ المحاضرة
+          </h3>
+          <span
+            className="font-semibold text-gray-800"
+          >
+            {data.data.session.session_date}
+          </span>
+        </div>
+        <div
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition hover:shadow-md"
+        >
+          <h3 className="text-sm font-bold text-gray-700 mb-3">
+          وقت المحاضرة
+          </h3>
+          <span
+            className="font-semibold text-gray-800"
+          >
+            {data.data.session.session_time}
+          </span>
+        </div>
+        <div
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 transition hover:shadow-md col-span-2"
+        >
+          <h3 className="text-sm font-bold text-gray-700 mb-3">
+          ملاحظات
+          </h3>
+          <span
+            className="font-semibold text-gray-800"
+          >
+            {data.data.notes}
+          </span>
+        </div>
       </div>
       <div className="flex items-center justify-end gap-4 mt-8 col-span-2">
         <Button
@@ -206,7 +231,7 @@ export const ProfileRequestDetails = ({ data }: RequestDetailsProps) => {
           color="danger"
           className="text-white"
           onPress={() => {
-            setAction("rejected");
+            setAction("canceled");
             setConfirmAction(true);
           }}
           isDisabled={UpdateInstructor?.isPending}

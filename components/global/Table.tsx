@@ -58,6 +58,14 @@ export default function TableComponent({
           </button>
         );
 
+      case "session_link":
+        return (
+          <div className="flex flex-col">
+            <Link href="/" className="text-small font-semibold text-start text-primary underline">
+              {cellValue}
+            </Link>
+          </div>
+        );
 
       case "name":
         return (

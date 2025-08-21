@@ -2,12 +2,18 @@
 
 import { Tabs, Tab } from "@heroui/react";
 import { ProfileRequests } from "./tabs/ProfileRequests";
+import { SessionsRequests } from "./tabs/SessionsRequests";
+import { usePathname, useRouter } from "next/navigation";
 
 
 export const TeacherRequests = () => {
+  const router = useRouter();
+  const pathname = usePathname();
   return (
     <div className="flex w-full flex-col">
       <Tabs
+        selectedKey={pathname.includes("sessions") ? "sessions" : "info"}
+        onSelectionChange={(key) => router.push(`/teachers/requests/${key}`)}
         aria-label="Options"
         classNames={{
           tabList: "w-full bg-main py-5",
@@ -21,8 +27,8 @@ export const TeacherRequests = () => {
         <Tab key="info" title="طلبات تعديل بيانات المعلمين">
           <ProfileRequests />
         </Tab>
-        <Tab key="sessions" title="طلبات خاصة بالحصص">
-          {/* <SessionsRequests /> */}
+        <Tab key="sessions" title="طلبات إلغاء حصص">
+          <SessionsRequests />
         </Tab>
       </Tabs>
     </div>

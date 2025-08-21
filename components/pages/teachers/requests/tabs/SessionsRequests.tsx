@@ -15,8 +15,11 @@ import { formatDate } from "@/lib/helper";
 const columns = [
   { name: "", uid: "avatar" },
   { name: "إسم المعلم", uid: "name" },
-  { name: "رقم الهاتف", uid: "phone" },
+  { name: "الحصة", uid: "session_link" },
   { name: "سبب الطلب", uid: "reason" },
+  { name: "البرنامج", uid: "program_title" },
+  { name: "تاريخ المحاضرة", uid: "session_date" },
+  { name: "وقت المحاضرة", uid: "session_time" },
   { name: <Options />, uid: "actions" },
 ];
 
@@ -37,7 +40,7 @@ const OptionsComponent = ({ id }: { id: number }) => {
   );
 };
 
-export const ProfileRequests = () => {
+export const SessionsRequests = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const params: Record<string, string | number> = {
@@ -46,22 +49,23 @@ export const ProfileRequests = () => {
 
   const { data: teachersRequests, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/instructor/update/profile/requests`, {
+      await fetchClient(`client/instructor/request/to/cancel/session`, {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllInstructorsRequests(
-      currentPage
-    ),
+    queryKey: ["getall"],
   });
 
   const formattedData =
     teachersRequests?.data?.map((item: any) => ({
       id: item.id,
-      name: item.instructor_data.name || "N/A",
-      phone: item.instructor_data.phone || "N/A",
+      name: item.session.instructor || "N/A",
       reason: item.reason || "N/A",
-      avatar: item.instructor_data.image || "N/A",
+      session_date: item.session.session_date || "N/A",
+      session_link: item.session.id || "N/A",
+      session_time: item.session.session_time || "N/A",
+      program_title: item.session.program_title || "N/A",
+      avatar: item.session.instructor_image || "N/A",
       created_at: formatDate(item.created_at) || "N/A",
     })) || [];
 
