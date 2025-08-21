@@ -23,6 +23,8 @@ import { axios_config } from "@/lib/const";
 import { fetchClient } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import { ProgramReportQuestions } from "./tabs/ProgramReportQuestions";
+import { AllQueryKeys } from "@/keys";
 
 type ProgramDetailsProps = {
   data: {
@@ -96,10 +98,18 @@ type ProgramDetailsProps = {
 export const ProgramDetails = () => {
     const params = useParams();
     const programId = params.id;
-    const { data, isLoading, refetch } = useQuery({
+    const { data, refetch } = useQuery({
       queryKey: ["GetProgramDetails", programId],
       queryFn: async () => await fetchClient(`client/program/show/${programId}`, axios_config),
     });
+    const { data: questionsData, isLoading } = useQuery({
+        queryFn: async () =>
+          await fetchClient(`client/report/question/method?program_id=${programId}`, {
+            ...axios_config,
+            params,
+          }),
+        queryKey: AllQueryKeys.GetAllSpecializations
+      });
   const [search, setSearch] = useState("");
   return (
     <div className="flex w-full flex-col">
@@ -128,6 +138,9 @@ export const ProgramDetails = () => {
         </Tab>
         <Tab key="goals" title="أهداف البرنامج">
           <ProgramGoals />
+        </Tab>
+        <Tab key="report-questions" title="أسئلة التقارير">
+          <ProgramReportQuestions data={questionsData} isLoading={isLoading} />
         </Tab>
         <Tab key="statistics" title="الإحصائيات">
           <ProgramStatistics />
