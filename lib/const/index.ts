@@ -42,7 +42,7 @@ export const routes = [
       { id: 1, name: "بيانات المعلمين", route: "" },
       { id: 2, name: "تحسين", route: "/improve" },
       { id: 3, name: "طلبات الإنضمام", route: "/" },
-      { id: 4, name: "طلبات المعلمين", route: "/requests"},
+      { id: 4, name: "طلبات المعلمين", route: "/requests/info"},
     ],
   },
   {
