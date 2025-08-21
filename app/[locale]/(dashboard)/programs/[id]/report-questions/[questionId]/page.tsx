@@ -1,19 +1,16 @@
 import { BreadCrumb } from "@/components/global/BreadCrumb";
-import { QuestionsDetails } from "@/components/pages/settings/report-questions/questions-details";
+import { QuestionsDetails } from "@/components/pages/programs/details/questions-details";
 import { fetchData } from "@/lib/utils";
 import { cookies } from "next/headers";
 import React from "react";
 
-export default async function page({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+export default async function Page({ params }: { params: Promise<{ id: string; questionId: string }> }) {
+  const { id, questionId } = await params;
+
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
 
-  const questionData = (await fetchData(`client/report/question/method/show/${id}`, token?.value)) as any;
+  const questionData = (await fetchData(`client/report/question/method/show/${questionId}`, token?.value)) as any;
 
   const BreadCrumbItems = [
     {
@@ -24,7 +21,7 @@ export default async function page({
     {
       id: 2,
       name: "أسئلة التقارير",
-      link: "/settings/report-questions",
+      link: `/programs/${id}`,
     },
     {
       id: 3,
