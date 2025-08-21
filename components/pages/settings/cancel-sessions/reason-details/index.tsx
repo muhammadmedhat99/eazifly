@@ -1,7 +1,7 @@
 "use client";
 import { Edit2 } from "iconsax-reactjs";
 
-import { Avatar, Input, Button, image, addToast } from "@heroui/react";
+import { Avatar, Input, Button, image, addToast, Select, SelectItem } from "@heroui/react";
 import { formatDate } from "@/lib/helper";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -14,6 +14,12 @@ import { useParams } from "next/navigation";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 
+const typeMapping: Record<string, string> = {
+  user: "الطالب",
+  instructor: "المعلم",
+  both: "كلاهما",
+};
+
 type ReasonDetailsProps = {
     data: {
         data: {
@@ -21,7 +27,8 @@ type ReasonDetailsProps = {
             title: string,
             title_ar: string;
             title_en: string;
-            created_at: string
+            created_at: string;
+            type: string;
         };
     };
 };
@@ -37,6 +44,9 @@ const schema = yup
             .string()
             .required("ادخل الاسم بالإنجليزية")
             .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
+        type: yup
+            .string()
+            .required("برجاء اختيار جهة العرض"),
     })
     .required();
 
@@ -48,10 +58,11 @@ export const ReasonDetails = ({ data }: ReasonDetailsProps) => {
     const id = params.id;
     const queryClient = useQueryClient();
     const [editField, setEditField] = useState<string | null>(null);
-    const { control, handleSubmit, watch } = useForm<FormData>({
+    const { control, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
         defaultValues: {
             title_ar: data?.data?.title_ar || "",
             title_en: data?.data?.title_en || "",
+            type: data?.data?.type || "",
         },
     });
 
@@ -71,7 +82,7 @@ export const ReasonDetails = ({ data }: ReasonDetailsProps) => {
             var formdata = new FormData();
             formdata.append("ar[title]", submitData.title_ar);
             formdata.append("en[title]", submitData.title_en);
-
+            formdata.append("type", submitData.type);
 
             return postData(
                 `client/reason/cancel/session/update/${data.data.id}`,
@@ -147,6 +158,62 @@ export const ReasonDetails = ({ data }: ReasonDetailsProps) => {
                     <button
                         type="button"
                         onClick={() => setEditField("name")}
+                        className="flex items-center gap-1 text-sm font-bold"
+                    >
+                        <Edit2 size={18} />
+                        تعديل
+                    </button>
+                )}
+            </div>
+
+            <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+                <div className="flex flex-col gap-4">
+                    <span className="text-[#5E5E5E] text-sm font-bold">جهة العرض</span>
+                         {editField === "type" ? (
+                             <Controller
+                                 name="type"
+                                 control={control}
+                                 render={({ field }) => (
+                                     <Select
+                                         {...field}
+                                         selectedKeys={field.value ? [field.value] : [""]}
+                                         onSelectionChange={(keys) => {
+                                             field.onChange(Array.from(keys)[0]);
+                                         }}
+                                         placeholder="اختر جهة العرض"
+                                         isInvalid={!!errors.type?.message}
+                                         errorMessage={errors.type?.message}
+                                         classNames={{
+                                             label: "text-[#272727] font-bold text-sm",
+                                             base: "w-48",
+                                             value: "text-[#87878C] text-sm",
+                                         }}
+                                     >
+                                         {[
+                                             { key: "user", label: "الطالب" },
+                                             { key: "instructor", label: "المعلم" },
+                                             { key: "both", label: "كلاهما" },
+                                         ].map((item) => (
+                                             <SelectItem key={item.key}>{item.label}</SelectItem>
+                                         ))}
+                                     </Select>
+                                 )}
+                             />
+                         ) : (
+                             <span className="text-black-text font-bold text-[15px]">
+                            {typeMapping[cancelSessionReasons.data.type] || "N/A"}
+                        </span>
+                    )}
+                </div>
+
+                {editField === "type" ? (
+                    <Button size="sm" color="primary" variant="solid" className="text-white" type="submit">
+                        حفظ
+                    </Button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() => setEditField("type")}
                         className="flex items-center gap-1 text-sm font-bold"
                     >
                         <Edit2 size={18} />
