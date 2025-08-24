@@ -25,6 +25,7 @@ type StudentDetailsProps = {
       whats_app: string;
       image: string;
       created_at: string;
+      parent_id : string;
       status_label: {
         label: string;
         color: string;
@@ -307,7 +308,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         )}
       </div>
 
-      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+      {!data.data?.parent_id &&<div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">الحالة</span>
           <div
@@ -318,9 +319,20 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
             {data?.data?.status_label?.label}
           </div>
         </div>
+      </div>}
+
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+        <div className="flex flex-col gap-4">
+          <span className="text-[#5E5E5E] text-sm font-bold">
+            نوع الحساب
+          </span>
+          <span className="text-black-text font-bold text-[15px]">
+            {data?.data?.parent_id === null ? "أساسي" : "فرعي"}
+          </span>
+        </div>
       </div>
 
-      <div className="flex items-end justify-end">
+      <div className="flex items-end justify-end col-span-2">
         <Button color="primary" variant="solid" className="text-white">
           إرسال رسالة
         </Button>
