@@ -448,8 +448,9 @@ export default function AddSubaccountModal({
                         }}
                         {...register("start_date")}
                         defaultValue={
-                          subscriptionDetails?.data?.start_date?.split("T")[0]
+                          new Date().toISOString().split("T")[0]
                         }
+                         min={new Date().toISOString().split("T")[0]}
                       />
 
                       {(subscriptionDetails?.data?.number_of_session_per_week
