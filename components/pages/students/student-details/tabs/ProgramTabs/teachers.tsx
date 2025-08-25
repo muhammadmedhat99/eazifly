@@ -4,30 +4,35 @@ import { Loader } from "@/components/global/Loader";
 import { useState} from "react";
 import { CustomPagination } from "@/components/global/Pagination";
 import ChangeTeacherModal from "../ChangeTeacherModal";
+import { useParams } from "next/navigation";
 
 type teachersProps = {
   teachersData?: any;
   isLoadingteachers: boolean;
   handleManualRefetch: any;
+  data: any;
 };
 
 
 export const Teachers = ({
   teachersData,
   isLoadingteachers,
-  handleManualRefetch
+  handleManualRefetch,
+  data,
 }: teachersProps) => {   
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
+    const params = useParams();
+    const user_id = params.id;
 
   return (
     <div className="flex flex-col gap-2">
       {isLoadingteachers ? (
         <Loader />
       ) : teachersData.data && teachersData.data.length > 0 ? (
-        teachersData.data.map(
+        teachersData.data?.filter(item => data.data.parent_id !== null ? item.user.id == user_id : true).map(
           (teacher: any, teacherIndex: number) => (
             
             <div

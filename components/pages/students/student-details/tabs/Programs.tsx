@@ -47,6 +47,8 @@ type StudentDetailsProps = {
       whats_app: string;
       image: string;
       created_at: string;
+      parent_id: string; 
+      parent_name: string; 
       status_label: {
         label: string;
         color: string;
@@ -143,12 +145,14 @@ const ActionsComponent = ({
   children_users,
   subscription_status,
   refetchSubscriptions,
+  isParent,
 }: {
   id: number;
   user_id: any;
   children_users: ChildUser[];
   subscription_status: string;
   refetchSubscriptions: () => void;
+  isParent: boolean;
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
@@ -251,7 +255,7 @@ const ActionsComponent = ({
 
   return (
     <>
-      <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
+      <Dropdown isDisabled={!isParent} classNames={{ base: "max-w-40", content: "min-w-36" }}>
         <DropdownTrigger>
           <button>
             <Options />
@@ -483,12 +487,16 @@ export const Programs = ({
                 <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background">
                   <div className="flex flex-col gap-4 w-1/2">
                     <span className="text-primary text-sm font-bold">
-                      عدد الطلاب المشتركين
+                      {data.data?.parent_name ? "الحساب الأساسي" : "عدد الطلاب المشتركين"}
                     </span>
-                    {(subaccountData as any)?.data ? (
+
+                    {data.data?.parent_name ? (
                       <div className="text-black-text font-bold text-[15px]">
-                        {(subaccountData as any)?.data?.length} من{" "}
-                        {subscription.student_number}
+                        {data.data.parent_name}
+                      </div>
+                    ) : (subaccountData as any)?.data ? (
+                      <div className="text-black-text font-bold text-[15px]">
+                        {(subaccountData as any)?.data?.length} من {subscription.student_number}
                       </div>
                     ) : (
                       <Loader />
@@ -589,6 +597,7 @@ export const Programs = ({
                             subscription.subscription_status.key
                           }
                           refetchSubscriptions={refetch}
+                          isParent={data.data.parent_id === null}
                         />
                       </div>
                     </Tab>
@@ -600,6 +609,7 @@ export const Programs = ({
                         teachersData={teacherData}
                         isLoadingteachers={isLoadingteacher}
                         handleManualRefetch={handleManualRefetch}
+                        data={data}
                       />
                     </Tab>
                   )}

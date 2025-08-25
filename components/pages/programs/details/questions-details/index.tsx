@@ -68,7 +68,7 @@ type FormData = yup.InferType<typeof schema>;
 
 export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {  
     const params = useParams();
-    const id = params.id;
+    const id = params.questionId;
     const queryClient = useQueryClient();
     const [editField, setEditField] = useState<string | null>(null);
 
@@ -85,7 +85,7 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
             })) || []
         }
     });
-  console.log(data);
+
     const { data: questionData, isLoading } = useQuery({
         queryKey: ['report_question', id],
         queryFn: async () => await fetchClient(`client/report/question/method/show/${id}`, axios_config),
@@ -143,9 +143,8 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
             queryKey: AllQueryKeys.GetAllPrograms("", 1),
           });
 
-     return isLoading ? (
-        <Loader />
-    ) : (
+     return (
+         isLoading ? (<Loader />) : (
              <form
                  onSubmit={handleSubmit(onSubmit)}
                  className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5"
@@ -218,49 +217,7 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
                      )}
                  </div>
 
-                 {/* البرنامج */}
-                 <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
-                     <div className="flex flex-col gap-4 w-1/2">
-                         <span className="text-[#5E5E5E] text-sm font-bold">البرنامج</span>
-                         {editField === "program_id" ? (
-                             <Controller
-                                 name="program_id"
-                                 control={control}
-                                 render={({ field }) => (
-                                     <Select
-                                         placeholder="اختر البرنامج"
-                                         selectedKeys={field.value ? [String(field.value)] : []}
-                                         onSelectionChange={(keys) => field.onChange(Number(Array.from(keys)[0]))}
-                                     >
-                                         {programData?.data.map((program: any) => (
-                                             <SelectItem key={program.id}>{program.title}</SelectItem>
-                                         ))}
-                                     </Select>
-                                 )}
-                             />
-                         ) : (
-                             <span className="text-black-text font-bold text-[15px]">
-                                 {questionData?.data?.program.title}
-                             </span>
-                         )}
-                     </div>
-                     {editField === "program_id" ? (
-                         <Button size="sm" color="primary" variant="solid" className="text-white" type="submit">
-                             حفظ
-                         </Button>
-                     ) : (
-                         <button
-                             type="button"
-                             onClick={() => setEditField("program_id")}
-                             className="flex items-center gap-1 text-sm font-bold"
-                         >
-                             <Edit2 size={18} />
-                             تعديل
-                         </button>
-                     )}
-                 </div>
-
-
+                 
                  {/* تاريخ الإنشاء */}
                  <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
                      <div className="flex flex-col gap-4">
@@ -367,7 +324,7 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
                              ) : (
                                  <div className="flex items-center gap-3 flex-wrap justify-between">
                                      <div className="flex items-center gap-3 flex-wrap">
-                                         {questionData.data.options.map((option: any) => (
+                                         {data.data.options.map((option: any) => (
                                              <div
                                                  className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm"
                                                  key={option.id}
@@ -381,7 +338,7 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
                                          onClick={() => {
                                              setValue(
                                                  "options",
-                                                 questionData.data.options.map((opt: any) => ({
+                                                 data.data.options.map((opt: any) => ({
                                                      ar: { title: opt.title_ar },
                                                      en: { title: opt.title_en },
                                                  }))
@@ -399,7 +356,6 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
                      </div>
                  )}
              </form>
-
-
+             )
     );
 };

@@ -21,4 +21,5 @@ export const AllQueryKeys = {
   GetAllActions: ["GetAllActions", axios_config],
   GetAllProgramContents: ["GetAllProgramContents", axios_config],
   GetAllLanguages: ["GetAllLanguages", axios_config],
+  GetAllInstructorsRequests: (currentPage: number) => ['GetAllInstructors', axios_config, currentPage],
 };

@@ -22,7 +22,7 @@ import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 type Option = {
   ar: { title: string };
@@ -48,8 +48,6 @@ const schema: yup.ObjectSchema<FormData> = yup.object({
     .string()
     .required("ادخل العنوان بالإنجليزية")
     .min(3, "العنوان لا يجب أن يقل عن ٣ أحرف"),
-
-  program_id: yup.number().typeError("اختر البرنامج").required("اختر البرنامج"),
 
   user_type: yup
     .mixed<FormData["user_type"]>()
@@ -99,6 +97,9 @@ export const CreateQuestions = () => {
     resolver: yupResolver(schema),
   });
 
+  const params = useParams();
+  const program_id = params.id;
+  
   const typeValue = watch("type");
   const [optionsCount, setOptionsCount] = useState(0);
 
@@ -129,7 +130,9 @@ export const CreateQuestions = () => {
       const formdata = new FormData();
       formdata.append("ar[title]", submitData.title_ar);
       formdata.append("en[title]", submitData.title_en);
-      formdata.append("program_id", submitData.program_id.toString());
+      if(program_id){
+        formdata.append("program_id", program_id.toString());
+      }
       formdata.append("user_type", submitData.user_type);
       formdata.append("type", submitData.type);
       if (submitData.type === "multiple_choice" && submitData.options) {
@@ -171,7 +174,7 @@ export const CreateQuestions = () => {
           title: data?.message,
           color: "success",
         });
-        router.push("/settings/report-questions");
+        router.push(`/programs/${program_id}`);
       }
     },
     onError: (error) => {
@@ -225,24 +228,6 @@ export const CreateQuestions = () => {
           base: "mb-4",
         }}
       />
-
-      {/* البرنامج */}
-      <Select
-        label="البرنامج"
-        placeholder="اختر البرنامج"
-        {...register("program_id")}
-        isInvalid={!!errors.program_id?.message}
-        errorMessage={errors.program_id?.message}
-        labelPlacement="outside"
-        classNames={{
-          label: "text-[#272727] font-bold text-sm",
-          base: "mb-4",
-        }}
-      >
-        {programData?.data?.map((program: any) => (
-          <SelectItem key={program.id}>{program.title}</SelectItem>
-        ))}
-      </Select>
 
       {/* نوع المستخدم */}
       <Select
