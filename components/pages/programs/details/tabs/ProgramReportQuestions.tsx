@@ -20,6 +20,8 @@ import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 import { formatDate } from "@/lib/helper";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
 const columns = [
   { name: "عنوان السؤال", uid: "name" },
@@ -49,11 +51,15 @@ const OptionsComponent = ({ id }: { id: number }) => {
   );
 };
 
-export const AllReportQuestions = () => {
+export const ProgramReportQuestions = ({ data, isLoading }: any) => {
   const [nameSearch, setNameSearch] = useState("");
   const debouncedNameSearch = useDebounce(nameSearch, 500);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
+
+  const pageParams = useParams();
+  const program_id = pageParams.id;
 
   const params: Record<string, string | number> = {
     page: currentPage,
@@ -63,24 +69,16 @@ export const AllReportQuestions = () => {
     params.name = debouncedNameSearch;
   }
 
-  const { data: questionsData, isLoading } = useQuery({
-    queryFn: async () =>
-      await fetchClient(`client/report/question/method`, {
-        ...axios_config,
-        params,
-      }),
-    queryKey: AllQueryKeys.GetAllSpecializations
-  });
-
   const formattedData =
-    questionsData?.data?.map((item: any) => ({
+    data?.data?.map((item: any) => ({
       id: item.id,
       name: item.title,
       type: item.type || "",
-      program: item.program.title || "",
+      program: item.program?.title || "",
       discount_type: item.discount_type || "",
       user_type: item.user_type || "",
-      created_at: formatDate(item.created_at) || ""
+      created_at: formatDate(item.created_at) || "",
+      programId: item.program?.id,
     })) || [];
 
   return (
@@ -118,43 +116,24 @@ export const AllReportQuestions = () => {
           </Dropdown>
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            id="all"
-            variant="flat"
-            color={selectedStatus === "all" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
+        <Link
+            href={`/programs/${program_id}/report-questions/create`}
+            className="text-white font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-primary"
           >
-            الكل
-          </Button>
-          <Button
-            id="active"
-            variant="flat"
-            color={selectedStatus === "active" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
-          >
-            نشط
-          </Button>
-          <Button
-            id="new"
-            variant="flat"
-            color={selectedStatus === "new" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
-          >
-            جديد
-          </Button>
-        </div>
+            أضافة سؤال  
+        </Link>
+
       </div>
       {isLoading ? (
-        <Loader />
+        <Loader />  
       ) : (
         <TableComponent
           columns={columns}
           data={formattedData}
           ActionsComponent={OptionsComponent}
+          handleRowClick={(row: any) =>
+            router.push(`/programs/${row.programId}/report-questions/${row.id}`)
+        }
         />
       )}
 
@@ -162,8 +141,8 @@ export const AllReportQuestions = () => {
         <CustomPagination
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
-          last_page={questionsData?.meta?.last_page}
-          total={questionsData?.meta?.total}
+          last_page={data?.meta?.last_page}
+          total={data?.meta?.total}
         />
       </div>
     </>

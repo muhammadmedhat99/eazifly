@@ -41,7 +41,8 @@ export const routes = [
     sub_routes: [
       { id: 1, name: "بيانات المعلمين", route: "" },
       { id: 2, name: "تحسين", route: "/improve" },
-      { id: 3, name: "طلبات الإنضمام", route: "/requests" },
+      { id: 3, name: "طلبات الإنضمام", route: "/" },
+      { id: 4, name: "طلبات المعلمين", route: "/requests/info"},
     ],
   },
   {
@@ -87,8 +88,8 @@ export const routes = [
     route: "/hr",
     icon: Rank,
     sub_routes: [
-      { id: 1, name: "الوظائف", route: "/jobs" },
-      { id: 2, name: "الموظفين", route: "/employees" },
+      { id: 1, name: "الوظائف", route: "/roles" },
+      { id: 2, name: "الموظفين", route: "/clients" },
       { id: 3, name: "الرواتب", route: "/salaries" },
       { id: 4, name: "الأقسام", route: "/departments" },
     ],
@@ -117,9 +118,6 @@ export const routes = [
       { id: 6, name: "ردود الطلاب", route: "/user-responses" },
       { id: 7, name: "مدة المحاضرات", route: "/sessions-time" },
       { id: 8, name: "كوبونات الخصم", route: "/coupons" },
-      { id: 9, name: "أسئلة التقارير", route: "/report-questions" },
-      { id: 10, name: "الموظفين", route: "/clients" },
-      { id: 11, name: "الوظائف", route: "/roles" },
     ],
   },
 ];

@@ -22,6 +22,8 @@ type StudentDetailsProps = {
       whats_app: string;
       image: string;
       created_at: string;
+      parent_id : string;
+      parent_name: string; 
       status_label: {
         label: string;
         color: string;
@@ -125,8 +127,8 @@ const [studentData, setStudentData] = useState(data.data);
         <Tab key="actions" title="الإجراءات السابقة">
           <TimelineDemo actionsData={actionsData} />
         </Tab>
-        <Tab key="other" title="الطلاب التابعين">
-          <RelatedStudents data={data} />
+        <Tab key="other" title="الطلاب التابعين" isDisabled={!!studentData?.parent_id} >
+          <RelatedStudents data={data}/>
         </Tab>
       </Tabs>
     </div>

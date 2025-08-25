@@ -35,6 +35,9 @@ const schema = yup
             .string()
             .required("ادخل الاسم بالإنجليزية")
             .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
+        type: yup
+              .string()
+              .required("برجاء اختيار جهة العرض"),
     })
     .required();
 
@@ -63,6 +66,7 @@ export const CreateCancelSessionsReason = () => {
             const formdata = new FormData();
             formdata.append("ar[title]", submitData.name_ar);
             formdata.append("en[title]", submitData.name_en);
+            formdata.append("type", submitData.type);
 
             return postData("client/reason/cancel/session/store", formdata, myHeaders);
         },
@@ -133,6 +137,38 @@ export const CreateCancelSessionsReason = () => {
                     inputWrapper: "shadow-none",
                     base: "mb-4",
                 }}
+            />
+
+            <Controller
+                name="type"
+                control={control}
+                render={({ field }) => (
+                    <Select
+                        {...field}
+                        selectedKeys={field.value ? [field.value] : [""]}
+                        onSelectionChange={(keys) => {
+                            field.onChange(Array.from(keys)[0]);
+                        }}
+                        label="جهة العرض"
+                        labelPlacement="outside"
+                        placeholder="اختر جهة العرض"
+                        isInvalid={!!errors.type?.message}
+                        errorMessage={errors.type?.message}
+                        classNames={{
+                            label: "text-[#272727] font-bold text-sm",
+                            base: "mb-4",
+                            value: "text-[#87878C] text-sm",
+                        }}
+                    >
+                        {[
+                            { key: "user", label: "الطالب" },
+                            { key: "instructor", label: "المعلم" },
+                            { key: "both", label: "كلاهما" },
+                        ].map((item) => (
+                            <SelectItem key={item.key}>{item.label}</SelectItem>
+                        ))}
+                    </Select>
+                )}
             />
 
             <div className="flex items-center justify-end gap-4 mt-8 col-span-2">

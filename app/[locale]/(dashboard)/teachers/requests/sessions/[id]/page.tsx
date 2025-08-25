@@ -1,5 +1,5 @@
 import { BreadCrumb } from "@/components/global/BreadCrumb";
-import { QuestionsDetails } from "@/components/pages/settings/report-questions/questions-details";
+import { SessionRequestDetails } from "@/components/pages/teachers/requests/session-request-details";
 import { fetchData } from "@/lib/utils";
 import { cookies } from "next/headers";
 import React from "react";
@@ -10,10 +10,9 @@ export default async function page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const cookieStore = await cookies();
+  const cookieStore = await cookies();  
   const token = cookieStore.get("token");
-
-  const questionData = (await fetchData(`client/report/question/method/show/${id}`, token?.value)) as any;
+  const data = await fetchData(`client/instructor/request/to/cancel/session/${id}`, token?.value);
 
   const BreadCrumbItems = [
     {
@@ -23,25 +22,25 @@ export default async function page({
     },
     {
       id: 2,
-      name: "أسئلة التقارير",
-      link: "/settings/report-questions",
+      name: "المعلمين",
+      link: "/teachers",
     },
     {
       id: 3,
-      name: "السؤال",
+      name: "طلبات المعلمين",
+       link: "/teachers/requests/sessions",
     },
     {
       id: 4,
       name:
-        `${questionData?.data?.title}`,
+        `${data?.data?.session?.instructor}` || "بيانات المعلم",
     },
   ];
   return (
-    
     <>
       <BreadCrumb items={BreadCrumbItems} />
 
-      <QuestionsDetails data={questionData} />
+      <SessionRequestDetails data= {data}/>
     </>
   );
 }
