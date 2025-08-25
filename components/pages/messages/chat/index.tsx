@@ -6,8 +6,16 @@ import { Image, Microphone, Send2, VoiceCricle } from "iconsax-reactjs";
 
 export const Chat = () => {
   const [messages, setMessages] = useState([
-    { id: 1, text: "مثال: هذا النص هو جزء من عملية تحسين تجربة المستخدم من خلال النص.", type: "received" },
-    { id: 2, text: "مثال: هذا النص هو جزء من عملية تحسين تجربة المستخدم من خلال النص.", type: "sent" },
+    {
+      id: 1,
+      text: "مثال: هذا النص هو جزء من عملية تحسين تجربة المستخدم من خلال النص.",
+      type: "received",
+    },
+    {
+      id: 2,
+      text: "مثال: هذا النص هو جزء من عملية تحسين تجربة المستخدم من خلال النص.",
+      type: "sent",
+    },
     // { id: 3, text: "فويس مسج", type: "received", audio: true },
   ]);
   const [input, setInput] = useState("");
@@ -20,7 +28,6 @@ export const Chat = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-
       {/* Messages */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3">
         {messages.map((msg) => (
@@ -31,13 +38,7 @@ export const Chat = () => {
             <Card
               className={`p-3 rounded-2xl max-w-[70%] bg-white text-black shadow rounded-bl-none`}
             >
-              {msg.audio ? (
-                <audio controls className="w-40">
-                  <source src="test-audio.mp3" type="audio/mpeg" />
-                </audio>
-              ) : (
-                msg.text
-              )}
+              msg.text
             </Card>
           </div>
         ))}
@@ -63,4 +64,4 @@ export const Chat = () => {
       </div>
     </div>
   );
-}
+};
