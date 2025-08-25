@@ -1,7 +1,7 @@
 "use client";
 import { Edit2, Trash } from "iconsax-reactjs";
 import { Loader } from "@/components/global/Loader";
-import { useState} from "react";
+import { useState } from "react";
 import { CustomPagination } from "@/components/global/Pagination";
 import ChangeTeacherModal from "../ChangeTeacherModal";
 import { useParams } from "next/navigation";
@@ -13,28 +13,29 @@ type teachersProps = {
   data: any;
 };
 
-
 export const Teachers = ({
   teachersData,
   isLoadingteachers,
   handleManualRefetch,
   data,
-}: teachersProps) => {   
+}: teachersProps) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-    const params = useParams();
-    const user_id = params.id;
+  const params = useParams();
+  const user_id = params.id;
 
   return (
     <div className="flex flex-col gap-2">
       {isLoadingteachers ? (
         <Loader />
       ) : teachersData.data && teachersData.data.length > 0 ? (
-        teachersData.data?.filter(item => data.data.parent_id !== null ? item.user.id == user_id : true).map(
-          (teacher: any, teacherIndex: number) => (
-            
+        teachersData.data
+          ?.filter((item: any) =>
+            data.data.parent_id !== null ? item.user.id == user_id : true
+          )
+          .map((teacher: any, teacherIndex: number) => (
             <div
               key={teacherIndex}
               className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8"
@@ -77,8 +78,7 @@ export const Teachers = ({
                 handleManualRefetch={handleManualRefetch}
               />
             </div>
-          )
-        )
+          ))
       ) : (
         <div className="text-sm text-gray-500 text-center">
           لا توجد بيانات حالية للعرض
