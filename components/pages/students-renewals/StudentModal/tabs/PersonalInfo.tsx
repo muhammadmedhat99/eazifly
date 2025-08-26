@@ -15,7 +15,11 @@ type StudentDetailsProps = {
     user_name: string;
     user_email: string;
     user_phone: string;
-    total_sessions: number;
+    total_sessions: {
+      finished: number;
+      missed: number;
+      canceled: number;
+    };
     total_children: number;
     user_whats_app: string;
     program_name: string;
@@ -104,13 +108,36 @@ export const PersonalInfo = ({studentInfo} : StudentDetailsProps) => {
         </div>
       </div>
       <div className="flex items-center justify-between bg-[#F8F9FA] px-5 py-4 rounded-xl border border-stroke">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 w-full">
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">إجمالي حصص الطالب</span>
-          <span className="text-black-text font-bold text-[15px]">
-            {studentInfo.total_sessions}
-          </span>
+          <div className="flex items-center justify-between">
+            {/* Finished */}
+            <div className="flex flex-col gap-2 items-center flex-1">
+              <span className="text-green-600 text-sm font-bold">مكتملة</span>
+              <span className="text-black-text font-bold text-[15px]">
+                {studentInfo.total_sessions.finished}
+              </span>
+            </div>
+
+            {/* Missed */}
+            <div className="flex flex-col gap-2 items-center flex-1">
+              <span className="text-orange-500 text-sm font-bold">غياب</span>
+              <span className="text-black-text font-bold text-[15px]">
+                {studentInfo.total_sessions.missed}
+              </span>
+            </div>
+
+            {/* Canceled */}
+            <div className="flex flex-col gap-2 items-center flex-1">
+              <span className="text-red-500 text-sm font-bold">ملغية</span>
+              <span className="text-black-text font-bold text-[15px]">
+                {studentInfo.total_sessions.canceled}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
+
       <div className="flex items-center justify-between bg-[#F8F9FA] px-5 py-4 rounded-xl border border-stroke">
         <div className="flex flex-col gap-2">
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">الطلاب التابعين</span>
