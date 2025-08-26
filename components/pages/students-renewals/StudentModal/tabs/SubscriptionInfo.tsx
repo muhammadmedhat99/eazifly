@@ -14,7 +14,12 @@ type StudentDetailsProps = {
     user_name: string;
     user_email: string;
     user_phone: string;
-    total_sessions: number;
+    total_sessions: {
+      finished: number;
+      missed: number;
+      canceled: number;
+      all_sessions: number;
+    };
     total_children: number;
     user_whats_app: string;
     program_name: string;
@@ -36,6 +41,10 @@ type StudentDetailsProps = {
     plan: string;
     subscription_type: string;
     student_number: string;
+    subscripe_days: {
+      title: string;
+    };
+    duration: string;
   };
 };
 
@@ -46,7 +55,7 @@ export const SubscriptionInfo = ({studentInfo} : StudentDetailsProps) => {
         <div className="flex flex-col gap-2">
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">خطة الإشتراك</span>
           <span className="text-black-text font-bold text-[15px]">
-            {studentInfo.plan}
+            {studentInfo.subscripe_days.title}
           </span>
         </div>
       </div>
@@ -71,6 +80,22 @@ export const SubscriptionInfo = ({studentInfo} : StudentDetailsProps) => {
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">إسم البرنامج</span>
           <span className="text-black-text font-bold text-[15px]">
             {studentInfo.program_name}
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between bg-[#F8F9FA] px-5 py-4 rounded-xl border border-stroke">
+        <div className="flex flex-col gap-2">
+          <span className="text-[#5E5E5E] text-sm font-bold text-primary">عدد الحصص</span>
+          <span className="text-black-text font-bold text-[15px]">
+            {studentInfo.total_sessions.all_sessions}
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between bg-[#F8F9FA] px-5 py-4 rounded-xl border border-stroke">
+        <div className="flex flex-col gap-2">
+          <span className="text-[#5E5E5E] text-sm font-bold text-primary">مدة الحصة</span>
+          <span className="text-black-text font-bold text-[15px]">
+            {studentInfo.duration} دقيقة
           </span>
         </div>
       </div>
