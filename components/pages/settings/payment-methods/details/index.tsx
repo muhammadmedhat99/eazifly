@@ -1,7 +1,7 @@
 "use client";
 import { Edit2 } from "iconsax-reactjs";
 
-import { Avatar, Input, Button, image, addToast } from "@heroui/react";
+import { Avatar, Input, Button, image, addToast, Switch } from "@heroui/react";
 import { formatDate } from "@/lib/helper";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -14,6 +14,7 @@ import { useParams } from "next/navigation";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 import Link from "next/link";
+import ConfirmModal from "@/components/global/ConfirmModal";
 
 type paymentDetailsProps = {
   data: {
@@ -24,6 +25,8 @@ type paymentDetailsProps = {
       image: string;
       created_at: string;
       how_to_use: string;
+      keys: { pay_on: string; max_value: string }[];
+      status: "active" | "inactive";
     };
   };
 };
@@ -56,6 +59,25 @@ const schema = yup
         (value) => value && value.length > 0
       )
       .required("الرجاء تحميل ملف"),
+    qr_image: yup
+      .mixed<FileList>()
+      .test(
+        "fileType",
+        "الرجاء تحميل ملف صحيح",
+        (value) => value && value.length > 0
+      )
+      .required("الرجاء تحميل ملف"),
+
+    keys: yup
+      .array()
+      .of(
+        yup.object().shape({
+          pay_on: yup.string().required("رقم الهاتف مطلوب"),
+          max_value: yup.string().required("القيمة القصوى مطلوبة"),
+        })
+      )
+      .min(1, "يجب إضافة مفتاح واحد على الأقل").required(),
+    status: yup.string().oneOf(["active", "inactive"]).required(),
   })
   .required();
 
@@ -66,15 +88,17 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
   const id = params.id;
   const queryClient = useQueryClient();
   const [editField, setEditField] = useState<string | null>(null);
-  const { control, handleSubmit, watch } = useForm<FormData>({
+  const { control, handleSubmit, getValues, watch, setValue } = useForm<FormData>({
     defaultValues: {
       title_ar: data?.data?.title_ar || "",
       title_en: data?.data?.title_en || "",
+      keys: data?.data?.keys || [],
+      status:  data?.data?.status || "",
     },
   });
 
   const { data: paymentData, isLoading } = useQuery({
-    queryKey: ["country", id],
+    queryKey: ["payment", id],
     queryFn: async () =>
       await fetchClient(`client/payment/method/show/${id}`, axios_config),
   });
@@ -96,6 +120,13 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
       if (submitData.how_to_use?.length) {
         formdata.append("how_to_use", submitData.how_to_use[0]);
       }
+      if (submitData.status) {
+        formdata.append("status", submitData.status);
+      }
+      submitData.keys?.forEach((key: any, index: number) => {
+        formdata.append(`keys[${index}][pay_on]`, key.pay_on);
+        formdata.append(`keys[${index}][max_value]`, key.max_value);
+      });
 
       return postData(
         `client/payment/method/update/${data.data.id}`,
@@ -114,7 +145,7 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
           title: data?.message,
           color: "success",
         });
-        queryClient.invalidateQueries({ queryKey: ["country", id] });
+        queryClient.invalidateQueries({ queryKey: ["payment", id] });
       }
       setEditField(null);
     },
@@ -127,13 +158,72 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
     },
   });
 
+  const [confirmAction, setConfirmAction] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<"active" | "inactive" | null>(null);
+
+  const handleConfirmRemove = () => {
+  if (!pendingStatus) return;
+  UpdatePaymentMethods.mutate({
+    ...getValues(),
+    status: pendingStatus,
+  });
+  setConfirmAction(false);
+  setPendingStatus(null);
+};
+
   return isLoading ? (
     <Loader />
   ) : (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5"
-    >
+      >
+        <ConfirmModal
+          open={confirmAction}
+          onCancel={() => {
+            setConfirmAction(false);
+            setPendingStatus(null);
+            setValue("status", watch("status") === "active" ? "inactive" : "active");
+          }}
+          onConfirm={handleConfirmRemove}
+          title="تأكيد تغير الحالة"
+          message="هل أنت متأكد من أنك تريد تغير حالة وسيلة الدفع؟"
+        />
+
+        <div className="col-span-2">
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-sm font-bold ${field.value === "inactive" ? "text-warning" : "text-gray-500"
+                    }`}
+                >
+                  inactive
+                </span>
+
+                <Switch
+                  isSelected={field.value === "active"}
+                  onValueChange={(selected) => {
+                    const newStatus = selected ? "active" : "inactive";
+                    setPendingStatus(newStatus);
+                    field.onChange(newStatus);
+                    setConfirmAction(true);
+                  }}
+                  color="success"
+                />
+
+                <span
+                  className={`text-sm font-bold ${field.value === "active" ? "text-green-600" : "text-gray-500"
+                    }`}
+                >
+                  active
+                </span>
+              </div>
+            )}
+          />
+        </div>
       <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">الاسم</span>
@@ -294,6 +384,67 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
           </button>
         )}
       </div>
+
+      {paymentData?.data?.keys?.map((_: any, index: number) => (
+        <div
+          key={index}
+          className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke"
+        >
+          <div className="flex flex-col gap-4 w-full">
+            <span className="text-[#5E5E5E] text-sm font-bold">الدفع على</span>
+            {editField === `key-${index}` ? (
+              <Controller
+                name={`keys.${index}.pay_on`}
+                control={control}
+                render={({ field }) => (
+                  <Input {...field} placeholder="نص الكتابة" type="text" />
+                )}
+              />
+            ) : (
+              <span className="text-black-text font-bold text-[15px]">
+                {paymentData?.data?.keys[index]?.pay_on}
+              </span>
+            )}
+
+            <span className="text-[#5E5E5E] text-sm font-bold">أقصى قيمة</span>
+            {editField === `key-${index}` ? (
+              <Controller
+                name={`keys.${index}.max_value`}
+                control={control}
+                render={({ field }) => (
+                  <Input {...field} placeholder="نص الكتابة" type="number" />
+                )}
+              />
+            ) : (
+              <span className="text-black-text font-bold text-[15px]">
+                {paymentData?.data?.keys[index]?.max_value}
+              </span>
+            )}
+          </div>
+
+          {editField === `key-${index}` ? (
+            <Button
+              size="sm"
+              color="primary"
+              variant="solid"
+              className="text-white"
+              type="submit"
+            >
+              حفظ
+            </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditField(`key-${index}`)}
+              className="flex items-center gap-1 text-sm font-bold"
+            >
+              <Edit2 size={18} />
+              تعديل
+            </button>
+          )}
+        </div>
+      ))}
+
     </form>
   );
 };
