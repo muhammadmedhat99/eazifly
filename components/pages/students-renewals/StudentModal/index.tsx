@@ -50,7 +50,7 @@ export default function StudentModal({
                         "text-[#5E5E5E] text-sm font-bold group-data-[selected=true]:text-primary",
                     }}
                 >
-                    <Tab key="action" title="الإجراء">
+                    <Tab key="action" title="إنشاء إجراء">
                     <Action studentInfo={student} onClose={onClose}/>
                     </Tab>
                     <Tab key="personal" title="البيانات الشخصية">

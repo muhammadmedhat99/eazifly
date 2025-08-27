@@ -491,9 +491,9 @@ export const Programs = ({
                     </span>
 
                     {data.data?.parent_name ? (
-                      <div className="text-black-text font-bold text-[15px]">
+                      <Link href={`/students/${data.data.parent_id}`} className="text-primary font-bold text-[15px] underline">
                         {data.data.parent_name}
-                      </div>
+                      </Link>
                     ) : (subaccountData as any)?.data ? (
                       <div className="text-black-text font-bold text-[15px]">
                         {(subaccountData as any)?.data?.length} من {subscription.student_number}

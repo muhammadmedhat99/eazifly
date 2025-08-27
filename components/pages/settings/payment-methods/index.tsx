@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
 import {
+  addToast,
   avatar,
   Button,
   Dropdown,
@@ -14,36 +15,101 @@ import {
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
 import { CustomPagination } from "@/components/global/Pagination";
-import { useQuery } from "@tanstack/react-query";
-import { fetchClient } from "@/lib/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 import { formatDate } from "@/lib/helper";
+import ConfirmModal from "@/components/global/ConfirmModal";
+import { getCookie } from "cookies-next";
 
 const columns = [
     { name: "الصورة", uid: "avatar" },
     { name: "وسيلة الدفع", uid: "name" },
+    { name: "الحالة", uid: "status" },
+    { name: <Options />, uid: "actions" },
 ];
 
-const OptionsComponent = ({ id }: { id: number }) => {
+const OptionsComponent = ({ id, currentStatus }: { id: number; currentStatus: "active" | "inactive" }) => {
+  const [confirmAction, setConfirmAction] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<"active" | "inactive" | null>(null);
+  const [currentId, setCurrentId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+
+
+  const handleChangeStatusClick = () => {
+    const newStatus = currentStatus === "active" ? "inactive" : "active";
+    setPendingStatus(newStatus);
+    setCurrentId(id);
+    setConfirmAction(true);
+  };
+
+  const UpdatePaymentMethods = useMutation({
+    mutationFn: ({ id, status }: any) => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+      formdata.append("status", status);
+
+      return postData(`client/payment/method/update/${id}`, formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({ title: "error", color: "danger" });
+      } else {
+        addToast({ title: data?.message, color: "success" });
+        queryClient.invalidateQueries({ queryKey: AllQueryKeys.GetAllPaymentMethods });
+      }
+    },
+    onError: () => {
+      addToast({ title: "عذرا حدث خطأ ما", color: "danger" });
+    },
+  });
+
+
   return (
-    <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
-      <DropdownTrigger>
-        <button>
-          <Options />
-        </button>
-      </DropdownTrigger>
-      <DropdownMenu aria-label="Static Actions">
-        <DropdownItem href={`/teachers/${id}`} key="show">
-          عرض البيانات
-        </DropdownItem>
-        <DropdownItem key="actions">الإجراءات</DropdownItem>
-        <DropdownItem key="delete">حذف</DropdownItem>
-        <DropdownItem key="add-to-course">تعيين علي برنامج</DropdownItem>
-        <DropdownItem key="send-mail">إرسال رسالة</DropdownItem>
-      </DropdownMenu>
-    </Dropdown>
+    <>
+      <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
+        <DropdownTrigger>
+          <button>
+            <Options />
+          </button>
+        </DropdownTrigger>
+        <DropdownMenu aria-label="Static Actions">
+          <DropdownItem href={`/settings/payment-methods/${id}`} key="show">
+            عرض البيانات
+          </DropdownItem>
+          <DropdownItem key="actions" onClick={handleChangeStatusClick}>
+            تغير الحالة
+          </DropdownItem>
+        </DropdownMenu>
+      </Dropdown>
+      <ConfirmModal
+        open={confirmAction}
+        onCancel={() => {
+          setConfirmAction(false);
+          setPendingStatus(null);
+          setCurrentId(null);
+        }}
+        onConfirm={() => {
+          if (!pendingStatus || !currentId) return;
+          UpdatePaymentMethods.mutate({
+            status: pendingStatus,
+            id: currentId,
+          });
+          setConfirmAction(false);
+          setPendingStatus(null);
+          setCurrentId(null);
+        }}
+        title="تأكيد تغير الحالة"
+        message="هل أنت متأكد من أنك تريد تغير حالة وسيلة الدفع؟"
+      />
+
+    </>
   );
 };
 
@@ -75,6 +141,14 @@ export const AllPaymentMethods = () => {
       id: item.id,
       avatar: item.image,
       name: item.title || "N/A",
+      status: {
+        name: item.status || "N/A",
+        color:
+          item?.status === "active"
+            ? "success"
+            : "warning",
+      },
+      currentStatus: item.status,
       created_at: formatDate(item.created_at) || "N/A",
     })) || [];
 
@@ -149,8 +223,10 @@ export const AllPaymentMethods = () => {
         <TableComponent
           columns={columns}
           data={formattedData}
-          ActionsComponent={OptionsComponent}
-        />
+            ActionsComponent={({ id, currentStatus }) => (
+              <OptionsComponent id={id} currentStatus={currentStatus} />
+            )}
+          />
       )}
 
       <div className="my-10 px-6">

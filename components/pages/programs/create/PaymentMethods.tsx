@@ -51,7 +51,7 @@ export const PaymentMethods = ({
   
   const { data: paymentMethods, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/payment/method`, axios_config),
+      await fetchClient(`client/payment/method?status=active`, axios_config),
     queryKey: AllQueryKeys.GetAllPaymentMethods,
   });
 
