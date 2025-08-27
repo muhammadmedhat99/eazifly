@@ -1,7 +1,13 @@
 "use client";
 
-import { addToast, Button, Input, Spinner, Switch } from "@heroui/react";
-import React, { useEffect } from "react";
+import {
+  addToast,
+  Button,
+  Input,
+  Spinner,
+  Switch,
+} from "@heroui/react";
+import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -12,27 +18,16 @@ import { axios_config } from "@/lib/const";
 import { getCookie } from "cookies-next";
 import { Loader } from "@/components/global/Loader";
 import { useParams } from "next/navigation";
+import ConfirmModal from "@/components/global/ConfirmModal"; // تأكدي من مكانه
 
 const schema = yup
   .object({
-    geidea_api_merchant_Key: yup
-      .string()
-      .required("ادخل Api Merchant Key"),
-    geidea_api_secret: yup
-      .string()
-      .required("ادخل Api Secret"),
-    test_geidea_api_merchant_Key: yup
-      .string()
-      .required("ادخل Api Merchant Key"),
-    test_geidea_api_secret: yup
-      .string()
-      .required("ادخل Api Secret"),
-    mail_name: yup
-      .string()
-      .required("ادخل البريد الإلكتروني"),
-    mail_password: yup
-      .string()
-      .required("ادخل كلمة المرور"),
+    geidea_api_merchant_Key: yup.string().required("ادخل Api Merchant Key"),
+    geidea_api_secret: yup.string().required("ادخل Api Secret"),
+    test_geidea_api_merchant_Key: yup.string().required("ادخل Api Merchant Key"),
+    test_geidea_api_secret: yup.string().required("ادخل Api Secret"),
+    mail_name: yup.string().required("ادخل البريد الإلكتروني"),
+    mail_password: yup.string().required("ادخل كلمة المرور"),
     geidea_status: yup
       .string()
       .oneOf(["test", "production"], "القيمة يجب أن تكون test أو production")
@@ -49,6 +44,7 @@ export const ExternalServicesDetails = () => {
     control,
     formState: { errors },
     reset,
+    getValues,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -58,42 +54,29 @@ export const ExternalServicesDetails = () => {
       geidea_api_secret: "",
       mail_name: "",
       mail_password: "",
+      geidea_status: "test",
     },
   });
+
   const { data: settingData, isLoading } = useQuery({
     queryKey: AllQueryKeys.GetAllSettings,
     queryFn: async () => await fetchClient(`client/setting`, axios_config),
   });
 
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [confirmAction, setConfirmAction] = useState(false);
+  const [confirmType, setConfirmType] = useState<"form" | "switch" | null>(null);
+
   useEffect(() => {
     if (settingData) {
-      const merchantKey = settingData.data.find(
-        (item: any) => item.key === "geidea_api_merchant_Key"
-      )?.value;
-
-      const secret = settingData.data.find(
-        (item: any) => item.key === "geidea_api_secret"
-      )?.value;
-
-      const testMerchantKey = settingData.data.find(
-        (item: any) => item.key === "test_geidea_api_merchant_Key"
-      )?.value;
-
-      const testSecret = settingData.data.find(
-        (item: any) => item.key === "test_geidea_api_secret"
-      )?.value;
-
-      const mail = settingData.data.find(
-        (item: any) => item.key === "mail_name"
-      )?.value;
-
-      const password = settingData.data.find(
-        (item: any) => item.key === "mail_password"
-      )?.value;
-
-      const geideaStatus = settingData.data.find(
-        (item: any) => item.key === "geidea_status"
-      )?.value;
+      const merchantKey = settingData.data.find((item: any) => item.key === "geidea_api_merchant_Key")?.value;
+      const secret = settingData.data.find((item: any) => item.key === "geidea_api_secret")?.value;
+      const testMerchantKey = settingData.data.find((item: any) => item.key === "test_geidea_api_merchant_Key")?.value;
+      const testSecret = settingData.data.find((item: any) => item.key === "test_geidea_api_secret")?.value;
+      const mail = settingData.data.find((item: any) => item.key === "mail_name")?.value;
+      const password = settingData.data.find((item: any) => item.key === "mail_password")?.value;
+      const geideaStatus = settingData.data.find((item: any) => item.key === "geidea_status")?.value;
 
       reset({
         geidea_api_merchant_Key: merchantKey || "",
@@ -102,12 +85,10 @@ export const ExternalServicesDetails = () => {
         test_geidea_api_secret: testSecret || "",
         mail_name: mail || "",
         mail_password: password || "",
-        geidea_status: geideaStatus || "",
+        geidea_status: geideaStatus || "test",
       });
     }
   }, [settingData, reset]);
-
-  const onSubmit = (data: FormData) => updateSettings.mutate(data);
 
   const updateSettings = useMutation({
     mutationFn: (submitData: FormData) => {
@@ -118,231 +99,134 @@ export const ExternalServicesDetails = () => {
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
 
       const payload = {
-        settings: [
-          {
-            key: "geidea_api_merchant_Key",
-            value: submitData.geidea_api_merchant_Key,
-            label_name: "geidea_api_merchant_Key",
-          },
-          {
-            key: "geidea_api_secret",
-            value: submitData.geidea_api_secret,
-            label_name: "geidea_api_secret",
-          },
-          {
-            key: "test_geidea_api_merchant_Key",
-            value: submitData.test_geidea_api_merchant_Key,
-            label_name: "test_geidea_api_merchant_Key",
-          },
-          {
-            key: "test_geidea_api_secret",
-            value: submitData.test_geidea_api_secret,
-            label_name: "test_geidea_api_secret",
-          },
-          {
-            key: "mail_name",
-            value: submitData.mail_name,
-            label_name: "mail_name",
-          },
-          {
-            key: "mail_password",
-            value: submitData.mail_password,
-            label_name: "mail_password",
-          },
-          {
-            key: "geidea_status",
-            value: submitData.geidea_status,
-            label_name: "geidea_status",
-          },
-        ],
+        settings: Object.entries(submitData).map(([key, value]) => ({
+          key,
+          value,
+          label_name: key,
+        })),
       };
 
       return postData("client/setting/update", JSON.stringify(payload), myHeaders);
     },
     onSuccess: (data) => {
-      if (data.message && typeof data.message === "object" && !Array.isArray(data.message)) {
-        const messagesObj = data.message as Record<string, string[]>;
-
-        Object.entries(messagesObj).forEach(([field, messages]) => {
-          messages.forEach((msg) => {
-            addToast({
-              title: `${field}: ${msg}`,
-              color: "danger",
-            });
-          });
-        });
-      } else if (data.message !== "success") {
-        addToast({
-          title: "error",
-          color: "danger",
-        });
+      if (data.message !== "success") {
+        addToast({ title: "error", color: "danger" });
       } else {
-        addToast({
-          title: data?.message,
-          color: "success",
-        });
+        addToast({ title: "تم التعديل بنجاح", color: "success" });
+        setIsEditing(false);
       }
     },
-    onError: (error) => {
-      console.log(" error ===>>", error);
-      addToast({
-        title: "عذرا حدث خطأ ما",
-        color: "danger",
-      });
+    onError: () => {
+      addToast({ title: "عذرا حدث خطأ ما", color: "danger" });
     },
   });
-    const params = useParams();
-    const service_id = params.id;
 
-  return (
-    isLoading ? (<Loader />) : (
-      <div className="px-4 py-6">
-        <div className="touch-none tap-highlight-transparent select-none w-full bg-content1 border border-stroke max-w-full rounded-2xl gap-5 p-4 data-[selected=true]:border-success">
-          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {service_id=== 'geidea' && <>
-              <span className="text-[#272727] text-base font-bold col-span-2">
-                بيانات وسيلة الدفع جيديا
-              </span>
+  const params = useParams();
+  const service_id = params.id;
 
-              <div className="col-span-2">
-                <Controller
-                  name="geidea_status"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`text-sm font-bold ${field.value === "test" ? "text-warning" : "text-gray-500"
-                          }`}
-                      >
-                        Test
-                      </span>
+  const handleConfirm = () => {
+    if (confirmType === "form") {
+      updateSettings.mutate(getValues());
+    } else if (confirmType === "switch") {
+      const current = getValues("geidea_status");
+      const newStatus = current === "test" ? "production" : "test";
+      updateSettings.mutate({ ...getValues(), geidea_status: newStatus });
+    }
+    setConfirmAction(false);
+    setConfirmType(null);
+  };
 
-                      <Switch
-                        isSelected={field.value === "production"}
-                        onValueChange={(selected) =>
-                          field.onChange(selected ? "production" : "test")
-                        }
-                        color="success"
-                      />
+  return isLoading ? (
+    <Loader />
+  ) : (
+    <div className="px-4 py-6">
+      <div className="touch-none tap-highlight-transparent select-none w-full bg-content1 border border-stroke max-w-full rounded-2xl gap-5 p-4">
+        {service_id === "geidea" && (
+          <div className="mb-6">
+            <Controller
+              name="geidea_status"
+              control={control}
+              render={({ field }) => (
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-bold ${field.value === "test" ? "text-warning" : "text-gray-500"}`}>Test</span>
 
-                      <span
-                        className={`text-sm font-bold ${field.value === "production" ? "text-green-600" : "text-gray-500"
-                          }`}
-                      >
-                        Production
-                      </span>
-                    </div>
-                  )}
-                />
+                  <Switch
+                    isSelected={field.value === "production"}
+                    onValueChange={(selected) => {
+                      const newStatus = selected ? "production" : "test";
+                      setConfirmType("switch");
+                      setConfirmAction(true);
+                      field.onChange(newStatus);
+                    }}
+                    color="success"
+                  />
 
-              </div>
-              <Input
-                label="Test Api Merchant Key"
-                placeholder="نص الكتابه"
-                type="text"
-                {...register("test_geidea_api_merchant_Key")}
-                isInvalid={!!errors.test_geidea_api_merchant_Key?.message}
-                errorMessage={errors.test_geidea_api_merchant_Key?.message}
-                labelPlacement="outside"
-                classNames={{
-                  label: "text-[#272727] font-bold text-sm",
-                  inputWrapper: "shadow-none",
-                  base: "mb-4",
-                }}
-              />
-              <Input
-                label="Test Api Secret"
-                placeholder="نص الكتابه"
-                type="text"
-                {...register("test_geidea_api_secret")}
-                isInvalid={!!errors.test_geidea_api_secret?.message}
-                errorMessage={errors.test_geidea_api_secret?.message}
-                labelPlacement="outside"
-                classNames={{
-                  label: "text-[#272727] font-bold text-sm",
-                  inputWrapper: "shadow-none",
-                  base: "mb-4",
-                }}
-              />
-              <Input
-                label="Api Merchant Key"
-                placeholder="نص الكتابه"
-                type="text"
-                {...register("geidea_api_merchant_Key")}
-                isInvalid={!!errors.geidea_api_merchant_Key?.message}
-                errorMessage={errors.geidea_api_merchant_Key?.message}
-                labelPlacement="outside"
-                classNames={{
-                  label: "text-[#272727] font-bold text-sm",
-                  inputWrapper: "shadow-none",
-                  base: "mb-4",
-                }}
-              />
-              <Input
-                label="Api Secret"
-                placeholder="نص الكتابه"
-                type="text"
-                {...register("geidea_api_secret")}
-                isInvalid={!!errors.geidea_api_secret?.message}
-                errorMessage={errors.geidea_api_secret?.message}
-                labelPlacement="outside"
-                classNames={{
-                  label: "text-[#272727] font-bold text-sm",
-                  inputWrapper: "shadow-none",
-                  base: "mb-4",
-                }}
-              />
-            </>}
-            {service_id=== 'mail' && <>
-            <span className="text-[#272727] text-base font-bold col-span-2">
-              بيانات الايميل
-            </span>
-
-            <Input
-              label="البريد الإلكتروني"
-              placeholder="نص الكتابه"
-              type="text"
-              {...register("mail_name")}
-              isInvalid={!!errors.mail_name?.message}
-              errorMessage={errors.mail_name?.message}
-              labelPlacement="outside"
-              classNames={{
-                label: "text-[#272727] font-bold text-sm",
-                inputWrapper: "shadow-none",
-                base: "mb-4",
-              }}
+                  <span className={`text-sm font-bold ${field.value === "production" ? "text-green-600" : "text-gray-500"}`}>Production</span>
+                </div>
+              )}
             />
-            <Input
-              label="كلمة المرور"
-              placeholder="نص الكتابه"
-              type="text"
-              {...register("mail_password")}
-              isInvalid={!!errors.mail_password?.message}
-              errorMessage={errors.mail_password?.message}
-              labelPlacement="outside"
-              classNames={{
-                label: "text-[#272727] font-bold text-sm",
-                inputWrapper: "shadow-none",
-                base: "mb-4",
-              }}
-            />
-            </>}
+          </div>
+        )}
 
-            <div className="flex items-center justify-end gap-4 mt-8 col-span-2">
-              <Button
-                type="submit"
-                variant="solid"
-                color="primary"
-                className="text-white"
-                isDisabled={updateSettings?.isPending}
-              >
-                {updateSettings?.isPending && <Spinner color="white" size="sm" />}
+        <form onSubmit={(e) => e.preventDefault()} className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {service_id === "geidea" && (
+            <>
+              <Input label="Test Api Merchant Key" labelPlacement="outside" {...register("test_geidea_api_merchant_Key")} isDisabled={!isEditing} errorMessage={errors.test_geidea_api_merchant_Key?.message} />
+              <Input label="Test Api Secret" labelPlacement="outside" {...register("test_geidea_api_secret")} isDisabled={!isEditing} errorMessage={errors.test_geidea_api_secret?.message} />
+              <Input label="Api Merchant Key" labelPlacement="outside" {...register("geidea_api_merchant_Key")} isDisabled={!isEditing} errorMessage={errors.geidea_api_merchant_Key?.message} />
+              <Input label="Api Secret"  labelPlacement="outside"{...register("geidea_api_secret")} isDisabled={!isEditing} errorMessage={errors.geidea_api_secret?.message} />
+            </>
+          )}
+
+          {service_id === "mail" && (
+            <>
+              <Input label="البريد الإلكتروني"  labelPlacement="outside"{...register("mail_name")} isDisabled={!isEditing} errorMessage={errors.mail_name?.message} />
+              <Input label="كلمة المرور"  labelPlacement="outside"{...register("mail_password")} isDisabled={!isEditing} errorMessage={errors.mail_password?.message} />
+            </>
+          )}
+
+          <div className="flex items-center justify-end gap-4 mt-8 col-span-2">
+            {!isEditing ? (
+              <Button className="text-white" onPress={() => setIsEditing(true)} color="primary">
                 تعديل
               </Button>
-            </div>
-          </form>
-        </div>
+            ) : (
+              <>
+                <Button
+                  onPress={() => {
+                    setConfirmType("form");
+                    setConfirmAction(true);
+                  }}
+                  color="primary"
+                  variant="solid"
+                  isDisabled={updateSettings.isPending}
+                >
+                  {updateSettings.isPending && <Spinner color="white" className="text-white" size="sm" />} حفظ
+                </Button>
+                <Button onPress={() => setIsEditing(false)} color="danger" className="text-white">
+                  إلغاء
+                </Button>
+              </>
+            )}
+          </div>
+        </form>
       </div>
-    )
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        open={confirmAction}
+        onCancel={() => {
+          setConfirmAction(false);
+          setConfirmType(null);
+        }}
+        onConfirm={handleConfirm}
+        title={confirmType === "form" ? "تأكيد التعديل" : "تأكيد تغيير الحالة"}
+        message={
+          confirmType === "form"
+            ? "هل أنت متأكد من حفظ التعديلات؟"
+            : "هل أنت متأكد من تغيير حالة جيديا؟"
+        }
+      />
+    </div>
   );
 };

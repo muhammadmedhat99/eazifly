@@ -3,6 +3,18 @@ import { User } from "@heroui/react";
 import Link from "next/link";
 import React from "react";
 
+const responseStatusMap: Record<string, string> = {
+  responded: "تم الرد",
+  not_responded: "غير متاح",
+};
+
+const renewalStatusMap: Record<string, string> = {
+  renew: "تم التجديد",
+  connected: "تم التواصل",
+  not_renewed: "لم يتم التجديد",
+  postpone: "تم التأجيل",
+};
+
 type StudentDetailsProps = {
   studentInfo: {
     id: number;
@@ -32,29 +44,78 @@ type StudentDetailsProps = {
 export const PreviousActions = ({studentInfo} : StudentDetailsProps) => {
   return (
     <div className="grid grid-cols-1 gap-4">
-      {studentInfo.communications.map((action) => (
-        <div key={action.id} className="bg-[#F8F9FA] px-5 py-4 rounded-xl border border-stroke flex items-center justify-between">
-          <div className="flex flex-col justify-center items-start gap-1">
-            <span className="justify-start text-[#272727] text-base font-bold ">
-              {action.response_status}
-            </span>
-            <span className="justify-start text-[#3D5066] text-sm font-bold">
-              {action.renewal_status}
-            </span>
+      {[...studentInfo.communications].reverse().map((action) => (
+        <div
+          key={action.id}
+          className="bg-[#F8F9FA] px-5 py-4 rounded-xl border border-stroke flex flex-col gap-4"
+        >
+          {/* Row 1: Status + User */}
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col justify-center items-start gap-1">
+              <span className="text-[#272727] text-base font-bold">
+                {responseStatusMap[action.response_status] || action.response_status}
+              </span>
+              <span className="text-[#3D5066] text-sm font-bold">
+                {renewalStatusMap[action.renewal_status] || action.renewal_status}
+              </span>
+            </div>
+
+            <Link href={"#"}>
+              <User
+                avatarProps={{
+                  radius: "full",
+                  src: action.client_image ?? undefined,
+                  size: "sm",
+                }}
+                description={
+                  <span className="text-sm font-bold text-[#3D5066]">
+                    {action.client_name}
+                  </span>
+                }
+                name={
+                  <span className="text-primary text-start text-xs font-bold">
+                    {formatDate(action.created_at)}
+                  </span>
+                }
+              />
+            </Link>
           </div>
-          <Link href={'#'}>
-            <User
-              avatarProps={{ radius: "full",  src: action.client_image ?? undefined, size: "sm" }}
-              description={
-                <span className="text-sm font-bold text-[#3D5066]">{action.client_name}</span>
-              }
-              name={
-                <span className="text-primary text-start text-xs font-bold">
-                  {formatDate(action.created_at)}
-                </span>
-              }
-            ></User>
-          </Link>
+          {/* Row 2: Reminder Info */}
+          <div className="flex flex-col gap-6">
+            {/* Reminder Info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <span className="text-xs text-gray-500 font-medium">التذكير</span>
+                <p className="text-sm font-semibold text-gray-800 mt-1">
+                  {action.reminder === "true" ? "نعم" : "لا"}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <span className="text-xs text-gray-500 font-medium">نوع التذكير</span>
+                <p className="text-sm font-semibold text-gray-800 mt-1">
+                  {action.reminder_type ?? "-"}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <span className="text-xs text-gray-500 font-medium">تاريخ التذكير</span>
+                <p className="text-sm font-semibold text-gray-800 mt-1">
+                  {action.reminder_date ? formatDate(action.reminder_date) : "-"}
+                </p>
+              </div>
+            </div>
+
+            {/* Note */}
+            {action.note && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100 shadow-sm">
+                <span className="text-xs text-gray-500 font-medium">ملاحظة</span>
+                <div
+                  className="text-sm text-gray-800 font-medium leading-relaxed mt-2"
+                  dangerouslySetInnerHTML={{ __html: action.note }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       ))}
     </div>
