@@ -25,18 +25,25 @@ import ConfirmModal from "@/components/global/ConfirmModal";
 import { getCookie } from "cookies-next";
 
 const columns = [
-    { name: "الصورة", uid: "avatar" },
-    { name: "وسيلة الدفع", uid: "name" },
-    { name: "الحالة", uid: "status" },
-    { name: <Options />, uid: "actions" },
+  { name: "الصورة", uid: "avatar" },
+  { name: "وسيلة الدفع", uid: "name" },
+  { name: "الحالة", uid: "status" },
+  { name: <Options />, uid: "actions" },
 ];
 
-const OptionsComponent = ({ id, currentStatus }: { id: number; currentStatus: "active" | "inactive" }) => {
+const OptionsComponent = ({
+  id,
+  currentStatus,
+}: {
+  id: number;
+  currentStatus: "active" | "inactive";
+}) => {
   const [confirmAction, setConfirmAction] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<"active" | "inactive" | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<
+    "active" | "inactive" | null
+  >(null);
   const [currentId, setCurrentId] = useState<number | null>(null);
   const queryClient = useQueryClient();
-
 
   const handleChangeStatusClick = () => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
@@ -55,21 +62,26 @@ const OptionsComponent = ({ id, currentStatus }: { id: number; currentStatus: "a
       const formdata = new FormData();
       formdata.append("status", status);
 
-      return postData(`client/payment/method/update/${id}`, formdata, myHeaders);
+      return postData(
+        `client/payment/method/update/${id}`,
+        formdata,
+        myHeaders
+      );
     },
     onSuccess: (data) => {
       if (data.message !== "success") {
         addToast({ title: "error", color: "danger" });
       } else {
         addToast({ title: data?.message, color: "success" });
-        queryClient.invalidateQueries({ queryKey: AllQueryKeys.GetAllPaymentMethods });
+        queryClient.invalidateQueries({
+          queryKey: AllQueryKeys.GetAllPaymentMethods,
+        });
       }
     },
     onError: () => {
       addToast({ title: "عذرا حدث خطأ ما", color: "danger" });
     },
   });
-
 
   return (
     <>
@@ -108,7 +120,6 @@ const OptionsComponent = ({ id, currentStatus }: { id: number; currentStatus: "a
         title="تأكيد تغير الحالة"
         message="هل أنت متأكد من أنك تريد تغير حالة وسيلة الدفع؟"
       />
-
     </>
   );
 };
@@ -133,7 +144,7 @@ export const AllPaymentMethods = () => {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllPaymentMethods
+    queryKey: AllQueryKeys.GetAllPaymentMethods,
   });
 
   const formattedData =
@@ -143,10 +154,7 @@ export const AllPaymentMethods = () => {
       name: item.title || "N/A",
       status: {
         name: item.status || "N/A",
-        color:
-          item?.status === "active"
-            ? "success"
-            : "warning",
+        color: item?.status === "active" ? "success" : "warning",
       },
       currentStatus: item.status,
       created_at: formatDate(item.created_at) || "N/A",
@@ -158,7 +166,11 @@ export const AllPaymentMethods = () => {
         <div className="flex items-center gap-2">
           <div className="relative md:min-w-80">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
+              <SearchNormal1
+                size="18"
+                className="text-gray-400"
+                variant="Outline"
+              />
             </div>
             <input
               type="text"
@@ -223,10 +235,19 @@ export const AllPaymentMethods = () => {
         <TableComponent
           columns={columns}
           data={formattedData}
-            ActionsComponent={({ id, currentStatus }) => (
-              <OptionsComponent id={id} currentStatus={currentStatus} />
-            )}
-          />
+          ActionsComponent={({
+            id,
+            currentStatus,
+          }: {
+            id: string;
+            currentStatus: string;
+          }) => (
+            <OptionsComponent
+              id={Number(id)}
+              currentStatus={currentStatus as "active" | "inactive"}
+            />
+          )}
+        />
       )}
 
       <div className="my-10 px-6">
