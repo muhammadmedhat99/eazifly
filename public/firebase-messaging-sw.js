@@ -17,8 +17,39 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function (payload) {
   console.log("📩 Background Message received: ", payload);
-  self.registration.showNotification(payload.notification.title, {
-    body: payload.notification.body,
-    icon: "/firebase-logo.png",
-  });
+
+  const notificationTitle = payload.notification?.title || 'New Message';
+  const notificationOptions = {
+    body: payload.notification?.body || payload.data?.message || 'You have a new message',
+    icon: "/img/logo/logo.svg",
+    badge: "/img/logo/logo.svg",
+    tag: 'chat-message',
+    data: payload.data,
+    actions: [
+      {
+        action: 'open',
+        title: 'Open Chat'
+      },
+      {
+        action: 'close',
+        title: 'Close'
+      }
+    ]
+  };
+
+  return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', function (event) {
+  console.log('🔔 Notification clicked:', event);
+
+  event.notification.close();
+
+  if (event.action === 'open') {
+    // Open the chat page
+    event.waitUntil(
+      clients.openWindow('/dashboard/messages')
+    );
+  }
 });
