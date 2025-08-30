@@ -8,6 +8,9 @@ import { addToast, Button, Checkbox, Input, Spinner } from "@heroui/react";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/lib/utils";
+import { getToken } from "firebase/messaging";
+import { messaging } from "../../../../firebase";
+import { getCookie } from "cookies-next";
 
 const emailOrEgyptPhoneSchema = yup
   .string()
@@ -51,6 +54,72 @@ export const LoginForm = () => {
   });
   const onSubmit = (data: FormData) => login.mutate(data);
 
+  const retrieveFcmToken = async (registration: ServiceWorkerRegistration): Promise<string | null> => {
+    try {
+      if (registration.installing) {
+        await new Promise<void>((resolve) => {
+          registration.installing?.addEventListener("statechange", function (e) {
+            if ((e.target as ServiceWorker).state === "activated") {
+              resolve();
+            }
+          });
+        });
+      } else if (registration.waiting) {
+        await new Promise<void>((resolve) => {
+          registration.waiting?.addEventListener("statechange", function (e) {
+            if ((e.target as ServiceWorker).state === "activated") {
+              resolve();
+            }
+          });
+        });
+      } else if (registration.active) {
+      }
+
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+        serviceWorkerRegistration: registration,
+      });
+
+      return token;
+    } catch (error) {
+      console.error("❌ Error getting FCM token:", error);
+      return 'empty';
+    }
+  };
+
+  const registerServiceWorker = async (): Promise<ServiceWorkerRegistration> => {
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    return registration;
+  };
+  
+  const handleFcmTokenUpdate = async () => {
+  if ("serviceWorker" in navigator) {
+    
+    try {
+      const registration = await registerServiceWorker();
+
+      const fcmToken = await retrieveFcmToken(registration);
+      console.log('fcmToken:', fcmToken);
+      
+      if (fcmToken) {
+        document.cookie = `fcm_token=${fcmToken}; path=/;`;
+
+        const headers = new Headers();
+        headers.append("local", "ar");
+        headers.append("Accept", "application/json");
+        headers.append("Authorization", `Bearer ${getCookie("token")}`);
+
+        const formdata = new FormData();
+        formdata.append("fcm_token", fcmToken);
+
+        await postData("client/update/fcm/token", formdata, headers);
+      }
+    } catch (error) {
+      console.error("Error while handling FCM token or Service Worker:", error);
+    }
+  }
+};
+
   const login = useMutation({
     mutationFn: (submitData: FormData) => {
       var myHeaders = new Headers();
@@ -61,7 +130,8 @@ export const LoginForm = () => {
       formdata.append("password", submitData.password);
       return postData("client/login", formdata, myHeaders);
     },
-    onSuccess: (data) => {
+
+    onSuccess: async (data) => {
       if (data.message !== "success") {
         addToast({
           title: data?.message,
@@ -78,12 +148,20 @@ export const LoginForm = () => {
           variant: "solid",
           color: "success",
         });
+
         reset({ phone: "", password: "" });
         document.cookie = `token=${data?.data?.token}; path=/;`;
         document.cookie = `client_id=${data?.data?.id}; path=/;`;
-        window.location.href = "/";
+
+        try {
+          await handleFcmTokenUpdate();
+          window.location.href = "/";
+        } catch (err) {
+          window.location.href = "/";
+        }
       }
     },
+
     onError: () => {
       addToast({
         title: "عذرا حدث خطأ ما",
