@@ -7,6 +7,8 @@ import { getCookie } from "cookies-next";
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { useFirebaseMessaging } from "@/lib/hooks/useFirebaseMessaging";
+import { useQuery } from "@tanstack/react-query";
+import { addToast } from "@heroui/react";
 
 type Message = {
   id: number;
@@ -22,35 +24,62 @@ export const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const client_id = cookieStore.get("client_id");
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const client_id = getCookie("client_id");
 
   // Handle incoming FCM message
   useFirebaseMessaging((payload) => {
+    console.log("📨 Chat received FCM message:", payload);
+
+    // Play notification sound (optional: add notification.mp3 to public folder)
+    try {
+      const audio = new Audio("/notification.mp3");
+      audio.volume = 0.3; // Lower volume
+      audio.play().catch(() => {
+        // Fallback: use browser's built-in notification sound
+        console.log("🔊 Playing notification sound");
+      });
+    } catch (error) {
+      console.log("🔇 Could not play notification sound");
+    }
+
+    // Show notification toast
+    addToast({
+      title: "رسالة جديدة",
+      description: payload.data?.message || "لديك رسالة جديدة",
+      timeout: 5000,
+      shouldShowTimeoutProgress: true,
+      variant: "solid",
+      color: "warning",
+    });
+
+    // Increment new message counter
+    setNewMessageCount((prev) => prev + 1);
+
     const incomingMessage: Message = {
       id: Date.now(),
       message: payload.data?.message,
       file: payload.data?.file,
       sender_type: "User",
     };
-    setMessages((prev) => [incomingMessage, ...prev]);
+    setMessages((prev) => [...prev, incomingMessage]);
   });
 
-  // Fetch messages from API
-  useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        const res = await fetchClient(
-          `client/chat/get-message?offset=0&chat_id=${CHAT_ID}`,
-          axios_config
-        );
-        setMessages(res.data);
-      } catch (err) {
-        console.error("Error fetching messages: ", err);
-      }
-    };
+  const { data: ChatMessages, isLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(
+        `client/chat/get-message?offset=0&chat_id=${CHAT_ID}&sort=asc`,
+        axios_config
+      ),
+    queryKey: ["GetChatMessages"],
+  });
 
-    loadMessages();
-  }, []);
+  // Initialize messages from API data
+  useEffect(() => {
+    if (ChatMessages?.data && messages.length === 0) {
+      setMessages(ChatMessages.data);
+    }
+  }, [ChatMessages?.data, messages.length]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -67,7 +96,7 @@ export const Chat = () => {
     if (!input.trim() && !selectedFile) return;
     const formData = new FormData();
     formData.append("sender_type", "Client");
-    formData.append("sender_id", client_id);
+    formData.append("sender_id", client_id as string);
     formData.append("receiver_type", "User");
     formData.append("receiver_id", USER_ID);
     if (input.trim()) formData.append("message", input);
@@ -86,18 +115,49 @@ export const Chat = () => {
         file: res.data.file,
         sender_type: res.data.sender_type,
       };
-      setMessages((prev) => [newMessage, ...prev]);
+      setMessages((prev) => [...prev, newMessage]);
       resetInput();
+
+      // Clear new message counter when user sends a message
+      setNewMessageCount(0);
     } catch (err) {
       console.error("Error sending message:", err);
+
+      // Show error notification
+      addToast({
+        title: "خطأ في الإرسال",
+        description: "فشل في إرسال الرسالة",
+        timeout: 3000,
+        shouldShowTimeoutProgress: true,
+        variant: "solid",
+        color: "danger",
+      });
     }
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
+      {/* Chat Header */}
+      <div className="bg-white p-4 border-b flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold">المحادثة</h2>
+          {newMessageCount > 0 && (
+            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+              {newMessageCount}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => setNewMessageCount(0)}
+          className="text-sm text-blue-500 hover:text-blue-700"
+        >
+          مسح الإشعارات
+        </button>
+      </div>
+
       {/* Messages List */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3">
-        {[...messages].reverse().map((msg) => (
+        {messages.map((msg: any) => (
           <div
             key={msg.id}
             className={`flex ${msg.sender_type === "Client" ? "justify-end" : "justify-start"}`}
