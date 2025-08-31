@@ -10,7 +10,8 @@ import {
   Setting,
   Rank,
   Brodcast,
-  Home2
+  Home2,
+  Notepad2
 } from "iconsax-reactjs";
 import { StylesConfig } from "react-select";
 
@@ -106,6 +107,12 @@ export const routes = [
   },
   {
     id: 10,
+    name: "الحصص",
+    route: "/sessions",
+    icon: Notepad2,
+  },
+  {
+    id: 11,
     name: "الإعدادات",
     route: "/settings",
     icon: Setting,

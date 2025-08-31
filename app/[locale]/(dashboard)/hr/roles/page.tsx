@@ -12,12 +12,11 @@ const BreadCrumbItems = [
   },
   {
     id: 2,
-    name: "الإعدادات",
-    link: "/settings/general"
+    name: "الموارد البشرية",
   },
   {
     id: 3,
-    name: "إعدادات الوظائف",
+    name: "الوظائف",
   },
 ];
 
@@ -27,7 +26,7 @@ export default function page() {
       <BreadCrumb items={BreadCrumbItems}>
       <div className="flex flex-wrap items-center gap-2">
           <Link
-            href="/settings/roles/create"
+            href="/hr/roles/create"
             className="text-white font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-primary"
           >
             أضافة وظيفة 
