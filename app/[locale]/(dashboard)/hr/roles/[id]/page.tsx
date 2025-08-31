@@ -27,7 +27,7 @@ export default async function page({
     {
       id: 2,
       name: "الوظائف",
-      link: "/settings/roles",
+      link: "/hr/roles",
     },
     {
       id: 3,
