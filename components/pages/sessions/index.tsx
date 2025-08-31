@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
 import {
   Button,
+  CalendarDate,
   DatePicker,
   Dropdown,
   DropdownItem,
@@ -45,7 +46,7 @@ const OptionsComponent = ({ id }: { id: number }) => {
         </button>
       </DropdownTrigger>
       <DropdownMenu aria-label="Static Actions">
-        <DropdownItem href={`/students/${id}`} key="show">
+        <DropdownItem href={`/sessions/${id}`} key="show">
           عرض البيانات
         </DropdownItem>
         <DropdownItem key="edit">تعديل البيانات</DropdownItem>
@@ -186,12 +187,35 @@ export const AllSessions = () => {
             t.name.toLowerCase().includes(nameSearch.toLowerCase())
         ) || [];
 
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
+    const dayName = (date: CalendarDate) => {
+        const jsDate = new Date(date.toString());
+        return new Intl.DateTimeFormat("ar-EG", { weekday: "long" }).format(jsDate);
+    };
+
   return (
     <>
       <div className="p-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="relative w-full md:min-w-80">
+            <div className="relative w-full md:min-w-48" ref={dropdownRef}>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
                 </div>
@@ -268,7 +292,10 @@ export const AllSessions = () => {
         </div>
 
        <div className="flex items-center gap-2">
-        <button
+            <div className="bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg shadow-md text-center w-28">
+                {dayName(selectedDate)}
+            </div>
+                  <button
         onClick={() => {
             console.log('h', selectedDate.toString());
             
