@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input, Button, Card } from "@heroui/react";
 import { CloseCircle, Image, Microphone, Send2 } from "iconsax-reactjs";
 import { getCookie } from "cookies-next";
@@ -9,6 +9,7 @@ import { axios_config } from "@/lib/const";
 import { useFirebaseMessaging } from "@/lib/hooks/useFirebaseMessaging";
 import { useQuery } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
+import { useParams, useSearchParams } from "next/navigation";
 
 type Message = {
   id: number;
@@ -17,16 +18,32 @@ type Message = {
   sender_type: "Client" | "User";
 };
 
-const CHAT_ID = 17;
-const USER_ID = "22";
 
 export const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [firstLoad, setFirstLoad] = useState(true);
   const [input, setInput] = useState("");
+  const [offset, setOffset] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const client_id = getCookie("client_id");
+  const [isFetching, setIsFetching] = useState(false);
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const CHAT_ID = params.id;
+  const USER_ID = searchParams.get("user");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  
+  const endRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    if (firstLoad && messages.length > 0) {
+      endRef.current?.scrollIntoView({ block: "end" });
+      setFirstLoad(false);
+    }
+  }, [messages, firstLoad]);
+  
   // Handle incoming FCM message
   useFirebaseMessaging((payload) => {
     console.log("📨 Chat received FCM message:", payload);
@@ -65,21 +82,41 @@ export const Chat = () => {
     setMessages((prev) => [...prev, incomingMessage]);
   });
 
-  const { data: ChatMessages, isLoading } = useQuery({
-    queryFn: async () =>
-      await fetchClient(
-        `client/chat/get-message?offset=0&chat_id=${CHAT_ID}&sort=asc`,
+useEffect(() => {
+  const fetchMessages = async () => {
+    const el = scrollRef.current;
+    const oldScrollHeight = el?.scrollHeight || 0;
+    setIsFetching(true);
+    try {
+      const res = await fetchClient(
+        `client/chat/get-message?offset=${offset}&chat_id=${CHAT_ID}&sort=desc`,
         axios_config
-      ),
-    queryKey: ["GetChatMessages"],
-  });
+      );
+      if (res?.data?.length) {
+        setMessages((prev) => [...res.data, ...prev]);
+        requestAnimationFrame(() => {
+        if (el) {
+          const newScrollHeight = el.scrollHeight;
+          el.scrollTop = newScrollHeight - oldScrollHeight;
+        }
+      });
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    } finally {
+      setIsFetching(false); // انتهى التحميل
+    }
+  };
+
+  fetchMessages();
+}, [offset]);
 
   // Initialize messages from API data
   useEffect(() => {
-    if (ChatMessages?.data && messages.length === 0) {
-      setMessages(ChatMessages.data);
+    if (messages && messages.length === 0) {
+      setMessages(messages);
     }
-  }, [ChatMessages?.data, messages.length]);
+  }, [messages, messages.length]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -98,7 +135,7 @@ export const Chat = () => {
     formData.append("sender_type", "Client");
     formData.append("sender_id", client_id as string);
     formData.append("receiver_type", "User");
-    formData.append("receiver_id", USER_ID);
+    formData.append("receiver_id", USER_ID as string);
     if (input.trim()) formData.append("message", input);
     if (selectedFile) formData.append("file", selectedFile);
 
@@ -135,6 +172,24 @@ export const Chat = () => {
     }
   };
 
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50; // 50px tolerance
+    setIsAtBottom(isBottom);
+
+    if (el.scrollTop === 0 && !isFetching) {
+      setOffset((prev) => prev + 20);
+    }
+  };
+
+  useEffect(() => {
+    if (isAtBottom) {
+      endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    }
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Chat Header */}
@@ -156,10 +211,16 @@ export const Chat = () => {
       </div>
 
       {/* Messages List */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3">
+      <div className="flex-1 p-4 overflow-y-auto space-y-3 scroll" onScroll={handleScroll}
+        ref={scrollRef}>
+        {isFetching && (
+          <div className="flex justify-center py-4">
+            <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
         {messages.map((msg: any) => (
-          <div
-            key={msg.id}
+          <div className="flex flex-col gap-2" key={msg.id}>
+            <div
             className={`flex ${msg.sender_type === "Client" ? "justify-end" : "justify-start"}`}
           >
             <Card
@@ -179,7 +240,22 @@ export const Chat = () => {
               )}
             </Card>
           </div>
+          <span className={`text-start text-xs font-bold text-[#3D5066] flex ${msg.sender_type === "Client" ? "justify-end" : "justify-start"}`}>
+                  {msg?.created_at
+                    ? new Date(msg.created_at).toLocaleString(
+                        "ar-EG",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          day: "2-digit",
+                          month: "short",
+                        }
+                      )
+                    : ""}
+                </span>
+          </div>
         ))}
+        <div ref={endRef} />
       </div>
 
       {/* Message Input */}

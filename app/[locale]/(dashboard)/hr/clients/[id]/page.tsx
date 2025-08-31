@@ -24,7 +24,7 @@ export default async function page({
     {
       id: 2,
       name: "الموظفين",
-      link: "/settings/clients",
+      link: "/hr/clients",
     },
     {
       id: 3,
