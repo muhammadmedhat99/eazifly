@@ -22,9 +22,8 @@ import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 import { parseDate, today } from "@internationalized/date";
+import TableSkeleton from "@/components/global/TableSkeleton";
 
-
-import { formatDate } from "@/lib/helper";
 
 const columns = [
   { name: "", uid: "avatar" },
@@ -369,7 +368,7 @@ export const AllSessions = () => {
         </div>
       </div>
       {isLoading ? (
-        <Loader />
+        <TableSkeleton columns={columns} rows={6} />
       ) : (
         <TableComponent
           columns={columns}
