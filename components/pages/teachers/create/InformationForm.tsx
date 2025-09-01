@@ -20,9 +20,21 @@ import { fetchClient, postData } from "@/lib/utils";
 import { getCookie } from "cookies-next";
 import React from "react";
 import { AllQueryKeys } from "@/keys";
-import { axios_config } from "@/lib/const";
+import { axios_config, phoneCodeCustomStyles } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+import countries from "world-countries";
+const SelectReact = dynamic(() => import("react-select"), { ssr: false });
+
+const allCountries = countries.map((country) => ({
+  name: country.name.common,
+  flag: country.flag,
+  code: country.cca2,
+  phone_code: country.idd.root
+    ? `${country.idd.root}${country.idd.suffixes?.[0] || ""}`
+    : "",
+}))
 
 const schema = yup
   .object({
@@ -225,57 +237,67 @@ export const InformationForm = ({
             base: "mb-4",
           }}
           endContent={
-            data?.data?.length > 0 && (
-              <Controller
-                name="country_code"
-                control={control}
-                defaultValue=""
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) => {
-                      const selectedKey = Array.from(keys)[0];
-                      field.onChange(selectedKey);
-                    }}
-                    className="max-w-40 -me-3 bg-white"
-                    isInvalid={!!errors.country_code?.message}
-                    errorMessage={errors.country_code?.message}
-                    classNames={{
-                      trigger: "rounded-s-none border-1 shadow-none",
-                      listbox: "w-full",
-                      listboxWrapper: "w-full",
-                    }}
-                    variant="bordered"
-                    renderValue={(items) =>
-                      items?.map((item: any) => (
-                        <div key={item.key} className="flex items-center gap-2">
-                          {item.props.startContent}
-                          <span>{item.props.children}</span>
-                        </div>
-                      ))
-                    }
-                  >
-                    {data?.data?.map((country: any) => (
-                      <SelectItem
-                        key={country.phone_code}
-                        startContent={
-                          <Avatar
-                            className="w-6 h-4"
-                            radius="none"
-                            src={country?.image}
-                            alt="country flag"
-                          />
-                        }
-                        className="w-full"
-                      >
-                        {country.phone_code}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                )}
-              />
-            )
+            <Controller
+              name="country_code"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <SelectReact
+                  placeholder="(+)"
+                  {...field}
+                  options={allCountries.map((country: any) => ({
+                    value: country.phone_code,
+                    label: (
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          className="w-6 h-4"
+                          radius="none"
+                          src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
+                          alt={country.name}
+                        />
+                        <span>
+                          {country.name} ({country.phone_code})
+                        </span>
+                      </div>
+                    ),
+                  }))}
+                  styles={phoneCodeCustomStyles}
+                  isSearchable
+                  onChange={(option: any) => field.onChange(option?.value)}
+                  value={
+                    field.value
+                      ? {
+                        value: field.value,
+                        label: (
+                          <div className="flex items-center gap-2">
+                            <Avatar
+                              className="w-6 h-4"
+                              radius="none"
+                              src={`https://flagcdn.com/w20/${allCountries.find(
+                                (c: any) => c.phone_code === field.value
+                              )?.code.toLowerCase()}.png`}
+                              alt={
+                                allCountries.find(
+                                  (c: any) => c.phone_code === field.value
+                                )?.name
+                              }
+                            />
+                            <span>
+                              {
+                                allCountries.find(
+                                  (c: any) => c.phone_code === field.value
+                                )?.name
+                              }{" "}
+                              ({field.value})
+                            </span>
+                          </div>
+                        ),
+                      }
+                      : null
+                  }
+                />
+              )}
+            />
           }
         />
         <Input
@@ -292,57 +314,69 @@ export const InformationForm = ({
           base: "mb-4",
         }}
         endContent={
-            data?.data?.length > 0 && (
-              <Controller
-                name="whats_app_country_code"
-                control={control}
-                defaultValue=""
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) => {
-                      const selectedKey = Array.from(keys)[0];
-                      field.onChange(selectedKey);
-                    }}
-                    className="max-w-40 -me-3 bg-white"
-                    isInvalid={!!errors.whats_app_country_code?.message}
-                    errorMessage={errors.whats_app_country_code?.message}
-                    classNames={{
-                      trigger: "rounded-s-none border-1 shadow-none",
-                      listbox: "w-full",
-                      listboxWrapper: "w-full",
-                    }}
-                    variant="bordered"
-                    renderValue={(items) =>
-                      items?.map((item: any) => (
-                        <div key={item.key} className="flex items-center gap-2">
-                          {item.props.startContent}
-                          <span>{item.props.children}</span>
-                        </div>
-                      ))
-                    }
-                  >
-                    {data?.data?.map((country: any) => (
-                      <SelectItem
-                        key={country.phone_code}
-                        startContent={
-                          <Avatar
-                            className="w-6 h-4"
-                            radius="none"
-                            src={country?.image}
-                            alt="country flag"
-                          />
-                        }
-                        className="w-full"
-                      >
-                        {country.phone_code}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                )}
-              />
-            )
+          data?.data?.length > 0 && (
+            <Controller
+              name="whats_app_country_code"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <SelectReact
+                  placeholder="(+)"
+                  {...field}
+                  options={allCountries.map((country: any) => ({
+                    value: country.phone_code,
+                    label: (
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          className="w-6 h-4"
+                          radius="none"
+                          src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
+                          alt={country.name}
+                        />
+                        <span>
+                          {country.name} ({country.phone_code})
+                        </span>
+                      </div>
+                    ),
+                  }))}
+                  styles={phoneCodeCustomStyles}
+                  isSearchable
+                  onChange={(option: any) => field.onChange(option?.value)}
+                  value={
+                    field.value
+                      ? {
+                        value: field.value,
+                        label: (
+                          <div className="flex items-center gap-2">
+                            <Avatar
+                              className="w-6 h-4"
+                              radius="none"
+                              src={`https://flagcdn.com/w20/${allCountries.find(
+                                (c: any) => c.phone_code === field.value
+                              )?.code.toLowerCase()}.png`}
+                              alt={
+                                allCountries.find(
+                                  (c: any) => c.phone_code === field.value
+                                )?.name
+                              }
+                            />
+                            <span>
+                              {
+                                allCountries.find(
+                                  (c: any) => c.phone_code === field.value
+                                )?.name
+                              }{" "}
+                              ({field.value})
+                            </span>
+                          </div>
+                        ),
+                      }
+                      : null
+                  }
+                />
+              )}
+            />
+          )
           }
       />
       <Input
