@@ -24,9 +24,53 @@ import { Loader } from "@/components/global/Loader";
 import { useRouter } from "next/navigation";
 import countries from "world-countries";
 import dynamic from "next/dynamic";
+<<<<<<< HEAD
 const SelectReact = dynamic(() => import("react-select"), { ssr: false });
 
 
+=======
+import { StylesConfig } from "react-select";
+const SelectReact = dynamic(() => import("react-select"), { ssr: false });
+
+
+export const customStyles: StylesConfig = {
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? "#f5f5f5" : "#f5f5f5",
+    "&:hover": {
+      backgroundColor: "#e4e4e7",
+    },
+    padding: "3px 4px",
+    direction: "rtl",
+    fontFamily: "inherit",
+    fontSize: "14px",
+    border: 0,
+    width: "180px",
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected
+      ? "#3b82f6"
+      : state.isFocused
+        ? "#f0f0f0"
+        : "#fff",
+    color: state.isSelected ? "#fff" : "#111827",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    direction: "rtl",
+    fontFamily: "inherit",
+  }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+
+};
+
+>>>>>>> f7e7704dbf652154630ee9652d69b0551b2c6844
 const allCountries = countries.map((country) => ({
   name: country.name.common,
   flag: country.flag,
@@ -203,7 +247,10 @@ export const CreateClient = () => {
               defaultValue=""
               render={({ field }) => (
                 <SelectReact
+<<<<<<< HEAD
                   placeholder="(+)"
+=======
+>>>>>>> f7e7704dbf652154630ee9652d69b0551b2c6844
                   {...field}
                   options={allCountries.map((country: any) => ({
                     value: country.phone_code,
@@ -221,7 +268,11 @@ export const CreateClient = () => {
                       </div>
                     ),
                   }))}
+<<<<<<< HEAD
                   styles={phoneCodeCustomStyles}
+=======
+                  styles={customStyles}
+>>>>>>> f7e7704dbf652154630ee9652d69b0551b2c6844
                   isSearchable
                   onChange={(option: any) => field.onChange(option?.value)}
                   value={
