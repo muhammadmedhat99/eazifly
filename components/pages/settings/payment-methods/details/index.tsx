@@ -1,7 +1,7 @@
 "use client";
 import { Edit2 } from "iconsax-reactjs";
 
-import { Avatar, Input, Button, image, addToast, Switch } from "@heroui/react";
+import { Avatar, Input, Button, image, addToast, Switch, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import { formatDate } from "@/lib/helper";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -84,6 +84,7 @@ const schema = yup
 type FormData = yup.InferType<typeof schema>;
 
 export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   const params = useParams();
   const id = params.id;
   const queryClient = useQueryClient();
@@ -178,6 +179,45 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
       onSubmit={handleSubmit(onSubmit)}
       className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5"
       >
+        <Modal isOpen={isOpen} onOpenChange={setIsOpen} size="lg">
+        <ModalContent>
+          {(onClose) => (
+            <form>
+              <ModalHeader className="font-bold">إضافة وسيلة دفع جديدة</ModalHeader>
+                <ModalBody>
+                  <div className="flex flex-col gap-4 w-full">
+                    <span className="text-[#5E5E5E] text-sm font-bold">الدفع على</span>
+                    
+                      <Controller
+                      name={`keys.${paymentData?.data?.keys?.length ? paymentData.data.keys.length : 0}.pay_on`}
+                        control={control}
+                        render={({ field }) => (
+                          <Input {...field} placeholder="نص الكتابة" type="text" />
+                        )}
+                      />
+
+                    <span className="text-[#5E5E5E] text-sm font-bold">أقصى قيمة</span>
+                     <Controller
+                        name={`keys.${paymentData?.data?.keys?.length ? paymentData.data.keys.length : 0}.max_value`}
+                        control={control}
+                        render={({ field }) => (
+                          <Input {...field} placeholder="نص الكتابة" type="number" />
+                        )}
+                      />
+                  </div>
+                </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  إلغاء
+                </Button>
+                <Button color="primary" className="text-white" onPress={() => {UpdatePaymentMethods.mutate(getValues()); setIsOpen(false)}} isLoading={UpdatePaymentMethods.isPending}>
+                  حفظ
+                </Button>
+              </ModalFooter>
+            </form>
+          )}
+        </ModalContent>
+      </Modal>
         <ConfirmModal
           open={confirmAction}
           onCancel={() => {
@@ -190,7 +230,7 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
           message="هل أنت متأكد من أنك تريد تغير حالة وسيلة الدفع؟"
         />
 
-        <div className="col-span-2">
+        <div>
           <Controller
             name="status"
             control={control}
@@ -223,8 +263,17 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
               </div>
             )}
           />
+         
         </div>
-      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+        <div className="flex justify-end">
+          <Button
+            onPress={() => setIsOpen(true)}
+            className="text-white font-semibold text-sm px-6 rounded-md bg-primary"
+          >
+            اضافة وسيلة دفع جديدة
+          </Button>
+        </div>
+        <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">الاسم</span>
           {editField === "name" ? (
@@ -385,65 +434,87 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
         )}
       </div>
 
-      {paymentData?.data?.keys?.map((_: any, index: number) => (
-        <div
-          key={index}
-          className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke"
-        >
-          <div className="flex flex-col gap-4 w-full">
-            <span className="text-[#5E5E5E] text-sm font-bold">الدفع على</span>
-            {editField === `key-${index}` ? (
-              <Controller
-                name={`keys.${index}.pay_on`}
-                control={control}
-                render={({ field }) => (
-                  <Input {...field} placeholder="نص الكتابة" type="text" />
-                )}
-              />
-            ) : (
-              <span className="text-black-text font-bold text-[15px]">
-                {paymentData?.data?.keys[index]?.pay_on}
-              </span>
-            )}
+        {paymentData?.data?.keys?.map((_: any, index: number) => (
+          <div
+            key={index}
+            className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke"
+          >
+            <div className="flex flex-col gap-4 w-full">
+              <span className="text-[#5E5E5E] text-sm font-bold">الدفع على</span>
+              {editField === `key-${index}` ? (
+                <Controller
+                  name={`keys.${index}.pay_on`}
+                  control={control}
+                  render={({ field }) => (
+                    <Input {...field} placeholder="نص الكتابة" type="text" />
+                  )}
+                />
+              ) : (
+                <span className="text-black-text font-bold text-[15px]">
+                  {paymentData?.data?.keys[index]?.pay_on}
+                </span>
+              )}
 
-            <span className="text-[#5E5E5E] text-sm font-bold">أقصى قيمة</span>
-            {editField === `key-${index}` ? (
-              <Controller
-                name={`keys.${index}.max_value`}
-                control={control}
-                render={({ field }) => (
-                  <Input {...field} placeholder="نص الكتابة" type="number" />
-                )}
-              />
-            ) : (
-              <span className="text-black-text font-bold text-[15px]">
-                {paymentData?.data?.keys[index]?.max_value}
-              </span>
-            )}
+              <span className="text-[#5E5E5E] text-sm font-bold">أقصى قيمة</span>
+              {editField === `key-${index}` ? (
+                <Controller
+                  name={`keys.${index}.max_value`}
+                  control={control}
+                  render={({ field }) => (
+                    <Input {...field} placeholder="نص الكتابة" type="number" />
+                  )}
+                />
+              ) : (
+                <span className="text-black-text font-bold text-[15px]">
+                  {paymentData?.data?.keys[index]?.max_value}
+                </span>
+              )}
+            </div>
+
+            <div className="flex gap-2 items-center">
+              {editField === `key-${index}` ? (
+                <Button
+                  size="sm"
+                  color="primary"
+                  variant="solid"
+                  className="text-white"
+                  type="submit"
+                >
+                  حفظ
+                </Button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setEditField(`key-${index}`)}
+                    className="flex items-center gap-1 text-sm font-bold"
+                  >
+                    <Edit2 size={18} />
+                    تعديل
+                  </button>
+
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 text-sm font-bold text-red-500"
+                      onClick={() => {
+                        const currentKeys = getValues("keys") || [];
+                        const updatedKeys = currentKeys.filter((_: any, i: number) => i !== index);
+
+                        setValue("keys", updatedKeys, { shouldValidate: true });
+
+                        UpdatePaymentMethods.mutate({
+                          ...getValues(),
+                          keys: updatedKeys,
+                        });
+                      }}
+                    >
+                      حذف
+                    </button>
+                </>
+              )}
+            </div>
           </div>
-
-          {editField === `key-${index}` ? (
-            <Button
-              size="sm"
-              color="primary"
-              variant="solid"
-              className="text-white"
-              type="submit"
-            >
-              حفظ
-            </Button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditField(`key-${index}`)}
-              className="flex items-center gap-1 text-sm font-bold"
-            >
-              <Edit2 size={18} />
-              تعديل
-            </button>
-          )}
-        </div>
-      ))}
+        ))}
 
     </form>
   );
