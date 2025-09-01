@@ -22,9 +22,21 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import { fetchClient, postData } from "@/lib/utils";
 import { AllQueryKeys } from "@/keys";
-import { axios_config } from "@/lib/const";
+import { axios_config, phoneCodeCustomStyles } from "@/lib/const";
 import { DropzoneField } from "@/components/global/DropZoneField";
 import { useParams } from 'next/navigation';
+import dynamic from "next/dynamic";
+import countries from "world-countries";
+const SelectReact = dynamic(() => import("react-select"), { ssr: false });
+
+const allCountries = countries.map((country) => ({
+  name: country.name.common,
+  flag: country.flag,
+  code: country.cca2,
+  phone_code: country.idd.root
+    ? `${country.idd.root}${country.idd.suffixes?.[0] || ""}`
+    : "",
+}))
 
 interface StudentModalProps {
   isOpen: boolean;
@@ -106,7 +118,7 @@ export default function AddStudentModal({
       var formdata = new FormData();
       if (typeof user_id === 'string') {
         formdata.append("parent_id", user_id);
-      } 
+      }
       formdata.append("first_name", submitData.first_name);
       formdata.append("last_name", submitData.last_name);
       formdata.append("user_name", submitData.user_name);
@@ -159,7 +171,7 @@ export default function AddStudentModal({
 
 
   return (
-    <Modal isOpen={isOpen} scrollBehavior={scrollBehavior}  onOpenChange={(open) => !open && onClose()} size="4xl">
+    <Modal isOpen={isOpen} scrollBehavior={scrollBehavior} onOpenChange={(open) => !open && onClose()} size="4xl">
       <ModalContent>
         {(closeModal) => (
           <>
@@ -168,337 +180,359 @@ export default function AddStudentModal({
             </ModalHeader>
 
             <ModalBody>
-                          <form
-                              onSubmit={handleSubmit(onSubmit)}
-                              className="grid grid-cols-1 gap-4 md:grid-cols-2 py-14 px-8"
-                          >
-                              <Input
-                                  label="الاسم الأول"
-                                  placeholder="نص الكتابه"
-                                  type="text"
-                                  {...register("first_name")}
-                                  isInvalid={!!errors.first_name?.message}
-                                  errorMessage={errors.first_name?.message}
-                                  labelPlacement="outside"
-                                  classNames={{
-                                      label: "text-[#272727] font-bold text-sm",
-                                      inputWrapper: "shadow-none",
-                                      base: "mb-4",
-                                  }}
-                              />
-                              <Input
-                                  label="الاسم الأخير"
-                                  placeholder="نص الكتابه"
-                                  type="text"
-                                  {...register("last_name")}
-                                  isInvalid={!!errors.last_name?.message}
-                                  errorMessage={errors.last_name?.message}
-                                  labelPlacement="outside"
-                                  classNames={{
-                                      label: "text-[#272727] font-bold text-sm",
-                                      inputWrapper: "shadow-none",
-                                      base: "mb-4",
-                                  }}
-                              />
-                              <Input
-                                  label="اسم المستخدم"
-                                  placeholder="نص الكتابه"
-                                  type="text"
-                                  {...register("user_name")}
-                                  isInvalid={!!errors.user_name?.message}
-                                  errorMessage={errors.user_name?.message}
-                                  labelPlacement="outside"
-                                  classNames={{
-                                      label: "text-[#272727] font-bold text-sm",
-                                      inputWrapper: "shadow-none",
-                                      base: "mb-4",
-                                  }}
-                              />
-                              <Input
-                                  label="البريد الإلكتروني"
-                                  placeholder="نص الكتابه"
-                                  type="text"
-                                  {...register("email")}
-                                  isInvalid={!!errors.email?.message}
-                                  errorMessage={errors.email?.message}
-                                  labelPlacement="outside"
-                                  classNames={{
-                                      label: "text-[#272727] font-bold text-sm",
-                                      inputWrapper: "shadow-none",
-                                      base: "mb-4",
-                                  }}
-                              />
-                              <Input
-                                        label="رقم الهاتف"
-                                        placeholder="نص الكتابه"
-                                        type="text"
-                                        {...register("phone")}
-                                        isInvalid={!!errors.phone?.message}
-                                        errorMessage={errors.phone?.message}
-                                        labelPlacement="outside"
-                                        classNames={{
-                                          label: "text-[#272727] font-bold text-sm",
-                                          inputWrapper: "shadow-none",
-                                          base: "mb-4",
-                                        }}
-                                        endContent={
-                                          data?.data?.length > 0 && (
-                                            <Controller
-                                              name="country_code"
-                                              control={control}
-                                              defaultValue=""
-                                              render={({ field }) => (
-                                                <Select
-                                                  {...field}
-                                                  selectedKeys={field.value ? [field.value] : []}
-                                                  onSelectionChange={(keys) => {
-                                                    const selectedKey = Array.from(keys)[0];
-                                                    field.onChange(selectedKey);
-                                                  }}
-                                                  className="max-w-40 -me-3 bg-white"
-                                                  isInvalid={!!errors.country_code?.message}
-                                                  errorMessage={errors.country_code?.message}
-                                                  classNames={{
-                                                    trigger: "rounded-s-none border-1 shadow-none",
-                                                    listbox: "w-full",
-                                                    listboxWrapper: "w-full",
-                                                  }}
-                                                  variant="bordered"
-                                                  renderValue={(items) =>
-                                                    items?.map((item: any) => (
-                                                      <div key={item.key} className="flex items-center gap-2">
-                                                        {item.props.startContent}
-                                                        <span>{item.props.children}</span>
-                                                      </div>
-                                                    ))
-                                                  }
-                                                >
-                                                  {data?.data?.map((country: any) => (
-                                                    <SelectItem
-                                                      key={country.phone_code}
-                                                      startContent={
-                                                        <Avatar
-                                                          className="w-6 h-4"
-                                                          radius="none"
-                                                          src={country?.image}
-                                                          alt="country flag"
-                                                        />
-                                                      }
-                                                      className="w-full"
-                                                    >
-                                                      {country.phone_code}
-                                                    </SelectItem>
-                                                  ))}
-                                                </Select>
-                                              )}
-                                            />
-                                          )
-                                        }
-                                      />
-                              <Input
-                                  label="رقم الواتس آب"
-                                  placeholder="نص الكتابه"
-                                  type="text"
-                                  {...register("whats_app")}
-                                  isInvalid={!!errors.whats_app?.message}
-                                  errorMessage={errors.whats_app?.message}
-                                  labelPlacement="outside"
-                                  classNames={{
-                                      label: "text-[#272727] font-bold text-sm",
-                                      inputWrapper: "shadow-none",
-                                      base: "mb-4",
-                                  }}
-                                  endContent={
-                                    data?.data?.length > 0 && (
-                                      <Controller
-                                        name="whats_app_country_code"
-                                        control={control}
-                                        defaultValue=""
-                                        render={({ field }) => (
-                                          <Select
-                                            {...field}
-                                            selectedKeys={field.value ? [field.value] : []}
-                                            onSelectionChange={(keys) => {
-                                              const selectedKey = Array.from(keys)[0];
-                                              field.onChange(selectedKey);
-                                            }}
-                                            className="max-w-40 -me-3 bg-white"
-                                            isInvalid={!!errors.whats_app_country_code?.message}
-                                            errorMessage={errors.whats_app_country_code?.message}
-                                            classNames={{
-                                              trigger: "rounded-s-none border-1 shadow-none",
-                                              listbox: "w-full",
-                                              listboxWrapper: "w-full",
-                                            }}
-                                            variant="bordered"
-                                            renderValue={(items) =>
-                                              items?.map((item: any) => (
-                                                <div key={item.key} className="flex items-center gap-2">
-                                                  {item.props.startContent}
-                                                  <span>{item.props.children}</span>
-                                                </div>
-                                              ))
-                                            }
-                                          >
-                                            {data?.data?.map((country: any) => (
-                                              <SelectItem
-                                                key={country.phone_code}
-                                                startContent={
-                                                  <Avatar
-                                                    className="w-6 h-4"
-                                                    radius="none"
-                                                    src={country?.image}
-                                                    alt="country flag"
-                                                  />
-                                                }
-                                                className="w-full"
-                                              >
-                                                {country.phone_code}
-                                              </SelectItem>
-                                            ))}
-                                          </Select>
-                                        )}
-                                      />
-                                    )
-                                  }
-                              />
-                              <Input
-                                  label="كلمة المرور"
-                                  placeholder="نص الكتابه"
-                                  type="password"
-                                  {...register("password")}
-                                  isInvalid={!!errors.password?.message}
-                                  errorMessage={errors.password?.message}
-                                  labelPlacement="outside"
-                                  classNames={{
-                                      label: "text-[#272727] font-bold text-sm",
-                                      inputWrapper: "shadow-none",
-                                      base: "mb-4",
-                                  }}
-                              />
-                              <Input
-                                  label="تأكيد كلمة المرور"
-                                  placeholder="نص الكتابه"
-                                  type="password"
-                                  {...register("password_confirmation")}
-                                  isInvalid={!!errors.password_confirmation?.message}
-                                  errorMessage={errors.password_confirmation?.message}
-                                  labelPlacement="outside"
-                                  classNames={{
-                                      label: "text-[#272727] font-bold text-sm",
-                                      inputWrapper: "shadow-none",
-                                      base: "mb-4",
-                                  }}
-                              />
-                              <Input
-                                  label="العمر"
-                                  placeholder="نص الكتابه"
-                                  type="text"
-                                  {...register("age")}
-                                  isInvalid={!!errors.age?.message}
-                                  errorMessage={errors.age?.message}
-                                  labelPlacement="outside"
-                                  classNames={{
-                                      label: "text-[#272727] font-bold text-sm",
-                                      inputWrapper: "shadow-none",
-                                      base: "mb-4",
-                                  }}
-                              />
-                              <Controller
-                                  name="gender"
-                                  control={control}
-                                  render={({ field }) => (
-                                      <Select
-                                          {...field}
-                                          selectedKeys={field.value ? [field.value] : [""]}
-                                          onSelectionChange={(keys) => {
-                                              field.onChange(Array.from(keys)[0]);
-                                              console.log(Array.from(keys)[0]);
-                                          }}
-                                          label="الجنس"
-                                          labelPlacement="outside"
-                                          placeholder="اختر الجنس"
-                                          isInvalid={!!errors.gender?.message}
-                                          errorMessage={errors.gender?.message}
-                                          classNames={{
-                                              label: "text-[#272727] font-bold text-sm",
-                                              base: "mb-4",
-                                              value: "text-[#87878C] text-sm",
-                                          }}
-                                      >
-                                          {[
-                                              { key: "male", label: "ذكر" },
-                                              { key: "female", label: "انثي" },
-                                          ].map((item) => (
-                                              <SelectItem key={item.key}>{item.label}</SelectItem>
-                                          ))}
-                                      </Select>
-                                  )}
-                              />
-
-                              <Controller
-                                  name="country"
-                                  control={control}
-                                  render={({ field }) => (
-                                      <Select
-                                          {...field}
-                                          selectedKeys={field.value ? [field.value] : [""]}
-                                          onSelectionChange={(keys) => field.onChange(Array.from(keys)[0])}
-                                          label="الدولة"
-                                          labelPlacement="outside"
-                                          placeholder="اختر الدولة"
-                                          isInvalid={!!errors.country?.message}
-                                          errorMessage={errors.country?.message}
-                                          classNames={{
-                                              label: "text-[#272727] font-bold text-sm",
-                                              base: "mb-4 md:col-span-2",
-                                              value: "text-[#87878C] text-sm",
-                                          }}
-                                      >
-                                          {[
-                                              { key: "1", label: "مصر" },
-                                              { key: "2", label: "المملكة العربيه السعوديه" },
-                                          ].map((item) => (
-                                              <SelectItem key={item.key}>{item.label}</SelectItem>
-                                          ))}
-                                      </Select>
-                                  )}
-                              />
-
-                              <Controller
-                                  name="image"
-                                  control={control}
-                                  render={({ field, fieldState }) => (
-                                      <DropzoneField
-                                          value={(field.value as any) || []}
-                                          onChange={field.onChange}
-                                          error={fieldState.error?.message}
-                                      />
-                                  )}
-                              />
-
-                              <div className="flex items-center justify-end gap-4 mt-8">
-                                  <Button
-                                      type="button"
-                                      onPress={() => reset()}
-                                      variant="solid"
-                                      color="primary"
-                                      className="text-white"
-                                  >
-                                      إلغاء
-                                  </Button>
-                                  <Button
-                                      type="submit"
-                                      variant="solid"
-                                      color="primary"
-                                      className="text-white"
-                                      isDisabled={CreateStudent?.isPending}
-                                  >
-                                      {CreateStudent?.isPending && <Spinner color="white" size="sm" />}
-                                      التالي
-                                  </Button>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="grid grid-cols-1 gap-4 md:grid-cols-2 py-14 px-8"
+              >
+                <Input
+                  label="الاسم الأول"
+                  placeholder="نص الكتابه"
+                  type="text"
+                  {...register("first_name")}
+                  isInvalid={!!errors.first_name?.message}
+                  errorMessage={errors.first_name?.message}
+                  labelPlacement="outside"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    inputWrapper: "shadow-none",
+                    base: "mb-4",
+                  }}
+                />
+                <Input
+                  label="الاسم الأخير"
+                  placeholder="نص الكتابه"
+                  type="text"
+                  {...register("last_name")}
+                  isInvalid={!!errors.last_name?.message}
+                  errorMessage={errors.last_name?.message}
+                  labelPlacement="outside"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    inputWrapper: "shadow-none",
+                    base: "mb-4",
+                  }}
+                />
+                <Input
+                  label="اسم المستخدم"
+                  placeholder="نص الكتابه"
+                  type="text"
+                  {...register("user_name")}
+                  isInvalid={!!errors.user_name?.message}
+                  errorMessage={errors.user_name?.message}
+                  labelPlacement="outside"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    inputWrapper: "shadow-none",
+                    base: "mb-4",
+                  }}
+                />
+                <Input
+                  label="البريد الإلكتروني"
+                  placeholder="نص الكتابه"
+                  type="text"
+                  {...register("email")}
+                  isInvalid={!!errors.email?.message}
+                  errorMessage={errors.email?.message}
+                  labelPlacement="outside"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    inputWrapper: "shadow-none",
+                    base: "mb-4",
+                  }}
+                />
+                <Input
+                  label="رقم الهاتف"
+                  placeholder="نص الكتابه"
+                  type="text"
+                  {...register("phone")}
+                  isInvalid={!!errors.phone?.message}
+                  errorMessage={errors.phone?.message}
+                  labelPlacement="outside"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    inputWrapper: "shadow-none",
+                    base: "mb-4",
+                  }}
+                  endContent={
+                    <Controller
+                      name="country_code"
+                      control={control}
+                      defaultValue=""
+                      render={({ field }) => (
+                        <SelectReact
+                          placeholder="(+)"
+                          {...field}
+                          options={allCountries.map((country: any) => ({
+                            value: country.phone_code,
+                            label: (
+                              <div className="flex items-center gap-2">
+                                <Avatar
+                                  className="w-6 h-4"
+                                  radius="none"
+                                  src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
+                                  alt={country.name}
+                                />
+                                <span>
+                                  {country.name} ({country.phone_code})
+                                </span>
                               </div>
-                          </form>
+                            ),
+                          }))}
+                          styles={phoneCodeCustomStyles}
+                          isSearchable
+                          onChange={(option: any) => field.onChange(option?.value)}
+                          value={
+                            field.value
+                              ? {
+                                value: field.value,
+                                label: (
+                                  <div className="flex items-center gap-2">
+                                    <Avatar
+                                      className="w-6 h-4"
+                                      radius="none"
+                                      src={`https://flagcdn.com/w20/${allCountries.find(
+                                        (c: any) => c.phone_code === field.value
+                                      )?.code.toLowerCase()}.png`}
+                                      alt={
+                                        allCountries.find(
+                                          (c: any) => c.phone_code === field.value
+                                        )?.name
+                                      }
+                                    />
+                                    <span>
+                                      {
+                                        allCountries.find(
+                                          (c: any) => c.phone_code === field.value
+                                        )?.name
+                                      }{" "}
+                                      ({field.value})
+                                    </span>
+                                  </div>
+                                ),
+                              }
+                              : null
+                          }
+                        />
+                      )}
+                    />
+                  }
+                />
+                <Input
+                  label="رقم الواتس آب"
+                  placeholder="نص الكتابه"
+                  type="text"
+                  {...register("whats_app")}
+                  isInvalid={!!errors.whats_app?.message}
+                  errorMessage={errors.whats_app?.message}
+                  labelPlacement="outside"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    inputWrapper: "shadow-none",
+                    base: "mb-4",
+                  }}
+                  endContent={
+                    data?.data?.length > 0 && (
+                      <Controller
+                      name="whats_app_country_code"
+                      control={control}
+                      defaultValue=""
+                      render={({ field }) => (
+                        <SelectReact
+                          placeholder="(+)"
+                          {...field}
+                          options={allCountries.map((country: any) => ({
+                            value: country.phone_code,
+                            label: (
+                              <div className="flex items-center gap-2">
+                                <Avatar
+                                  className="w-6 h-4"
+                                  radius="none"
+                                  src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
+                                  alt={country.name}
+                                />
+                                <span>
+                                  {country.name} ({country.phone_code})
+                                </span>
+                              </div>
+                            ),
+                          }))}
+                          styles={phoneCodeCustomStyles}
+                          isSearchable
+                          onChange={(option: any) => field.onChange(option?.value)}
+                          value={
+                            field.value
+                              ? {
+                                value: field.value,
+                                label: (
+                                  <div className="flex items-center gap-2">
+                                    <Avatar
+                                      className="w-6 h-4"
+                                      radius="none"
+                                      src={`https://flagcdn.com/w20/${allCountries.find(
+                                        (c: any) => c.phone_code === field.value
+                                      )?.code.toLowerCase()}.png`}
+                                      alt={
+                                        allCountries.find(
+                                          (c: any) => c.phone_code === field.value
+                                        )?.name
+                                      }
+                                    />
+                                    <span>
+                                      {
+                                        allCountries.find(
+                                          (c: any) => c.phone_code === field.value
+                                        )?.name
+                                      }{" "}
+                                      ({field.value})
+                                    </span>
+                                  </div>
+                                ),
+                              }
+                              : null
+                          }
+                        />
+                      )}
+                    />
+                    )
+                  }
+                />
+                <Input
+                  label="كلمة المرور"
+                  placeholder="نص الكتابه"
+                  type="password"
+                  {...register("password")}
+                  isInvalid={!!errors.password?.message}
+                  errorMessage={errors.password?.message}
+                  labelPlacement="outside"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    inputWrapper: "shadow-none",
+                    base: "mb-4",
+                  }}
+                />
+                <Input
+                  label="تأكيد كلمة المرور"
+                  placeholder="نص الكتابه"
+                  type="password"
+                  {...register("password_confirmation")}
+                  isInvalid={!!errors.password_confirmation?.message}
+                  errorMessage={errors.password_confirmation?.message}
+                  labelPlacement="outside"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    inputWrapper: "shadow-none",
+                    base: "mb-4",
+                  }}
+                />
+                <Input
+                  label="العمر"
+                  placeholder="نص الكتابه"
+                  type="text"
+                  {...register("age")}
+                  isInvalid={!!errors.age?.message}
+                  errorMessage={errors.age?.message}
+                  labelPlacement="outside"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    inputWrapper: "shadow-none",
+                    base: "mb-4",
+                  }}
+                />
+                <Controller
+                  name="gender"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      selectedKeys={field.value ? [field.value] : [""]}
+                      onSelectionChange={(keys) => {
+                        field.onChange(Array.from(keys)[0]);
+                        console.log(Array.from(keys)[0]);
+                      }}
+                      label="الجنس"
+                      labelPlacement="outside"
+                      placeholder="اختر الجنس"
+                      isInvalid={!!errors.gender?.message}
+                      errorMessage={errors.gender?.message}
+                      classNames={{
+                        label: "text-[#272727] font-bold text-sm",
+                        base: "mb-4",
+                        value: "text-[#87878C] text-sm",
+                      }}
+                    >
+                      {[
+                        { key: "male", label: "ذكر" },
+                        { key: "female", label: "انثي" },
+                      ].map((item) => (
+                        <SelectItem key={item.key}>{item.label}</SelectItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+
+                <Controller
+                  name="country"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      selectedKeys={field.value ? [field.value] : [""]}
+                      onSelectionChange={(keys) => field.onChange(Array.from(keys)[0])}
+                      label="الدولة"
+                      labelPlacement="outside"
+                      placeholder="اختر الدولة"
+                      isInvalid={!!errors.country?.message}
+                      errorMessage={errors.country?.message}
+                      classNames={{
+                        label: "text-[#272727] font-bold text-sm",
+                        base: "mb-4 md:col-span-2",
+                        value: "text-[#87878C] text-sm",
+                      }}
+                    >
+                      {[
+                        { key: "1", label: "مصر" },
+                        { key: "2", label: "المملكة العربيه السعوديه" },
+                      ].map((item) => (
+                        <SelectItem key={item.key}>{item.label}</SelectItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+
+                <Controller
+                  name="image"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <DropzoneField
+                      value={(field.value as any) || []}
+                      onChange={field.onChange}
+                      error={fieldState.error?.message}
+                    />
+                  )}
+                />
+
+                <div className="flex items-center justify-end gap-4 mt-8">
+                  <Button
+                    type="button"
+                    onPress={() => reset()}
+                    variant="solid"
+                    color="primary"
+                    className="text-white"
+                  >
+                    إلغاء
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="solid"
+                    color="primary"
+                    className="text-white"
+                    isDisabled={CreateStudent?.isPending}
+                  >
+                    {CreateStudent?.isPending && <Spinner color="white" size="sm" />}
+                    التالي
+                  </Button>
+                </div>
+              </form>
             </ModalBody>
           </>
         )}
