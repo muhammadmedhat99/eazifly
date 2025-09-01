@@ -267,74 +267,83 @@ export const StudentsSubscriptionDetails = ({
             }}
             indicator={<ArrowLeft2 variant="Bold" color="#2563EB" />}
           >
-            <div className="py-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
-                <span className="text-[#5E5E5E] text-sm font-bold">
-                  وسيلة الدفع
-                </span>
 
-                <span className="text-black-text font-bold text-[15px]">
-                  {data?.data.payment_method}
-                </span>
-              </div>
-              <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
-                <span className="text-[#5E5E5E] text-sm font-bold">
-                  خطة اللإشتراك
-                </span>
-
-                <span className="text-black-text font-bold text-[15px]">
-                  {data?.data.order_details[0]?.plan_title}
-                </span>
-              </div>
-              <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
-                <span className="text-[#5E5E5E] text-sm font-bold">
-                  مدة الحصة
-                </span>
-
-                <span className="text-black-text font-bold text-[15px]">
-                  {data?.data.order_details[0]?.duration} دقيقة
-                </span>
-              </div>
-              <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
-                <span className="text-[#5E5E5E] text-sm font-bold">
-                  عدد الحصص الأسبوعية
-                </span>
-
-                <span className="text-black-text font-bold text-[15px]">
-                  {data?.data.order_details[0]?.number_of_session_per_week}
-                </span>
-              </div>
-              <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
-                <span className="text-[#5E5E5E] text-sm font-bold">
-                  قيمة الإشتراك
-                </span>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-primary font-bold text-[15px]">
-                    {data?.data.order_details[0]?.discount_price}
+              <div className="py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+                <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg whitespace-nowrap">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    وسيلة الدفع
                   </span>
-                  <span className="text-primary font-bold text-[15px]">
-                    ج.م
+
+                  <span className="text-black-text font-bold text-[15px]">
+                    {data?.data.payment_method}
                   </span>
+                </div>
+                <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg lg:col-span-2">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    اسم البرنامج
+                  </span>
+
+                  <span className="text-black-text font-bold text-[15px] flex items-center gap-2">
+                    <span>{data?.data.order_details[0]?.program}</span>
+                    <span>-</span>
+                    <span>{data?.data.order_details[0]?.subscription_plan}</span>
+                  </span>
+                </div>
+                <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg lg:col-span-2">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    خطة الإشتراك
+                  </span>
+
+                  <span className="text-black-text font-bold text-[15px] flex items-center gap-2">
+                    <span>
+                      {data?.data.order_details[0]?.number_of_session_per_week}{" "}
+                      {data?.data.order_details[0]?.number_of_session_per_week === 1 ? "حصة" : "حصص"} شهرياً
+                    </span>
+                    <span>-</span>
+                    <span>{data?.data.order_details[0]?.duration} دقيقة</span>
+                  </span>
+                </div>
+                <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    عدد الطلاب
+                  </span>
+
+                  <span className="text-black-text font-bold text-[15px]">
+                    {data?.data.order_details[0]?.student_number}
+                  </span>
+                </div>
+                <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    قيمة الإشتراك
+                  </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-primary font-bold text-[15px]">
+                      {data?.data.order_details[0]?.discount_price}
+                    </span>
+                    <span className="text-primary font-bold text-[15px]">
+                      ج.م
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <span className="text-primary font-bold text-sm">
+                    صورة التحويل
+                  </span>
+                  <div className="overflow-hidden rounded-lg">
+                    {data?.data.image ? (
+                      <Image
+                        src={data.data.image}
+                        alt="bill image"
+                        width={1024}
+                        height={337}
+                        className="object-cover"
+                      />
+                    ) : null}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <span className="text-primary font-bold text-sm">
-                  صورة التحويل
-                </span>
-                <div className="overflow-hidden rounded-lg">
-                  {data?.data.image ? (
-                    <Image
-                      src={data.data.image}
-                      alt="bill image"
-                      width={1024}
-                      height={337}
-                      className="object-cover"
-                    />
-                  ) : null}
-                </div>
-              </div>
-            </div>
           </AccordionItem>
           <AccordionItem
             key="3"
