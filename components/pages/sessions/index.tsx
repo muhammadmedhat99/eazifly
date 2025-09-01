@@ -14,7 +14,13 @@ import {
   DropdownTrigger,
 } from "@heroui/react";
 import { useDebounce } from "@/lib/hooks/useDebounce";
-import { ArrowDown2, ArrowLeft2, ArrowRight2, Calendar, SearchNormal1 } from "iconsax-reactjs";
+import {
+  ArrowDown2,
+  ArrowLeft2,
+  ArrowRight2,
+  Calendar,
+  SearchNormal1,
+} from "iconsax-reactjs";
 import { CustomPagination } from "@/components/global/Pagination";
 import { useQuery } from "@tanstack/react-query";
 import { fetchClient } from "@/lib/utils";
@@ -24,6 +30,7 @@ import { Loader } from "@/components/global/Loader";
 import { parseDate, today } from "@internationalized/date";
 import TableSkeleton from "@/components/global/TableSkeleton";
 
+import { formatDate } from "@/lib/helper";
 
 const columns = [
   { name: "", uid: "avatar" },
@@ -65,10 +72,12 @@ export const AllSessions = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedDate, setSelectedDate] = useState(today("UTC"));
+  const [selectedDate, setSelectedDate] = useState<any>(today("UTC"));
   const debouncedDateSearch = useDebounce(selectedDate, 500);
 
-  const [selectedInstructorId, setSelectedInstructorId] = useState<number | null>(null);
+  const [selectedInstructorId, setSelectedInstructorId] = useState<
+    number | null
+  >(null);
 
   const params: Record<string, string | number | boolean> = {
     page: currentPage,
@@ -87,13 +96,12 @@ export const AllSessions = () => {
   }
 
   if (!debouncedNameSearch) {
-    params.parent = 'true'; 
+    params.parent = "true";
   }
 
   if (debouncedDateSearch) {
     params.date = debouncedDateSearch.toString();
   }
-
 
   const { data: sessionsData, isLoading } = useQuery({
     queryFn: async () =>
@@ -104,10 +112,9 @@ export const AllSessions = () => {
     queryKey: AllQueryKeys.GetAllSessions(
       debouncedNameSearch,
       debouncedDateSearch.toString(),
-      currentPage,
-
+      currentPage
     ),
-});
+  });
 
   const formattedData =
     sessionsData?.data?.map((item: any) => ({
@@ -161,53 +168,48 @@ export const AllSessions = () => {
         return new Date(bVal).getTime() - new Date(aVal).getTime();
       }
 
-      return (aVal || "").toString().localeCompare(
-        (bVal || "").toString(),
-        "ar"
-      );
+      return (aVal || "")
+        .toString()
+        .localeCompare((bVal || "").toString(), "ar");
     });
   }, [filteredData, sortKey]);
 
   const { data: teachersData, isLoading: isTeachersLoading } = useQuery({
-      queryFn: async () =>
-        await fetchClient(`client/instructors`, {
-          ...axios_config,
-          params,
-        }),
-      queryKey: AllQueryKeys.GetAllInstructors(
-        '',
-        '',
-        1
-      ),
-    });
+    queryFn: async () =>
+      await fetchClient(`client/instructors`, {
+        ...axios_config,
+        params,
+      }),
+    queryKey: AllQueryKeys.GetAllInstructors("", "", 1),
+  });
 
-    const filteredTeachers =
-        teachersData?.data?.filter((t: any) =>
-            t.name.toLowerCase().includes(nameSearch.toLowerCase())
-        ) || [];
+  const filteredTeachers =
+    teachersData?.data?.filter((t: any) =>
+      t.name.toLowerCase().includes(nameSearch.toLowerCase())
+    ) || [];
 
-    const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target as Node)
-            ) {
-                setShowDropdown(false);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
-
-    const dayName = (date: CalendarDate) => {
-        const jsDate = new Date(date.toString());
-        return new Intl.DateTimeFormat("ar-EG", { weekday: "long" }).format(jsDate);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
     };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const dayName = (date: CalendarDate) => {
+    const jsDate = new Date(date.toString());
+    return new Intl.DateTimeFormat("ar-EG", { weekday: "long" }).format(jsDate);
+  };
 
   return (
     <>
@@ -215,52 +217,58 @@ export const AllSessions = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="relative w-full md:min-w-48" ref={dropdownRef}>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
-                </div>
-                <input
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <SearchNormal1
+                  size="18"
+                  className="text-gray-400"
+                  variant="Outline"
+                />
+              </div>
+              <input
                 type="text"
                 placeholder="بحث باسم المعلم..."
                 className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
                 value={nameSearch}
                 onChange={(e) => {
-                    setNameSearch(e.target.value);
-                    setShowDropdown(true);
-                    setSelectedInstructorId(null); 
+                  setNameSearch(e.target.value);
+                  setShowDropdown(true);
+                  setSelectedInstructorId(null);
                 }}
                 onFocus={() => setShowDropdown(true)}
-                />
+              />
 
-                {showDropdown && (
+              {showDropdown && (
                 <ul className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg">
-                    {isTeachersLoading ? (
+                  {isTeachersLoading ? (
                     <li className="px-4 py-2 text-gray-500 text-sm">
-                        جاري التحميل...
+                      جاري التحميل...
                     </li>
-                    ) : filteredTeachers.length ? (
+                  ) : filteredTeachers.length ? (
                     filteredTeachers.map((teacher: any) => (
-                        <li
+                      <li
                         key={teacher.id}
                         className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer flex items-center gap-2"
                         onClick={() => {
-                            setNameSearch(teacher.name); 
-                            setSelectedInstructorId(teacher.id);
-                            setShowDropdown(false);
+                          setNameSearch(teacher.name);
+                          setSelectedInstructorId(teacher.id);
+                          setShowDropdown(false);
                         }}
-                        >
+                      >
                         <img
-                            src={teacher.image}
-                            alt={teacher.name}
-                            className="w-6 h-6 rounded-full"
+                          src={teacher.image}
+                          alt={teacher.name}
+                          className="w-6 h-6 rounded-full"
                         />
                         {teacher.name}
-                        </li>
+                      </li>
                     ))
-                    ) : (
-                    <li className="px-4 py-2 text-gray-500 text-sm">لا يوجد نتائج</li>
-                    )}
+                  ) : (
+                    <li className="px-4 py-2 text-gray-500 text-sm">
+                      لا يوجد نتائج
+                    </li>
+                  )}
                 </ul>
-                )}
+              )}
             </div>
           </div>
 
@@ -287,38 +295,37 @@ export const AllSessions = () => {
               <DropdownItem key="status">الحالة</DropdownItem>
             </DropdownMenu>
           </Dropdown>
-
         </div>
 
-       <div className="flex items-center gap-2">
-            <div className="bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg shadow-md text-center w-28">
-                {dayName(selectedDate)}
-            </div>
-                  <button
-        onClick={() => {
-            console.log('h', selectedDate.toString());
-            
-          setSelectedDate(selectedDate.subtract({ days: 1 }));
-        }}
+        <div className="flex items-center gap-2">
+          <div className="bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg shadow-md text-center w-28">
+            {dayName(selectedDate)}
+          </div>
+          <button
+            onClick={() => {
+              console.log("h", selectedDate.toString());
+
+              setSelectedDate(selectedDate.subtract({ days: 1 }));
+            }}
             className="font-semibold w-fit p-0 bg-primary/10 rounded p-3 rounded-lg"
           >
             <ArrowRight2 size={14} color={"blue"} />
           </button>
-            <DatePicker
+          <DatePicker
             className="max-w-[284px]"
-            value={selectedDate} 
+            value={selectedDate}
             onChange={setSelectedDate}
-            />
-        <button
-        onClick={() => {
-          // 🆕 Move one day forward
-          setSelectedDate(selectedDate.add({ days: 1 }));
-        }}
+          />
+          <button
+            onClick={() => {
+              // 🆕 Move one day forward
+              setSelectedDate(selectedDate.add({ days: 1 }));
+            }}
             className="font-semibold w-fit p-0 bg-primary/10 rounded p-3 rounded-lg"
           >
             <ArrowLeft2 size={14} color={"blue"} />
           </button>
-       </div>
+        </div>
         <div className="flex gap-2 flex-wrap">
           <Button
             id="all"
@@ -345,7 +352,7 @@ export const AllSessions = () => {
             className="font-semibold"
             onPress={(e) => setSelectedStatus(e.target.id)}
           >
-            غياب 
+            غياب
           </Button>
           <Button
             id="canceled"
@@ -354,7 +361,7 @@ export const AllSessions = () => {
             className="font-semibold"
             onPress={(e) => setSelectedStatus(e.target.id)}
           >
-            ملغية 
+            ملغية
           </Button>
           <Button
             id="ended"
