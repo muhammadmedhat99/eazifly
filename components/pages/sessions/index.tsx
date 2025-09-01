@@ -185,7 +185,7 @@ export const AllSessions = () => {
 
   const filteredTeachers =
     teachersData?.data?.filter((t: any) =>
-      t.name.toLowerCase().includes(nameSearch.toLowerCase())
+      (t?.name || "").toLowerCase().includes((nameSearch || "").toLowerCase())
     ) || [];
 
   const dropdownRef = useRef<HTMLDivElement>(null);
