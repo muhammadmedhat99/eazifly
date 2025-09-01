@@ -28,6 +28,7 @@ import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 import { parseDate, today } from "@internationalized/date";
+import TableSkeleton from "@/components/global/TableSkeleton";
 
 import { formatDate } from "@/lib/helper";
 
@@ -184,7 +185,7 @@ export const AllSessions = () => {
 
   const filteredTeachers =
     teachersData?.data?.filter((t: any) =>
-      t.name.toLowerCase().includes(nameSearch.toLowerCase())
+      (t?.name || "").toLowerCase().includes((nameSearch || "").toLowerCase())
     ) || [];
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -374,7 +375,7 @@ export const AllSessions = () => {
         </div>
       </div>
       {isLoading ? (
-        <Loader />
+        <TableSkeleton columns={columns} rows={6} />
       ) : (
         <TableComponent
           columns={columns}
