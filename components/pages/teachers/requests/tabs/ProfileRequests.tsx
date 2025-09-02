@@ -57,12 +57,12 @@ export const ProfileRequests = () => {
 
   const formattedData =
     teachersRequests?.data?.map((item: any) => ({
-      id: item.id,
-      name: item.instructor_data.name || "N/A",
-      phone: item.instructor_data.phone || "N/A",
-      reason: item.reason || "N/A",
-      avatar: item.instructor_data.image || "N/A",
-      created_at: formatDate(item.created_at) || "N/A",
+      id: item?.id,
+      name: item?.instructor_data?.name || "N/A",
+      phone: item?.instructor_data?.phone || "N/A",
+      reason: item?.reason || "N/A",
+      avatar: item?.instructor_data?.image || "N/A",
+      created_at: formatDate(item?.created_at) || "N/A",
     })) || [];
 
   return (

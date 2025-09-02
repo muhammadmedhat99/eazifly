@@ -34,8 +34,8 @@ import { formatDate } from "@/lib/helper";
 
 const columns = [
   { name: "", uid: "avatar" },
-  { name: "الطالب", uid: "name" },
-  { name: "المعلم", uid: "instructor" },
+  { name: "الطالب", uid: "name_link" },
+  { name: "المعلم", uid: "instructor_link" },
   { name: "تاريخ الحصة", uid: "session_date" },
   { name: "البرامج التابع للحصة", uid: "program" },
   { name: "موعد تجديد الطالب", uid: "session_time" },
@@ -120,8 +120,10 @@ export const AllSessions = () => {
     sessionsData?.data?.map((item: any) => ({
       id: item.id,
       avatar: item.users[0]?.user_image || null,
-      name: item.users[0]?.user_name || "N/A",
-      instructor: item.instructor || "N/A",
+      name_link: item.users[0]?.user_name || "N/A",
+      user_id: item.users[0]?.id || null,
+      instructor_id: item.instructor_id || null,
+      instructor_link: item.instructor || "N/A",
       session_date: item.session_date || "N/A",
       program: item.program_title || "N/A",
       status: {

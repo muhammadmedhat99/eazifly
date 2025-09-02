@@ -17,6 +17,7 @@ import { Loader } from "@/components/global/Loader";
 import { getCookie } from "cookies-next";
 import { postData } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 
 type MainInformationProps = {
   data: {
@@ -111,9 +112,16 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
           </div>
           <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
             <div className="text-[#5E5E5E] text-sm font-bold">رابط الحصة</div>
-            <div className="text-black-text font-bold text-[15px]">
-                {''}
-            </div>
+            {data?.meeting_url && (
+              <Link
+                href={data?.meeting_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary font-bold text-[15px] underline"
+              >
+                {data?.meeting_url}
+              </Link>
+            )}
           </div>
         </div>
       ) : <Loader />}
