@@ -209,3 +209,39 @@ export const phoneCodeCustomStyles: StylesConfig = {
   }),
 
 };
+export const whitePhoneCodeCustomStyles: StylesConfig = {
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? "rgb(233 239 247 / var(--tw-bg-opacity, 1))" : "rgb(233 239 247 / var(--tw-bg-opacity, 1))",
+    "&:hover": {
+      backgroundColor: "rgb(233 239 247 / var(--tw-bg-opacity, 1))",
+    },
+    padding: "0",
+    direction: "rtl",
+    fontFamily: "inherit",
+    fontSize: "14px",
+    border: "1px solid #d1d5db",
+    width: "180px",
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected
+      ? "#3b82f6"
+      : state.isFocused
+        ? "#f0f0f0"
+        : "#fff",
+    color: state.isSelected ? "#fff" : "#111827",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    direction: "rtl",
+    fontFamily: "inherit",
+  }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+
+};
