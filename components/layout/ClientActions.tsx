@@ -10,7 +10,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { HamburgerMenu } from "iconsax-reactjs";
 
 export const ClientActions = () => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
   return (
     <>
@@ -27,7 +27,7 @@ export const ClientActions = () => {
         size="xs"
       >
         <DrawerContent>
-          <Sidebar />
+          <Sidebar onLinkClick={onClose} />
         </DrawerContent>
       </Drawer>
     </>
