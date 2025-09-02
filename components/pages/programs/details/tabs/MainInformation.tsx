@@ -208,6 +208,15 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
               <span className="text-sm font-bold">تعديل</span>
             </Button>
           </div>
+
+          <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
+            <div className="text-primary font-bold">وصف البرنامج</div>
+            <div
+              className="mb-6 text-sm text-title leading-relaxed rtl [&>*]:!block [&>*]:mb-2 flex flex-col items-start gap-4"
+              dir="rtl"
+              dangerouslySetInnerHTML={{ __html: data?.description }}
+            />
+          </div>
           {/* Main Card  */}
           {/* Main Card  */}
           <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex items-center justify-between">
