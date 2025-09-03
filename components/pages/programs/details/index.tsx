@@ -25,6 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { ProgramReportQuestions } from "./tabs/ProgramReportQuestions";
 import { AllQueryKeys } from "@/keys";
+import { Settings } from "./tabs/Settings";
 
 type ProgramDetailsProps = {
   data: {
@@ -144,6 +145,9 @@ export const ProgramDetails = () => {
         </Tab>
         <Tab key="statistics" title="الإحصائيات">
           <ProgramStatistics />
+        </Tab>
+        <Tab key="settings" title="الاعدادات">
+          <Settings />
         </Tab>
       </Tabs>
     </div>
