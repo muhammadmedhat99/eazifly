@@ -107,6 +107,7 @@ export const ProgramReportQuestions = ({ data }: any) => {
   const queryClient = useQueryClient();
   const pageParams = useParams();
   const program_id = pageParams.id;
+
   const [items, setItems] = useState(
     data?.data?.map((item: any) => ({
       id: item.id.toString(),
@@ -116,10 +117,12 @@ export const ProgramReportQuestions = ({ data }: any) => {
       user_type: item.user_type,
       created_at: item.created_at,
       programId: item.program?.id,
+      status: item.status,
     })) || []
   );
 
   const [isChanged, setIsChanged] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<"all" | "active" | "inactive">("active");
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
@@ -137,12 +140,10 @@ export const ProgramReportQuestions = ({ data }: any) => {
   const handleSave = () => {
     const orderedIds = items.map((i: any) => i.id);
 
-    console.log("Save order:", orderedIds);
-
     const payload = {
       questions: orderedIds.map((id: string, index: number) => ({
         question_id: Number(id),
-        sort_order: index + 1, // أو index لو API عايزه يبدأ من 0
+        sort_order: index + 1,
       })),
     };
 
@@ -188,43 +189,74 @@ export const ProgramReportQuestions = ({ data }: any) => {
     },
   });
 
+  const filteredItems =
+    selectedStatus === "all"
+      ? items
+      : items.filter((item: any) =>
+          selectedStatus === "active"
+            ? item.status === "active"
+            : item.status === "inactive"
+        );
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex justify-end pt-4 gap-4">
-        {isChanged && (
-
+      <div className="flex justify-between pt-4">
+        <div className="flex gap-2">
           <Button
-            color="primary"
-            className="px-6 font-semibold text-white"
-            onPress={handleSave}
+            variant="flat"
+            color={selectedStatus === "all" ? "primary" : "default"}
+            className="font-semibold"
+            onPress={() => setSelectedStatus("all")}
           >
-            حفظ الترتيب
+            الكل
           </Button>
-
-        )}
-        <Link
-          href={`/programs/${program_id}/report-questions/create`}
-          className="text-white font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-primary"
-        >
-          أضافة سؤال
-        </Link>
+          <Button
+            variant="flat"
+            color={selectedStatus === "active" ? "primary" : "default"}
+            className="font-semibold"
+            onPress={() => setSelectedStatus("active")}
+          >
+            نشط
+          </Button>
+          <Button
+            variant="flat"
+            color={selectedStatus === "inactive" ? "primary" : "default"}
+            className="font-semibold"
+            onPress={() => setSelectedStatus("inactive")}
+          >
+            غير نشط
+          </Button>
+        </div>
+        <div className="flex items-center gap-4">
+          {isChanged && (
+            <Button
+              color="primary"
+              className="px-6 font-semibold text-white"
+              onPress={handleSave}
+            >
+              حفظ الترتيب
+            </Button>
+          )}
+          <Link
+            href={`/programs/${program_id}/report-questions/create`}
+            className="text-white font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-primary"
+          >
+            أضافة سؤال
+          </Link>
+        </div>
       </div>
-      <DndContext
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
+
+      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
-          items={items.map((i: any) => i.id)}
+          items={filteredItems.map((i: any) => i.id)}
           strategy={verticalListSortingStrategy}
         >
-          {items.map((row: any) => (
+          {filteredItems.map((row: any) => (
             <SortableCard key={row.id} row={row} />
           ))}
         </SortableContext>
       </DndContext>
-
-
     </div>
   );
 };
+
