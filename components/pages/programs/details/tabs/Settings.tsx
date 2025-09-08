@@ -7,6 +7,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import { AllQueryKeys } from "@/keys";
 import { axios_config } from "@/lib/const";
+import { Warning2 } from "iconsax-reactjs";
 
 export const Settings = () => {
     const [filterType, setFilterType] = useState<string>("all");
@@ -95,7 +96,13 @@ export const Settings = () => {
                     </div>
                 </form>
             </div>
-            <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-4">
+            <div className="relative bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-4">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 backdrop-blur-sm rounded-xl z-10">
+                    <Warning2 size="40" color="#f59e0b" variant="Bold" />
+                    <span className="mt-2 text-2xl font-bold text-gray-700">
+                        Coming Soon
+                    </span>
+                </div>
                 <h2 className="text-xl font-bold mb-2">خصم الطلاب المتعددين</h2>
 
                 <Switch
