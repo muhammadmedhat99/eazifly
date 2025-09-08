@@ -123,6 +123,36 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
               </Link>
             )}
           </div>
+          <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
+            <div className="text-[#5E5E5E] text-sm font-bold">حالة دخول المعلم</div>
+            <div className="text-black-text font-bold text-[15px]">
+              {data?.instructor_join_time
+                ? `دخل`
+                : "لم يدخل"}
+            </div>
+          </div>
+
+          <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
+            <div className="text-[#5E5E5E] text-sm font-bold">حالة دخول الطالب</div>
+            <div className="text-black-text font-bold text-[15px]">
+              {data?.student_join_time
+                ? `دخل`
+                : "لم يدخل"}
+            </div>
+          </div>
+          {data?.instructor_join_time && <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
+            <div className="text-[#5E5E5E] text-sm font-bold">وقت دخول المعلم</div>
+            <div className="text-black-text font-bold text-[15px]">
+              {data?.instructor_join_time}
+            </div>
+          </div>}
+
+          {data?.student_join_time && <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
+            <div className="text-[#5E5E5E] text-sm font-bold">وقت دخول الطالب</div>
+            <div className="text-black-text font-bold text-[15px]">
+              {data?.student_join_time}
+            </div>
+          </div>}
         </div>
       ) : <Loader />}
     </>
