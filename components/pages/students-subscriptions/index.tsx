@@ -134,7 +134,7 @@ export const AllStudentsSubscriptions = () => {
         color: item.status.color,
       },
       avatar: item.image || "N/A",
-    })).reverse() || [];
+    })) || [];
 
   const filteredData = useMemo(() => {
     return formattedData.filter((item: SubscriptionItem) => {
