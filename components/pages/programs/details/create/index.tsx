@@ -49,11 +49,6 @@ const schema: yup.ObjectSchema<FormData> = yup.object({
     .required("ادخل العنوان بالإنجليزية")
     .min(3, "العنوان لا يجب أن يقل عن ٣ أحرف"),
 
-  user_type: yup
-    .mixed<FormData["user_type"]>()
-    .required("اختر نوع المستخدم")
-    .oneOf(["user", "client", "instructor"], "نوع المستخدم غير صحيح"),
-
   type: yup
     .mixed<FormData["type"]>()
     .required("اختر نوع السؤال")
@@ -133,7 +128,7 @@ export const CreateQuestions = () => {
       if(program_id){
         formdata.append("program_id", program_id.toString());
       }
-      formdata.append("user_type", submitData.user_type);
+      formdata.append("user_type", "instructor");
       formdata.append("type", submitData.type);
       if (submitData.type === "multiple_choice" && submitData.options) {
         submitData.options.forEach((option, index) => {
@@ -228,24 +223,6 @@ export const CreateQuestions = () => {
           base: "mb-4",
         }}
       />
-
-      {/* نوع المستخدم */}
-      <Select
-        label="نوع المستخدم"
-        placeholder="اختر نوع المستخدم"
-        {...register("user_type")}
-        isInvalid={!!errors.user_type?.message}
-        errorMessage={errors.user_type?.message}
-        labelPlacement="outside"
-        classNames={{
-          label: "text-[#272727] font-bold text-sm",
-          base: "mb-4",
-        }}
-      >
-        <SelectItem key="user">user</SelectItem>
-        <SelectItem key="client">client</SelectItem>
-        <SelectItem key="instructor">instructor</SelectItem>
-      </Select>
 
       {/* نوع السؤال */}
       <Select

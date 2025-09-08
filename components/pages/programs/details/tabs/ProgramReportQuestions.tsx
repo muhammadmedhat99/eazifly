@@ -1,36 +1,25 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import TableComponent from "@/components/global/Table";
-import { Options } from "@/components/global/Icons";
+import React, { useState } from "react";
+import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
-  avatar,
-  Button,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
-import { useDebounce } from "@/lib/hooks/useDebounce";
-import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
-import { CustomPagination } from "@/components/global/Pagination";
-import { useQuery } from "@tanstack/react-query";
-import { fetchClient } from "@/lib/utils";
-import { axios_config } from "@/lib/const";
-import { AllQueryKeys } from "@/keys";
-import { Loader } from "@/components/global/Loader";
-import { formatDate } from "@/lib/helper";
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Button, Dropdown, DropdownTrigger, DropdownItem, DropdownMenu, addToast } from "@heroui/react";
+import { Options } from "@/components/global/Icons";
 import { useParams, useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { getCookie } from "cookies-next";
+import { postData } from "@/lib/utils";
+import { AllQueryKeys } from "@/keys";
 import Link from "next/link";
+import { formatDate } from "@/lib/helper";
 
-const columns = [
-  { name: "عنوان السؤال", uid: "name" },
-  { name: "نوع السؤال", uid: "type" },
-  { name: "البرنامج", uid: "program" },
-  { name: "نوع المستخدم", uid: "user_type" },
-];
-
-const OptionsComponent = ({ id }: { id: number }) => {
+const OptionsComponent = ({ row }: { row: any }) => {
   return (
     <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
       <DropdownTrigger>
@@ -39,7 +28,7 @@ const OptionsComponent = ({ id }: { id: number }) => {
         </button>
       </DropdownTrigger>
       <DropdownMenu aria-label="Static Actions">
-        <DropdownItem href={`/teachers/${id}`} key="show">
+        <DropdownItem href={`/programs/${row.programId}/report-questions/${row.id}`} key="show">
           عرض البيانات
         </DropdownItem>
         <DropdownItem key="actions">الإجراءات</DropdownItem>
@@ -51,100 +40,191 @@ const OptionsComponent = ({ id }: { id: number }) => {
   );
 };
 
-export const ProgramReportQuestions = ({ data, isLoading }: any) => {
-  const [nameSearch, setNameSearch] = useState("");
-  const debouncedNameSearch = useDebounce(nameSearch, 500);
-  const [selectedStatus, setSelectedStatus] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const router = useRouter();
+// ===== Sortable Card Component =====
+const SortableCard = ({ row }: { row: any }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: row.id });
 
-  const pageParams = useParams();
-  const program_id = pageParams.id;
-
-  const params: Record<string, string | number> = {
-    page: currentPage,
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
   };
 
-  if (debouncedNameSearch) {
-    params.name = debouncedNameSearch;
-  }
+  const router = useRouter();
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="border border-stroke rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition cursor-pointer"
+      onClick={() =>
+        router.push(`/programs/${row.programId}/report-questions/${row.id}`)
+      }
+    >
+      {/* Header */}
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-bold text-base sm:text-lg text-gray-800">
+          {row.name}
+        </h3>
 
-  const formattedData =
+        <div className="flex items-center gap-2">
+          {/* Drag Handle */}
+          <span
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+          >
+            ☰
+          </span>
+
+          {/* Options Dropdown (click works normally now) */}
+          <OptionsComponent row={row} />
+        </div>
+      </div>
+
+      {/* Details */}
+      <div className="space-y-2 text-sm text-gray-700">
+        <p>
+          <span className="font-bold text-gray-600">نوع السؤال: </span>
+          {row.type || "-"}
+        </p>
+        <p>
+          <span className="font-bold text-gray-600">البرنامج: </span>
+          {row.program || "-"}
+        </p>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-4 text-xs text-gray-500 border-t pt-2">
+        <span>أضيف في {formatDate(row.created_at)}</span>
+      </div>
+    </div>
+  );
+};
+
+// ===== Main Component =====
+export const ProgramReportQuestions = ({ data }: any) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const pageParams = useParams();
+  const program_id = pageParams.id;
+  const [items, setItems] = useState(
     data?.data?.map((item: any) => ({
-      id: item.id,
+      id: item.id.toString(),
       name: item.title,
-      type: item.type || "",
-      program: item.program?.title || "",
-      discount_type: item.discount_type || "",
-      user_type: item.user_type || "",
-      created_at: formatDate(item.created_at) || "",
+      type: item.type,
+      program: item.program?.title,
+      user_type: item.user_type,
+      created_at: item.created_at,
       programId: item.program?.id,
-    })) || [];
+    })) || []
+  );
+
+  const [isChanged, setIsChanged] = useState(false);
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setItems((prev: any) => {
+        const oldIndex = prev.findIndex((i: any) => i.id === active.id);
+        const newIndex = prev.findIndex((i: any) => i.id === over.id);
+        const newArr = arrayMove(prev, oldIndex, newIndex);
+        setIsChanged(true);
+        return newArr;
+      });
+    }
+  };
+
+  const handleSave = () => {
+    const orderedIds = items.map((i: any) => i.id);
+
+    console.log("Save order:", orderedIds);
+
+    const payload = {
+      questions: orderedIds.map((id: string, index: number) => ({
+        question_id: Number(id),
+        sort_order: index + 1, // أو index لو API عايزه يبدأ من 0
+      })),
+    };
+
+    UpdateOrder.mutate(payload);
+    setIsChanged(false);
+  };
+
+  const UpdateOrder = useMutation({
+    mutationFn: async (payload: any) => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      myHeaders.append("Content-Type", "application/json");
+
+      return postData(
+        `client/sort/report/questions`,
+        JSON.stringify(payload),
+        myHeaders
+      );
+    },
+    onSuccess: (response) => {
+      if (response.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: response?.message,
+          color: "success",
+        });
+        queryClient.invalidateQueries({
+          queryKey: AllQueryKeys.GetAllSpecializations,
+        });
+      }
+    },
+    onError: () => {
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
 
   return (
-    <>
-      <div className="p-4 flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-2">
-          <div className="relative md:min-w-80">
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
-            </div>
-            <input
-              type="text"
-              placeholder="بحث..."
-              className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
-              value={nameSearch}
-              onChange={(e) => setNameSearch(e.target.value)}
-            />
-          </div>
+    <div className="p-4 space-y-4">
+      <div className="flex justify-end pt-4 gap-4">
+        {isChanged && (
 
-          <Dropdown classNames={{ content: "min-w-36" }} showArrow>
-            <DropdownTrigger>
-              <Button
-                variant="flat"
-                color="primary"
-                className="text-primary font-semibold gap-1"
-                radius="sm"
-              >
-                <ArrowDown2 size={14} />
-                ترتيب حسب
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              <DropdownItem key="show">الإسم</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-
-        <Link
-            href={`/programs/${program_id}/report-questions/create`}
-            className="text-white font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-primary"
+          <Button
+            color="primary"
+            className="px-6 font-semibold text-white"
+            onPress={handleSave}
           >
-            أضافة سؤال  
+            حفظ الترتيب
+          </Button>
+
+        )}
+        <Link
+          href={`/programs/${program_id}/report-questions/create`}
+          className="text-white font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-primary"
+        >
+          أضافة سؤال
         </Link>
-
       </div>
-      {isLoading ? (
-        <Loader />  
-      ) : (
-        <TableComponent
-          columns={columns}
-          data={formattedData}
-          ActionsComponent={OptionsComponent}
-          handleRowClick={(row: any) =>
-            router.push(`/programs/${row.programId}/report-questions/${row.id}`)
-        }
-        />
-      )}
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={items.map((i: any) => i.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {items.map((row: any) => (
+            <SortableCard key={row.id} row={row} />
+          ))}
+        </SortableContext>
+      </DndContext>
 
-      <div className="my-10 px-6">
-        <CustomPagination
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          last_page={data?.meta?.last_page}
-          total={data?.meta?.total}
-        />
-      </div>
-    </>
+
+    </div>
   );
 };
