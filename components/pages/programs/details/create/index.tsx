@@ -14,7 +14,7 @@ import {
   Avatar,
 } from "@heroui/react";
 import { DropzoneField } from "@/components/global/DropZoneField";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
 import { getCookie } from "cookies-next";
 import React, { useState } from "react";
@@ -23,6 +23,7 @@ import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
+import { Trash } from "iconsax-reactjs";
 
 type Option = {
   ar: { title: string };
@@ -94,6 +95,8 @@ export const CreateQuestions = () => {
 
   const params = useParams();
   const program_id = params.id;
+
+  const queryClient = useQueryClient();
   
   const typeValue = watch("type");
   const [optionsCount, setOptionsCount] = useState(0);
@@ -169,6 +172,7 @@ export const CreateQuestions = () => {
           title: data?.message,
           color: "success",
         });
+        queryClient.invalidateQueries({ queryKey: AllQueryKeys.GetAllSpecializations });
         router.push(`/programs/${program_id}`);
       }
     },
@@ -186,6 +190,13 @@ export const CreateQuestions = () => {
       await fetchClient(`client/program?status=published`, axios_config),
     queryKey: AllQueryKeys.GetAllPrograms("", 1),
   });
+
+  React.useEffect(() => {
+    if (typeValue === "multiple_choice" && fields.length === 0) {
+      append({ ar: { title: "" }, en: { title: "" } });
+      append({ ar: { title: "" }, en: { title: "" } });
+    }
+  }, [typeValue, fields.length, append]);
 
   return (
     <form
@@ -243,40 +254,54 @@ export const CreateQuestions = () => {
       </Select>
 
       {typeValue === "multiple_choice" && (
-        <>
-          <Input
-            type="number"
-            label="عدد الاختيارات"
-            value={optionsCount.toString()}
-            min={2}
-            labelPlacement="outside"
-            classNames={{
-              label: "text-[#272727] font-bold text-sm",
-              inputWrapper: "shadow-none",
-              base: "mb-4",
-            }}
-            onChange={(e) => handleOptionsCountChange(Number(e.target.value))}
-          />
-          <label className="text-[#272727] font-bold text-sm col-span-2">
+        <div className="col-span-2 flex flex-col gap-4">
+          <label className="text-[#272727] font-bold text-sm">
             الاختيارات
           </label>
+
           {fields.map((field, index) => (
             <div
               key={field.id}
-              className="grid grid-cols-2 gap-2 border p-2 rounded"
+              className="col-span-2 flex gap-4 items-center"
             >
-              <Input
-                placeholder="العنوان بالعربية"
-                {...register(`options.${index}.ar.title`)}
-              />
-              <Input
-                placeholder="العنوان بالإنجليزية"
-                {...register(`options.${index}.en.title`)}
-              />
+              <div className="grid grid-cols-2 gap-2 border p-2 rounded flex-1">
+                <Input
+                  placeholder="العنوان بالعربية"
+                  {...register(`options.${index}.ar.title`)}
+                />
+                <Input
+                  placeholder="العنوان بالإنجليزية"
+                  {...register(`options.${index}.en.title`)}
+                />
+              </div>
+
+              <Button
+                isIconOnly
+                size="sm"
+                color="danger"
+                variant="light"
+                onPress={() => remove(index)}
+                isDisabled={index < 2} 
+                className="text-red-500 hover:text-red-700 disabled:opacity-50"
+              >
+                <Trash color="red" size="20" />
+              </Button>
             </div>
           ))}
-        </>
+          <div className="flex justify-center col-span-2">
+            <Button
+              type="button"
+              variant="light"
+              color="primary"
+              onPress={() => append({ ar: { title: "" }, en: { title: "" } })}
+              className="col-span-2"
+            >
+              + إضافة اختيار
+            </Button>
+          </div>
+        </div>
       )}
+
 
       <div className="flex items-center justify-end gap-4 mt-8 col-span-2">
         <Button
