@@ -66,14 +66,14 @@ deploy:
             docker service update --image \$IMAGE $SERVICE_NAME --update-parallelism 1 --update-delay 10s --force
         else
             echo 'Creating new Swarm service: $SERVICE_NAME'
-            docker service create --name $SERVICE_NAME --restart-condition any -p 3000 $IMAGE
+            docker service create --name $SERVICE_NAME --restart-condition any -p 8081:3000 $IMAGE
         fi
 
         docker service ls
       "
     - echo "🏥 Health check..."
     - sleep 10
-    - curl -f http://$SERVER_IP:8080 || echo "⚠️ Health check failed - service might still be starting"
+    - curl -f http://$SERVER_IP:8081 || echo "⚠️ Health check failed - service might still be starting"
 
   after_script:
     - echo "🧹 Cleaning up SSH files..."
@@ -107,8 +107,8 @@ rollback:
         docker run -d \
           --name $SERVICE_NAME \
           --restart unless-stopped \
-          -p 8080:3000 \
-          $IMAGE_NAME:$CI_COMMIT_BEFORE_SHA || docker run -d --name $SERVICE_NAME --restart unless-stopped -p 8080:3000 $IMAGE_NAME:latest
+          -p 8081:3000 \
+          $IMAGE_NAME:$CI_COMMIT_BEFORE_SHA || docker run -d --name $SERVICE_NAME --restart unless-stopped -p 8081:3000 $IMAGE_NAME:latest
 
         echo '✅ Rollback completed!'
       "
