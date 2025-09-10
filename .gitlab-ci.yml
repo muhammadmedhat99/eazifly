@@ -3,8 +3,8 @@ stages:
   - deploy
 
 variables:
-  IMAGE_NAME: registry.gitlab.com/mahmoudqotb123/Client_Dashboard
-  SERVICE_NAME: eazifly_production_client_Dashboard
+  IMAGE_NAME: registry.gitlab.com/mahmoudqotb123/client_dashboard
+  SERVICE_NAME: eazifly_production_client_dashboard
 
 # -------- BUILD STAGE --------
 build:
