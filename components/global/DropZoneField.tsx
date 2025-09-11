@@ -1,6 +1,6 @@
 import { FolderOpen } from "iconsax-reactjs";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 
 type FileWithPreview = File | { preview: string; name: string };
@@ -22,8 +22,6 @@ export const DropzoneField = ({
   label,
   description,
 }: DropzoneFieldProps) => {
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const newFiles = multiple ? [...value, ...acceptedFiles] : acceptedFiles;
@@ -41,19 +39,9 @@ export const DropzoneField = ({
     },
   });
 
-  useEffect(() => {
-    if (!value) return;
-
-    const urls = value.map((file: any) =>
-      file instanceof File ? URL.createObjectURL(file) : file.preview
-    );
-
-    setPreviewUrls(urls);
-
-    return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [value]);
+  const previews = value?.map((file: any) =>
+    file instanceof File ? URL.createObjectURL(file) : file.preview
+  );
 
   return (
     <div {...getRootProps()} className="flex flex-col gap-1">
@@ -72,7 +60,7 @@ export const DropzoneField = ({
           </div>
         ) : value?.length ? (
           <div className="flex items-center flex-col gap-2">
-            {previewUrls.map((url, index) => {
+            {previews.map((url, index) => {
               const file = value[index];
               const isImage =
                 file instanceof File

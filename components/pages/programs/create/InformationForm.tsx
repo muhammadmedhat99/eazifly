@@ -52,7 +52,7 @@ const defaultValues: Partial<InformationFormData> = {
   localizedFields: locales.reduce(
     (acc, locale) => ({
       ...acc,
-      [locale]: { title: "", label: "", goals: "", content: "" },
+      [locale]: { title: "", label: "", goals: "", content: "", description: "" },
     }),
     {} as InformationFormData["localizedFields"]
   ),
@@ -72,12 +72,14 @@ export const InformationForm = ({
           label: data.data.label || "",
           goals: data.data.goals || "",
           content: data.data.content || "",
+          description: data.data.description || "",
         },
         en: {
           title: data.data.title || "",
           label: data.data.label || "",
           goals: data.data.goals || "",
           content: data.data.content || "",
+          description: data.data.description || "",
         },
       },
       slug: data.data.slug || "",
@@ -152,6 +154,7 @@ export const InformationForm = ({
       formdata.append(`${locale}[label]`, localeData.label);
       formdata.append(`${locale}[goals]`, localeData.goals);
       formdata.append(`${locale}[content]`, localeData.content);
+      formdata.append(`${locale}[description]`, localeData.description);
     });
 
     // Add other fields
@@ -323,22 +326,34 @@ export const InformationForm = ({
         />
       </div>
 
-      {/* Program Content */}
-      <div className="md:col-span-2">
-        <LocalizedTextArea
-          control={control}
-          name="content"
-          label="محتوي البرنامج"
-        />
-      </div>
+      {/* Wrapper Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full col-span-4">
+        {/* Program description */}
+        <div className="col-span-1">
+          <LocalizedTextArea
+            control={control}
+            name="description"
+            label="وصف البرنامج"
+          />
+        </div>
 
-      {/* Program Goals */}
-      <div className="md:col-span-2">
-        <LocalizedTextArea
-          control={control}
-          name="goals"
-          label="اهداف البرنامج"
-        />
+        {/* Program Content */}
+        <div className="col-span-1">
+          <LocalizedTextArea
+            control={control}
+            name="content"
+            label="محتوي البرنامج"
+          />
+        </div>
+
+        {/* Program Goals */}
+        <div className="col-span-1 md:col-span-2">
+          <LocalizedTextArea
+            control={control}
+            name="goals"
+            label="اهداف البرنامج"
+          />
+        </div>
       </div>
 
       {/* Specialization Select */}

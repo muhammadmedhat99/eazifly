@@ -8,14 +8,13 @@ import Link from "next/link";
 import { axios_config, routes } from "@/lib/const";
 import { fetchClient } from "@/lib/utils";
 
-export const Sidebar = () => {
+export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
   const [counts, setCounts] = React.useState<{ new_orders?: number }>({});
 
   React.useEffect(() => {
     const fetchCounts = async () => {
       try {
         const res = await fetchClient("client/count/data", axios_config);
-        console.log(res);
         setCounts(res);
       } catch (err) {
         console.error("Error fetching counts", err);
@@ -35,13 +34,11 @@ export const Sidebar = () => {
         className="mb-4"
       />
 
-      {/* Main wrapper that maps original routes in order */}
       <div className="flex flex-col">
         {routes.map((item) => {
           const Icon = item.icon;
           const hasSubRoutes = item.sub_routes && item.sub_routes.length > 0;
 
-          // Render AccordionItem if sub_routes exist
           if (hasSubRoutes) {
             return (
               <Accordion
@@ -70,12 +67,14 @@ export const Sidebar = () => {
                       <Link
                         key={subItem.id}
                         href={`${item.route}${subItem.route}`}
+                        onClick={onLinkClick}
                         className="flex items-center gap-1 duration-300 hover:px-1"
                       >
                         <ArrowLeft2 size={12} />
                         <span className="text-[12px] font-semibold flex items-center gap-2">
                           {subItem.name}
-                          {subItem.route === "/subscriptions" && counts?.new_orders ? (
+                          {subItem.route === "/subscriptions" &&
+                          counts?.new_orders ? (
                             <span className="ml-2 flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[11px] font-bold">
                               {counts.new_orders}
                             </span>
@@ -89,11 +88,11 @@ export const Sidebar = () => {
             );
           }
 
-          // Render direct Link if no sub_routes
           return (
             <Link
               key={item.id}
               href={item.route}
+              onClick={onLinkClick}
               className="flex items-center gap-1.5 px-5 py-3 hover:bg-muted transition-all duration-300"
             >
               <Icon size={18} />
