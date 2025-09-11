@@ -24,7 +24,7 @@ import { User } from "@heroui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import { fetchClient, postData } from "@/lib/utils";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 
@@ -89,6 +89,7 @@ export const StudentsSubscriptionDetails = ({
   const [paidValue, setPaidValue] = useState("");
   const params = useParams();
   const order_id = params.id;
+  const router = useRouter();
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["orderDetails", order_id],
@@ -116,7 +117,7 @@ export const StudentsSubscriptionDetails = ({
     onSuccess: (data) => {
       if (data.message !== "success") {
         addToast({
-          title: "error",
+          title: data.message.paid[0] || "error",
           color: "danger",
         });
       } else {
@@ -125,6 +126,7 @@ export const StudentsSubscriptionDetails = ({
           color: "success",
         });
         setPaidValue("");
+        refetch();
       }
     },
     onError: (error) => {
@@ -434,7 +436,7 @@ export const StudentsSubscriptionDetails = ({
           >
             رفض الطلب
           </Button>}
-          <Button variant="solid" color="primary" className="text-white">
+          <Button onPress={() => router.push('/messages')} variant="solid" color="primary" className="text-white">
             إرسال رسالة
           </Button>
           {data?.data.status.key !== "approved" && <Button

@@ -118,6 +118,9 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
       if (submitData.image?.length) {
         formdata.append("image", submitData.image[0]);
       }
+      if (submitData.qr_image?.length) {
+        formdata.append("qr_image", submitData.qr_image[0]);
+      }
       if (submitData.how_to_use?.length) {
         formdata.append("how_to_use", submitData.how_to_use[0]);
       }
@@ -379,6 +382,53 @@ export const PaymentMethodDetails = ({ data }: paymentDetailsProps) => {
           <button
             type="button"
             onClick={() => setEditField("image")}
+            className="flex items-center gap-1 text-sm font-bold"
+          >
+            <Edit2 size={18} />
+            تعديل
+          </button>
+        )}
+      </div>
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+        <div className="flex flex-col gap-4">
+          <span className="text-[#5E5E5E] text-sm font-bold">صورة QR</span>
+          {editField === "qr_image" ? (
+            <Controller
+              name="qr_image"
+              control={control}
+              render={({ field }) => (
+                <DropzoneField
+                  value={field.value as any}
+                  onChange={field.onChange}
+                  description="تحميل صورة جديدة"
+                />
+              )}
+            />
+          ) : (
+            <Avatar
+              size="lg"
+              radius="sm"
+              showFallback
+              src={paymentData?.data?.qr_image}
+              name={paymentData?.data?.name}
+            />
+          )}
+        </div>
+
+        {editField === "qr_image" ? (
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            type="submit"
+          >
+            حفظ
+          </Button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditField("qr_image")}
             className="flex items-center gap-1 text-sm font-bold"
           >
             <Edit2 size={18} />

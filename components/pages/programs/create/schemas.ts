@@ -7,6 +7,7 @@ const localizedStringSchema = yup.object().shape({
   label: yup.string().required("Label is required"),
   goals: yup.string().required("Goals is required"),
   content: yup.string().required("Content is required"),
+  description: yup.string().required("Description is required"),
 });
 
 const localizedSubscriptionSchema = yup.object().shape({

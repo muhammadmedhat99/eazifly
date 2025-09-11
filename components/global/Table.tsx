@@ -35,6 +35,22 @@ export default function TableComponent({
     const cellValue: string = item[columnKey];
 
     switch (columnKey) {
+      case "name_link":
+        return (
+          <div className="flex flex-col">
+            <Link onClick={(e) => e.stopPropagation()} href={`/students/${item.user_id}`} className="text-small font-semibold text-start text-primary underline">
+              {cellValue}
+            </Link>
+          </div>
+        );
+      case "instructor_link":
+       return (
+          <div className="flex flex-col">
+            <Link onClick={(e) => e.stopPropagation()} href={`/teachers/${item.instructor_id}`} className="text-small font-semibold text-start text-primary underline">
+              {cellValue}
+            </Link>
+          </div>
+        );
       case "avatar":
         return (
           <Avatar
@@ -61,7 +77,7 @@ export default function TableComponent({
       case "session_link":
         return (
           <div className="flex flex-col">
-            <Link href="/" className="text-small font-semibold text-start text-primary underline">
+            <Link onClick={(e) => e.stopPropagation()} href={`/sessions/${item.session_link}`} className="text-small font-semibold text-start text-primary underline">
               {cellValue}
             </Link>
           </div>

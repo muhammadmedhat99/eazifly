@@ -59,7 +59,7 @@ export const ProgramContent = ({ data }: MainInformationProps) => {
 
       {/* descriptiuon  */}
       <div className="col-span-3">
-        <h2 className="text-right text-primary font-bold mb-4">وصف البرنامج</h2>
+        <h2 className="text-right text-primary font-bold mb-4">محتوي البرنامج</h2>
         <div
           className="mb-6 text-sm text-title leading-relaxed rtl [&>*]:!block [&>*]:mb-2 flex flex-col items-start gap-4"
           dir="rtl"

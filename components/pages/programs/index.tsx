@@ -19,7 +19,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 const columns = [
   { name: "صورة البرنامج", uid: "image" },
@@ -52,7 +52,7 @@ const OptionsComponent = ({ id }: { id: number }) => {
 export const AllPrograms = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
-  const [selectedStatus, setSelectedStatus] = useState("1");
+  const [selectedStatus, setSelectedStatus] = useState("published");
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: allPrograms, isLoading } = useQuery({
@@ -98,6 +98,16 @@ export const AllPrograms = () => {
     },
   }));
 
+  const filteredData = useMemo(() => {
+      if (selectedStatus === "all") return tableData;
+  
+      return tableData?.filter((item: any) => {
+        const userStatusKey = item?.status?.key;
+  
+        return userStatusKey === selectedStatus;
+      });
+    }, [tableData, selectedStatus]);
+  
   return (
     <>
       <div className="p-4 flex items-center justify-between flex-wrap gap-4">
@@ -145,9 +155,9 @@ export const AllPrograms = () => {
 
         <div className="flex gap-2">
           <Button
-            id="1"
+            id="all"
             variant="flat"
-            color={selectedStatus === "1" ? "primary" : "default"}
+            color={selectedStatus === "all" ? "primary" : "default"}
             className="font-semibold"
             onPress={(e) => {
               setSelectedStatus(e.target.id);
@@ -156,37 +166,37 @@ export const AllPrograms = () => {
             الكل
           </Button>
           <Button
-            id="2"
+            id="published"
             variant="flat"
-            color={selectedStatus === "2" ? "primary" : "default"}
+            color={selectedStatus === "published" ? "primary" : "default"}
             className="font-semibold"
             onPress={(e) => {
               setSelectedStatus(e.target.id);
             }}
           >
-            نشط
+            منشور
           </Button>
           <Button
-            id="3"
+            id="uncompleted"
             variant="flat"
-            color={selectedStatus === "3" ? "primary" : "default"}
+            color={selectedStatus === "uncompleted" ? "primary" : "default"}
             className="font-semibold"
             onPress={(e) => {
               setSelectedStatus(e.target.id);
             }}
           >
-            متوقف
+            نموذج اولي
           </Button>
           <Button
-            id="4"
+            id="archived"
             variant="flat"
-            color={selectedStatus === "4" ? "primary" : "default"}
+            color={selectedStatus === "archived" ? "primary" : "default"}
             className="font-semibold"
             onPress={(e) => {
               setSelectedStatus(e.target.id);
             }}
           >
-            ملغي
+            مؤرشف
           </Button>
         </div>
       </div>
@@ -197,7 +207,7 @@ export const AllPrograms = () => {
         <>
           <TableComponent
             columns={columns}
-            data={tableData}
+            data={filteredData}
             ActionsComponent={OptionsComponent}
           />
 

@@ -49,7 +49,6 @@ const schema = yup
             .required("ادخل العنوان بالإنجليزية")
             .min(3, "العنوان لا يجب أن يقل عن ٣ أحرف"),
         program_id: yup.number().required("اختر البرنامج"),
-        user_type: yup.string().required("اختر نوع المستخدم"),
         type: yup.string().required("اختر النوع"),
         options: yup.array().of(
             yup.object({
@@ -77,7 +76,6 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
             title_ar: data?.data?.title_ar,
             title_en: data?.data?.title_en,
             program_id: data?.data?.program.id || undefined,
-            user_type: data?.data?.user_type || "client",
             type: data?.data?.type || "text",
             options: data?.data?.options?.map((opt: any) => ({
                 ar: { title: opt.title_ar || "" },
@@ -103,7 +101,6 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
             formdata.append("ar[title]", submitData.title_ar);
             formdata.append("en[title]", submitData.title_en);
             formdata.append("program_id", submitData.program_id.toString());
-            formdata.append("user_type", submitData.user_type);
             formdata.append("type", submitData.type);
             if (submitData.type === "multiple_choice" && submitData.options) {
                 submitData.options.forEach((option, index) => {
@@ -143,12 +140,77 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
             queryKey: AllQueryKeys.GetAllPrograms("", 1),
           });
 
+    const handleStatusChange = (newStatus: string) => {
+        UpdateStatus.mutate(newStatus);
+    };
+
+    const UpdateStatus = useMutation({
+        mutationFn: (newStatus: string) => {
+            const myHeaders = new Headers();
+            myHeaders.append("local", "ar");
+            myHeaders.append("Accept", "application/json");
+            myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+            const formdata = new FormData();
+
+            return postData(
+                `client/report/question/change/status/${id}?status=${newStatus}`,
+                formdata,
+                myHeaders
+            );
+        },
+        onSuccess: (response) => {
+            if (response.message !== "success") {
+                addToast({
+                    title: "error",
+                    color: "danger",
+                });
+            } else {
+                addToast({
+                    title: response?.message,
+                    color: "success",
+                });
+                queryClient.invalidateQueries({ queryKey: ['report_question', id] });
+                queryClient.invalidateQueries({ queryKey: AllQueryKeys.GetAllSpecializations });
+            }
+        },
+        onError: () => {
+            addToast({
+                title: "عذرا حدث خطأ ما",
+                color: "danger",
+            });
+        },
+    });
      return (
          isLoading ? (<Loader />) : (
              <form
                  onSubmit={handleSubmit(onSubmit)}
                  className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5"
              >
+                 <div className="col-span-2 flex justify-end px-5">
+                     {questionData.data?.status === "inactive" && (
+                         <button
+                             type="button"
+                             className="flex items-center gap-1 text-sm font-bold text-success"
+                             onClick={() => handleStatusChange("active")}
+                         >
+                             <Edit2 size={18} />
+                             نشر
+                         </button>
+                     )}
+                     {questionData.data?.status === "active" && (
+                         <button
+                             type="button"
+                             className="flex items-center gap-1 text-sm font-bold text-warning"
+                             onClick={() => handleStatusChange("inactive")}
+                         >
+                             <Edit2 size={18} />
+                             أرشفة
+                         </button>
+                     )}
+
+                     
+                </div>
                  {/* عنوان السؤال بالعربي */}
                  <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
                      <div className="flex flex-col gap-4">
