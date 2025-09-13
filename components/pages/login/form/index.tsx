@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/lib/utils";
 import { getToken } from "firebase/messaging";
-import { messaging } from "../../../../lib/firebaseClient";
+import { messaging } from "../../../../lib/FirebaseClient";
 import { getCookie } from "cookies-next";
 import dynamic from "next/dynamic";
 import countries from "world-countries";
