@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { getToken, onMessage, MessagePayload } from "firebase/messaging";
-import { messaging } from "../../lib/firebaseClient";
+import { messaging } from "../../lib/FirebaseClient";
 import { setCookie } from "cookies-next";
 
 type OnReceiveMessage = (message: MessagePayload) => void;
