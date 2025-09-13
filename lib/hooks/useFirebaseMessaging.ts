@@ -23,19 +23,15 @@ const generateAndStoreFcmToken = async (): Promise<string | null> => {
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
     console.log("🔧 Service Worker registered:", registration);
 
-    // Get FCM token
-     useEffect(() => {
-        // Only run this code in the browser
-        if (messaging) {
+    if (messaging) {
           // Your messaging logic here
           const token = getToken(messaging, {
           vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
           serviceWorkerRegistration: registration,
         });
 
-        return token;
-        }
-      }, []);
+
+    
 
     if (token) {
       console.log("🎯 FCM Token generated:", token);
@@ -53,7 +49,7 @@ const generateAndStoreFcmToken = async (): Promise<string | null> => {
     } else {
       console.warn("⚠️ No FCM token generated");
       return null;
-    }
+    }}
   } catch (error) {
     console.error("❌ Error generating FCM token:", error);
     return null;

@@ -72,44 +72,46 @@ export const LoginForm = () => {
   });
   const onSubmit = (data: FormData) => login.mutate(data);
 
-  const retrieveFcmToken = async (registration: ServiceWorkerRegistration): Promise<string | null> => {
-    try {
-      if (registration.installing) {
-        await new Promise<void>((resolve) => {
-          registration.installing?.addEventListener("statechange", function (e) {
-            if ((e.target as ServiceWorker).state === "activated") {
-              resolve();
-            }
-          });
+  const retrieveFcmToken = async (
+  registration: ServiceWorkerRegistration
+): Promise<string | null> => {
+  try {
+    if (registration.installing) {
+      await new Promise<void>((resolve) => {
+        registration.installing?.addEventListener("statechange", function (e) {
+          if ((e.target as ServiceWorker).state === "activated") {
+            resolve();
+          }
         });
-      } else if (registration.waiting) {
-        await new Promise<void>((resolve) => {
-          registration.waiting?.addEventListener("statechange", function (e) {
-            if ((e.target as ServiceWorker).state === "activated") {
-              resolve();
-            }
-          });
+      });
+    } else if (registration.waiting) {
+      await new Promise<void>((resolve) => {
+        registration.waiting?.addEventListener("statechange", function (e) {
+          if ((e.target as ServiceWorker).state === "activated") {
+            resolve();
+          }
         });
-      } else if (registration.active) {
-      }
-      useEffect(() => {
-        // Only run this code in the browser
-        if (messaging) {
-          // Your messaging logic here
-          const token = getToken(messaging, {
-          vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-          serviceWorkerRegistration: registration,
-        });
-
-        return token;
-        }
-      }, []);
-      
-    } catch (error) {
-      console.error("❌ Error getting FCM token:", error);
-      return 'empty';
+      });
+    } else if (!registration.active) {
+      return null;
     }
-  };
+
+    if (messaging) {
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+        serviceWorkerRegistration: registration,
+      });
+
+      return token || null;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("❌ Error getting FCM token:", error);
+    return null;
+  }
+};
+
 
   const registerServiceWorker = async (): Promise<ServiceWorkerRegistration> => {
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
