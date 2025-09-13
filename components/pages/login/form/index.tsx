@@ -3,13 +3,14 @@
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { useEffect, useState } from 'react';
 
 import { addToast, Avatar, Button, Checkbox, Input, Spinner } from "@heroui/react";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/lib/utils";
 import { getToken } from "firebase/messaging";
-import { messaging } from "../../../../firebase";
+import { messaging } from "../../../../lib/firebaseClient";
 import { getCookie } from "cookies-next";
 import dynamic from "next/dynamic";
 import countries from "world-countries";
@@ -91,13 +92,19 @@ export const LoginForm = () => {
         });
       } else if (registration.active) {
       }
+      useEffect(() => {
+        // Only run this code in the browser
+        if (messaging) {
+          // Your messaging logic here
+          const token = getToken(messaging, {
+          vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+          serviceWorkerRegistration: registration,
+        });
 
-      const token = await getToken(messaging, {
-        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-        serviceWorkerRegistration: registration,
-      });
-
-      return token;
+        return token;
+        }
+      }, []);
+      
     } catch (error) {
       console.error("❌ Error getting FCM token:", error);
       return 'empty';
