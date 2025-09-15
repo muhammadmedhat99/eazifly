@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { Notification, MessageText1, SearchNormal1 } from "iconsax-reactjs";
 import { useDebounce } from "@/lib/hooks/useDebounce"; // see below for implementation
+import { useRouter } from "next/navigation";
 
 export const Header = ({ children }: { children?: React.ReactNode }) => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
+  const router = useRouter();
 
   useEffect(() => {
     if (debouncedSearch) {
@@ -44,7 +46,9 @@ export const Header = ({ children }: { children?: React.ReactNode }) => {
           <Notification size="20" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full" />
         </button>
-        <button className="relative w-10 h-10 flex items-center justify-center p-1 rounded-xl border">
+        <button onClick={() =>
+          router.push(`/messages`)
+        } className="relative w-10 h-10 flex items-center justify-center p-1 rounded-xl border">
           <MessageText1 size="20" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full" />
         </button>
