@@ -91,7 +91,7 @@ export const routes = [
     sub_routes: [
       { id: 1, name: "الوظائف", route: "/roles" },
       { id: 2, name: "الموظفين", route: "/clients" },
-      { id: 3, name: "الرواتب", route: "/salaries" },
+      { id: 3, name: "رواتب المعلمين", route: "/salaries" },
       { id: 4, name: "الأقسام", route: "/departments" },
     ],
   },
