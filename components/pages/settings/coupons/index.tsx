@@ -28,6 +28,7 @@ const columns = [
   { name: "تاريخ الانتهاء", uid: "expire_date" },
   { name: "عدد مرات الاستخدام", uid: "times_used" },
   { name: "تم استخدامه مسبقًا", uid: "already_used" },
+  { name: "الحالة", uid: "status" },
 ];
 
 const OptionsComponent = ({ id }: { id: number }) => {
@@ -83,7 +84,24 @@ export const AllCoupons = () => {
       expire_date: item.expire_date || "",
       times_used: item.times_used || "",
       already_used: item.already_used || "",
+      status: {
+        name: item.status || "N/A",
+        color:
+          item?.status === "inactive"
+            ? "warning"
+            : "success",
+      },
     })) || [];
+
+  const filteredData = useMemo(() => {
+    if (selectedStatus === "all") return formattedData;
+
+    return formattedData?.filter((item: any) => {
+      const userStatusKey = item?.status?.name;
+
+      return userStatusKey === selectedStatus;
+    });
+  }, [formattedData, selectedStatus]);
 
   return (
     <>
@@ -126,7 +144,9 @@ export const AllCoupons = () => {
             variant="flat"
             color={selectedStatus === "all" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
+            onPress={(e) => {
+              setSelectedStatus(e.target.id);
+            }}
           >
             الكل
           </Button>
@@ -135,18 +155,22 @@ export const AllCoupons = () => {
             variant="flat"
             color={selectedStatus === "active" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
+            onPress={(e) => {
+              setSelectedStatus(e.target.id);
+            }}
           >
             نشط
           </Button>
           <Button
-            id="new"
+            id="inactive"
             variant="flat"
-            color={selectedStatus === "new" ? "primary" : "default"}
+            color={selectedStatus === "inactive" ? "primary" : "default"}
             className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
+            onPress={(e) => {
+              setSelectedStatus(e.target.id);
+            }}
           >
-            جديد
+            مؤرشف
           </Button>
         </div>
       </div>
@@ -155,7 +179,7 @@ export const AllCoupons = () => {
       ) : (
         <TableComponent
           columns={columns}
-          data={formattedData}
+          data={filteredData}
           ActionsComponent={OptionsComponent}
         />
       )}
