@@ -32,6 +32,7 @@ type CouponDetailsProps = {
       times_used: string;
       already_used: string;
       created_at: string;
+      status: string;
     };
   };
 };
@@ -140,6 +141,47 @@ export const CouponsDetails = ({ data }: CouponDetailsProps) => {
     },
   });
 
+  const handleStatusChange = () => {
+    UpdateStatus.mutate();
+  };
+
+  const UpdateStatus = useMutation({
+    mutationFn: () => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+
+      return postData(
+        `client/coupon/toggle/status/${id}`,
+        formdata,
+        myHeaders
+      );
+    },
+    onSuccess: (response) => {
+      if (response.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: response?.message,
+          color: "success",
+        });
+        queryClient.invalidateQueries({ queryKey: ["coupon", id] });
+      }
+    },
+    onError: () => {
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
   return isLoading ? (
     <Loader />
   ) : (
@@ -185,6 +227,39 @@ export const CouponsDetails = ({ data }: CouponDetailsProps) => {
             تعديل
           </button>
         )}
+      </div>
+
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+        <div className="flex flex-col gap-4">
+          <span className="text-[#5E5E5E] text-sm font-bold">الحالة</span>
+          <div
+            className={`text-${data?.data?.status === "inactive" ? "warning" : "success"}
+              bg-${data?.data?.status === "inactive" ? "warning" : "success"} bg-opacity-10
+              px-5 py-1 rounded-3xl font-bold text-[15px]`}
+          >
+            {data?.data?.status}
+          </div>
+        </div>
+          {data.data?.status === "inactive" && (
+            <button
+              type="button"
+              className="flex items-center gap-1 text-sm font-bold text-success"
+              onClick={() => handleStatusChange()}
+            >
+              <Edit2 size={18} />
+              نشر
+            </button>
+          )}
+          {data.data?.status === "active" && (
+            <button
+              type="button"
+              className="flex items-center gap-1 text-sm font-bold text-warning"
+              onClick={() => handleStatusChange()}
+            >
+              <Edit2 size={18} />
+              أرشفة
+            </button>
+          )}
       </div>
 
       {/* قيمة الخصم */}
