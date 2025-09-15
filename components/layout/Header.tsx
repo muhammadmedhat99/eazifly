@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Notification, MessageText1, SearchNormal1 } from "iconsax-reactjs";
 import { useDebounce } from "@/lib/hooks/useDebounce"; // see below for implementation
 import { useRouter } from "next/navigation";
+import NotificationDropdown from "./NotificationDropdown";
 
 export const Header = ({ children }: { children?: React.ReactNode }) => {
   const [search, setSearch] = useState("");
@@ -42,13 +43,12 @@ export const Header = ({ children }: { children?: React.ReactNode }) => {
 
       {/* Left: Notification and Message */}
       <div className="flex gap-4">
-        <button className="relative w-10 h-10 flex items-center justify-center p-1 rounded-xl border">
-          <Notification size="20" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full" />
-        </button>
-        <button onClick={() =>
-          router.push(`/messages`)
-        } className="relative w-10 h-10 flex items-center justify-center p-1 rounded-xl border">
+        <NotificationDropdown />
+
+        <button
+          onClick={() => router.push(`/messages`)}
+          className="relative w-10 h-10 flex items-center justify-center p-1 rounded-xl border"
+        >
           <MessageText1 size="20" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full" />
         </button>
