@@ -10,6 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import { postData } from "@/lib/utils";
 import * as yup from "yup";
+import { useParams, useRouter } from "next/navigation";
 
 type StudentDetailsProps = {
   data: {
@@ -77,6 +78,9 @@ const schema = yup
 type FormData = yup.InferType<typeof schema>;
 
 export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
+  const router = useRouter();
+  const params = useParams();
+  const user_id = params.id;
   const [editField, setEditField] = useState<string | null>(null);
   const { control, handleSubmit, watch } = useForm<FormData>({
     defaultValues: {
@@ -139,6 +143,27 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
     },
   });
 
+  const CheckOrCreateChat = useMutation({
+    mutationFn: async () => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+      formdata.append("sender_type", "Client");
+      formdata.append("sender_id", getCookie("client_id") as string);
+      formdata.append("receiver_type", "User");
+      formdata.append("receiver_id", user_id as string);
+
+      return postData("client/check/chat", formdata, myHeaders);
+    },
+    onSuccess: (response) => {
+      if (response?.data?.id) {
+        router.push(`/messages/${response.data.id}?user=${user_id}`);
+      }
+    },
+  });
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -333,7 +358,13 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
       </div>
 
       <div className="flex items-end justify-end col-span-2">
-        <Button color="primary" variant="solid" className="text-white">
+        <Button
+          color="primary"
+          variant="solid"
+          className="text-white"
+          onPress={() => CheckOrCreateChat.mutate()}
+          isLoading={CheckOrCreateChat.isPending}
+        >
           إرسال رسالة
         </Button>
       </div>

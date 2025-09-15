@@ -181,8 +181,10 @@ export const Messages = () => {
                     }}
                     description={
                       <span className="text-sm font-semibold text-[#3D5066]">
-                        {chat.latest_message?.message ||
-                          (chat.latest_message?.file ? "📎 مرفق" : "—")}
+                        {chat.latest_message
+                          ? (chat.latest_message.message ||
+                            (chat.latest_message.file ? "📎 مرفق" : "—"))
+                          : "انقر لبدء المحادثة"}
                       </span>
                     }
                     name={
