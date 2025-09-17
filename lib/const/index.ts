@@ -68,7 +68,7 @@ export const routes = [
     route: "/financials",
     icon: Money2,
     sub_routes: [
-      // Add sub routes here if needed
+      { id: 1, name: "رواتب المعلمين", route: "/salaries" },
     ],
   },
   {
