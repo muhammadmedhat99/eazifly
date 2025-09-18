@@ -17,6 +17,7 @@ import { LocalizedField } from "@/components/global/LocalizedField";
 import { useLanguages } from "@/lib/hooks/useLanguages";
 import { title } from "process";
 
+
 type TransferDetailsProps = {
     data: {
         data: {
@@ -24,7 +25,10 @@ type TransferDetailsProps = {
             title: string,
             title_ar: string;
             title_en: string;
-            created_at: string
+            created_at: string;
+            payment_methods_information: {
+                columns: string[];
+            };
         };
     };
 };
@@ -86,7 +90,7 @@ export const TransferDetails = ({ data }: TransferDetailsProps) => {
 
     const { fields, append, remove } = useFieldArray({
         control,
-        name: "payment_methods_information.columns",
+         name: "payment_methods_information.columns",
     });
 
 
@@ -105,9 +109,11 @@ export const TransferDetails = ({ data }: TransferDetailsProps) => {
             myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
             var formdata = new FormData();
             formdata.append(`title`, submitData.title);
-            submitData.payment_methods_information.columns.forEach((col: string, index: number) => {
+            if(submitData.payment_methods_information.columns) {
+                submitData.payment_methods_information.columns.forEach((col: string, index: number) => {
                 formdata.append(`payment_methods_information[columns][${index}]`, col);
             });
+            }
             if (submitData.image?.length) {
                 formdata.append("image", submitData.image[0]);
             }
