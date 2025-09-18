@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { getToken, onMessage, MessagePayload } from "firebase/messaging";
-import { messaging } from "../../lib/FirebaseClient";
+import { messaging } from "../../firebase";
 import { setCookie } from "cookies-next";
 
 type OnReceiveMessage = (message: MessagePayload) => void;
@@ -23,15 +23,11 @@ const generateAndStoreFcmToken = async (): Promise<string | null> => {
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
     console.log("🔧 Service Worker registered:", registration);
 
-    if (messaging) {
-          // Your messaging logic here
-          const token = getToken(messaging, {
-          vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-          serviceWorkerRegistration: registration,
-        });
-
-
-    
+    // Get FCM token
+    const token = await getToken(messaging, {
+      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+      serviceWorkerRegistration: registration
+    });
 
     if (token) {
       console.log("🎯 FCM Token generated:", token);
@@ -49,7 +45,7 @@ const generateAndStoreFcmToken = async (): Promise<string | null> => {
     } else {
       console.warn("⚠️ No FCM token generated");
       return null;
-    }}
+    }
   } catch (error) {
     console.error("❌ Error generating FCM token:", error);
     return null;
