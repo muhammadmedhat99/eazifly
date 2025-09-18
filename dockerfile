@@ -1,34 +1,24 @@
-# --------------------
-# Build stage
-FROM node:20-alpine AS builder
+  # Use official Node.js image
+  #
+  FROM node:20-alpine AS builder
 
-# Set working dir
-WORKDIR /app
+  WORKDIR /app
 
-# Install deps
-COPY package*.json ./
-RUN npm install
 
-# Copy source code and build
-COPY . .
-RUN npm run build
+  COPY package*.json ./
+  RUN npm install
+  COPY . .
+  RUN npm run build
 
-# --------------------
-# Production stage
-FROM node:20-alpine AS runner
+  # --------------------
+  # Production stage
+  FROM node:20-alpine AS runner
 
-WORKDIR /app
+  WORKDIR /app
+  COPY --from=builder /app/.next ./.next
+  COPY --from=builder /app/public ./public
+  COPY --from=builder /app/package*.json ./
+  RUN npm install --production
 
-# Copy only needed files from builder
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.* ./
-
-# Install only production dependencies
-RUN npm install --only=production
-
-EXPOSE 3000
-
-# Use next's production start
-CMD ["npm", "run", "start"]
+  EXPOSE 3000
+  CMD ["npm", "start"]
