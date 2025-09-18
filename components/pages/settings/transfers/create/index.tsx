@@ -92,9 +92,11 @@ export const CreateTransfers = () => {
             const formdata = new FormData();
 
             formdata.append(`title`, submitData.title);
-            submitData.payment_methods_information.columns.forEach((col: string, index: number) => {
+            if(submitData.payment_methods_information.columns) {
+                submitData.payment_methods_information.columns.forEach((col: string, index: number) => {
                 formdata.append(`payment_methods_information[columns][${index}]`, col);
             });
+            }
             if (submitData.image?.length) {
                 formdata.append("image", submitData.image[0]);
             }
