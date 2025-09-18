@@ -3,14 +3,13 @@
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useEffect, useState } from 'react';
 
 import { addToast, Avatar, Button, Checkbox, Input, Spinner } from "@heroui/react";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/lib/utils";
 import { getToken } from "firebase/messaging";
-import { messaging } from "../../../../lib/FirebaseClient";
+import { messaging } from "../../../../firebase";
 import { getCookie } from "cookies-next";
 import dynamic from "next/dynamic";
 import countries from "world-countries";
@@ -72,46 +71,38 @@ export const LoginForm = () => {
   });
   const onSubmit = (data: FormData) => login.mutate(data);
 
-  const retrieveFcmToken = async (
-  registration: ServiceWorkerRegistration
-): Promise<string | null> => {
-  try {
-    if (registration.installing) {
-      await new Promise<void>((resolve) => {
-        registration.installing?.addEventListener("statechange", function (e) {
-          if ((e.target as ServiceWorker).state === "activated") {
-            resolve();
-          }
+  const retrieveFcmToken = async (registration: ServiceWorkerRegistration): Promise<string | null> => {
+    try {
+      if (registration.installing) {
+        await new Promise<void>((resolve) => {
+          registration.installing?.addEventListener("statechange", function (e) {
+            if ((e.target as ServiceWorker).state === "activated") {
+              resolve();
+            }
+          });
         });
-      });
-    } else if (registration.waiting) {
-      await new Promise<void>((resolve) => {
-        registration.waiting?.addEventListener("statechange", function (e) {
-          if ((e.target as ServiceWorker).state === "activated") {
-            resolve();
-          }
+      } else if (registration.waiting) {
+        await new Promise<void>((resolve) => {
+          registration.waiting?.addEventListener("statechange", function (e) {
+            if ((e.target as ServiceWorker).state === "activated") {
+              resolve();
+            }
+          });
         });
-      });
-    } else if (!registration.active) {
-      return null;
-    }
+      } else if (registration.active) {
+      }
 
-    if (messaging) {
       const token = await getToken(messaging, {
         vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
         serviceWorkerRegistration: registration,
       });
 
-      return token || null;
+      return token;
+    } catch (error) {
+      console.error("❌ Error getting FCM token:", error);
+      return 'empty';
     }
-
-    return null;
-  } catch (error) {
-    console.error("❌ Error getting FCM token:", error);
-    return null;
-  }
-};
-
+  };
 
   const registerServiceWorker = async (): Promise<ServiceWorkerRegistration> => {
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
