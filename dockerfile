@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Install deps
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source code and build
 COPY . .
@@ -26,7 +26,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.* ./
 
 # Install only production dependencies
-RUN npm ci --only=production
+RUN npm install --only=production
 
 EXPOSE 3000
 
