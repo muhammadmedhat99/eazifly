@@ -30,20 +30,6 @@ export default async function page() {
   return (
     <div>
       <BreadCrumb items={BreadCrumbItems}>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="#"
-            className="text-title font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-input"
-          >
-            تصدير البيانات
-          </Link>  
-          <Link
-            href="/students/create"
-            className="text-white font-semibold text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 rounded-md bg-primary"
-          >
-            إعلان وطيفة جديدة
-          </Link>
-        </div>
       </BreadCrumb>
 
       <Salaries />
