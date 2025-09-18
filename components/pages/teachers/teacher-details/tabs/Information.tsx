@@ -11,6 +11,8 @@ import * as yup from "yup";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/lib/utils";
 import { getCookie } from "cookies-next";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 type TeacherDetailsProps = {
   data: {
@@ -264,13 +266,36 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">رقم الهاتف</span>
           {editField === "phone" ? (
-            <Controller
-              name="phone"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} placeholder="رقم الهاتف" size="sm" />
-              )}
-            />
+            <div
+              style={{ "direction": "ltr" }}
+              className={`
+      shadow-none border-stroke border rounded-lg px-3 py-2 flex items-center
+      focus-within:border-primary transition dir-ltr
+    `}
+            >
+              <Controller
+                name="phone"
+                control={control}
+                rules={{
+                  required: "برجاء إدخال رقم هاتف",
+                  validate: (value) =>
+                    isValidPhoneNumber(value || "") || "رقم الهاتف غير صحيح",
+                }}
+                render={({ field }) => (
+                  <PhoneInput
+                    {...field}
+                    defaultCountry="EG"
+                    value={field.value}
+                    onChange={field.onChange}
+                    international
+                    countryCallingCodeEditable={false}
+                    placeholder="ادخل رقم الهاتف"
+                    className="flex-1 text-sm outline-none border-0 focus:ring-0"
+                  />
+                )}
+              />
+
+            </div>
           ) : (
             <span className="text-black-text font-bold text-[15px]">
               {data?.data?.phone}
@@ -304,13 +329,36 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">رقم الواتس آب</span>
           {editField === "whats_app" ? (
-            <Controller
-              name="whats_app"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} placeholder="رقم الواتس آب " size="sm" />
-              )}
-            />
+            <div
+              style={{ "direction": "ltr" }}
+              className={`
+      shadow-none border-stroke border rounded-lg px-3 py-2 flex items-center
+      focus-within:border-primary transition dir-ltr
+    `}
+            >
+              <Controller
+                name="whats_app"
+                control={control}
+                rules={{
+                  required: "برجاء إدخال رقم هاتف",
+                  validate: (value) =>
+                    isValidPhoneNumber(value || "") || "رقم الهاتف غير صحيح",
+                }}
+                render={({ field }) => (
+                  <PhoneInput
+                    {...field}
+                    defaultCountry="EG"
+                    value={field.value}
+                    onChange={field.onChange}
+                    international
+                    countryCallingCodeEditable={false}
+                    placeholder="ادخل رقم الهاتف"
+                    className="flex-1 text-sm outline-none border-0 focus:ring-0"
+                  />
+                )}
+              />
+
+            </div>
           ) : (
             <span className="text-black-text font-bold text-[15px]">
               {data?.data?.whats_app}

@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+.PhoneInput {
+  all: unset;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.PhoneInputInput {
+  all: unset;
+  flex: 1;
+  font-size: 14px;
+  direction: ltr;
+}
+
+.PhoneInputCountry {
+  margin-right: 8px;
+}

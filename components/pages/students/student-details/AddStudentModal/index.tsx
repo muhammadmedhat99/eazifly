@@ -25,18 +25,9 @@ import { AllQueryKeys } from "@/keys";
 import { axios_config, phoneCodeCustomStyles } from "@/lib/const";
 import { DropzoneField } from "@/components/global/DropZoneField";
 import { useParams } from 'next/navigation';
-import dynamic from "next/dynamic";
-import countries from "world-countries";
-const SelectReact = dynamic(() => import("react-select"), { ssr: false });
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
-const allCountries = countries.map((country) => ({
-  name: country.name.common,
-  flag: country.flag,
-  code: country.cca2,
-  phone_code: country.idd.root
-    ? `${country.idd.root}${country.idd.suffixes?.[0] || ""}`
-    : "",
-}))
 
 interface StudentModalProps {
   isOpen: boolean;
@@ -63,8 +54,6 @@ const schema = yup
       .email("ادخل بريد إلكتروني صحيح")
       .required("ادخل بريد إلكتروني"),
     phone: yup.string().required("ادخل رقم الهاتف"),
-    country_code: yup.string().required("ادخل كود الدولة"),
-    whats_app_country_code: yup.string().required("ادخل كود الدولة"),
     whats_app: yup.string().required("ادخل رقم الواتس آب"),
     password: yup.string().required("ادخل كلمة المرور"),
     password_confirmation: yup
@@ -124,7 +113,6 @@ export default function AddStudentModal({
       formdata.append("user_name", submitData.user_name);
       formdata.append("email", submitData.email);
       formdata.append("phone", submitData.phone);
-      formdata.append("country_code", submitData.country_code);
       formdata.append("whats_app", submitData.whats_app);
       formdata.append("password", submitData.password);
       formdata.append(
@@ -240,162 +228,82 @@ export default function AddStudentModal({
                     base: "mb-4",
                   }}
                 />
-                <Input
-                  label="رقم الهاتف"
-                  placeholder="نص الكتابه"
-                  type="text"
-                  {...register("phone")}
-                  isInvalid={!!errors.phone?.message}
-                  errorMessage={errors.phone?.message}
-                  labelPlacement="outside"
-                  classNames={{
-                    label: "text-[#272727] font-bold text-sm",
-                    inputWrapper: "shadow-none",
-                    base: "mb-4",
-                  }}
-                  endContent={
+                <div className="flex flex-col gap-1">
+                  <label className="text-[#272727] font-bold text-sm">رقم الهاتف</label>
+                  <div
+                    style={{ "direction": "ltr" }}
+                    className={`
+      shadow-none border-stroke border rounded-lg px-3 py-2 flex items-center
+      focus-within:border-primary transition dir-ltr
+    `}
+                  >
                     <Controller
-                      name="country_code"
+                      name="phone"
                       control={control}
-                      defaultValue=""
+                      rules={{
+                        required: "برجاء إدخال رقم هاتف",
+                        validate: (value) =>
+                          isValidPhoneNumber(value || "") || "رقم الهاتف غير صحيح",
+                      }}
                       render={({ field }) => (
-                        <SelectReact
-                          placeholder="(+)"
+                        <PhoneInput
                           {...field}
-                          options={allCountries.map((country: any) => ({
-                            value: country.phone_code,
-                            label: (
-                              <div className="flex items-center gap-2">
-                                <Avatar
-                                  className="w-6 h-4"
-                                  radius="none"
-                                  src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
-                                  alt={country.name}
-                                />
-                                <span>
-                                  {country.name} ({country.phone_code})
-                                </span>
-                              </div>
-                            ),
-                          }))}
-                          styles={phoneCodeCustomStyles}
-                          isSearchable
-                          onChange={(option: any) => field.onChange(option?.value)}
-                          value={
-                            field.value
-                              ? {
-                                value: field.value,
-                                label: (
-                                  <div className="flex items-center gap-2">
-                                    <Avatar
-                                      className="w-6 h-4"
-                                      radius="none"
-                                      src={`https://flagcdn.com/w20/${allCountries.find(
-                                        (c: any) => c.phone_code === field.value
-                                      )?.code.toLowerCase()}.png`}
-                                      alt={
-                                        allCountries.find(
-                                          (c: any) => c.phone_code === field.value
-                                        )?.name
-                                      }
-                                    />
-                                    <span>
-                                      {
-                                        allCountries.find(
-                                          (c: any) => c.phone_code === field.value
-                                        )?.name
-                                      }{" "}
-                                      ({field.value})
-                                    </span>
-                                  </div>
-                                ),
-                              }
-                              : null
-                          }
+                          defaultCountry="EG"
+                          value={field.value}
+                          onChange={field.onChange}
+                          international
+                          countryCallingCodeEditable={false}
+                          placeholder="ادخل رقم الهاتف"
+                          className="flex-1 text-sm outline-none border-0 focus:ring-0"
                         />
                       )}
                     />
-                  }
-                />
-                <Input
-                  label="رقم الواتس آب"
-                  placeholder="نص الكتابه"
-                  type="text"
-                  {...register("whats_app")}
-                  isInvalid={!!errors.whats_app?.message}
-                  errorMessage={errors.whats_app?.message}
-                  labelPlacement="outside"
-                  classNames={{
-                    label: "text-[#272727] font-bold text-sm",
-                    inputWrapper: "shadow-none",
-                    base: "mb-4",
-                  }}
-                  endContent={
-                    data?.data?.length > 0 && (
-                      <Controller
-                      name="whats_app_country_code"
+
+                  </div>
+                  {errors.phone && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.phone.message}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[#272727] font-bold text-sm">رقم الواتس آب</label>
+                  <div
+                    style={{ "direction": "ltr" }}
+                    className={`
+      shadow-none border-stroke border rounded-lg px-3 py-2 flex items-center
+      focus-within:border-primary transition dir-ltr
+    `}
+                  >
+                    <Controller
+                      name="whats_app"
                       control={control}
-                      defaultValue=""
+                      rules={{
+                        required: "برجاء إدخال رقم هاتف",
+                        validate: (value) =>
+                          isValidPhoneNumber(value || "") || "رقم الهاتف غير صحيح",
+                      }}
                       render={({ field }) => (
-                        <SelectReact
-                          placeholder="(+)"
+                        <PhoneInput
                           {...field}
-                          options={allCountries.map((country: any) => ({
-                            value: country.phone_code,
-                            label: (
-                              <div className="flex items-center gap-2">
-                                <Avatar
-                                  className="w-6 h-4"
-                                  radius="none"
-                                  src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
-                                  alt={country.name}
-                                />
-                                <span>
-                                  {country.name} ({country.phone_code})
-                                </span>
-                              </div>
-                            ),
-                          }))}
-                          styles={phoneCodeCustomStyles}
-                          isSearchable
-                          onChange={(option: any) => field.onChange(option?.value)}
-                          value={
-                            field.value
-                              ? {
-                                value: field.value,
-                                label: (
-                                  <div className="flex items-center gap-2">
-                                    <Avatar
-                                      className="w-6 h-4"
-                                      radius="none"
-                                      src={`https://flagcdn.com/w20/${allCountries.find(
-                                        (c: any) => c.phone_code === field.value
-                                      )?.code.toLowerCase()}.png`}
-                                      alt={
-                                        allCountries.find(
-                                          (c: any) => c.phone_code === field.value
-                                        )?.name
-                                      }
-                                    />
-                                    <span>
-                                      {
-                                        allCountries.find(
-                                          (c: any) => c.phone_code === field.value
-                                        )?.name
-                                      }{" "}
-                                      ({field.value})
-                                    </span>
-                                  </div>
-                                ),
-                              }
-                              : null
-                          }
+                          defaultCountry="EG"
+                          value={field.value}
+                          onChange={field.onChange}
+                          international
+                          countryCallingCodeEditable={false}
+                          placeholder="ادخل رقم الهاتف"
+                          className="flex-1 text-sm outline-none border-0 focus:ring-0"
                         />
                       )}
                     />
-                    )
-                  }
-                />
+
+                  </div>
+                  {errors.whats_app && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.whats_app.message}
+                    </p>
+                  )}
+                </div>
                 <Input
                   label="كلمة المرور"
                   placeholder="نص الكتابه"
