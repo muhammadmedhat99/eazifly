@@ -1,39 +1,34 @@
-# Use official Node.js image
-#
+# --------------------
+# Build stage
 FROM node:20-alpine AS builder
 
+# Set working dir
 WORKDIR /app
 
-# Add build arguments for environment variables
-ARG NEXT_PUBLIC_FIREBASE_API_KEY
-ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
-ARG NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-ARG NEXT_PUBLIC_FIREBASE_APP_ID
-ARG NEXT_PUBLIC_FIREBASE_VAPID_KEY
-
-# Set environment variables from build arguments
-ENV NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY
-ENV NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID
-ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
-ENV NEXT_PUBLIC_FIREBASE_VAPID_KEY=$NEXT_PUBLIC_FIREBASE_VAPID_KEY
-
+# Install deps
 COPY package*.json ./
-RUN npm install
+RUN npm ci
+
+# Copy source code and build
 COPY . .
 RUN npm run build
 
 # --------------------
 # Production stage
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
+
+# Copy only needed files from builder
+COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/package*.json ./
-RUN npm install --production
+COPY --from=builder /app/next.config.* ./
+
+# Install only production dependencies
+RUN npm ci --only=production
 
 EXPOSE 3000
-CMD ["npm", "start"]
+
+# Use next's production start
+CMD ["npm", "run", "start"]
