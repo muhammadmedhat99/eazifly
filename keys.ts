@@ -22,4 +22,6 @@ export const AllQueryKeys = {
   GetAllProgramContents: ["GetAllProgramContents", axios_config],
   GetAllLanguages: ["GetAllLanguages", axios_config],
   GetAllInstructorsRequests: (currentPage: number) => ['GetAllInstructors', axios_config, currentPage],
-  GetAllSessions: (nameSearch: string, selectedDate: string, currentPage: number) => ['GetAllSessions', axios_config, nameSearch, selectedDate, currentPage],};
+  GetAllSessions: (nameSearch: string, selectedDate: string, currentPage: number) => ['GetAllSessions', axios_config, nameSearch, selectedDate, currentPage],
+  GetAllSalaries: (nameSearch: string, selectedDate: string, currentPage: number) => ['GetAllSalaries', axios_config, nameSearch, selectedDate, currentPage],
+};

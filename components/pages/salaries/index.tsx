@@ -5,7 +5,11 @@ import React, { useMemo, useState } from "react";
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
 import {
+  addToast,
+  avatar,
   Button,
+  CalendarDate,
+  DatePicker,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -14,22 +18,24 @@ import {
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
 import { CustomPagination } from "@/components/global/Pagination";
-import { useQuery } from "@tanstack/react-query";
-import { fetchClient } from "@/lib/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
 
 import { formatDate } from "@/lib/helper";
+import { today } from "@internationalized/date";
+import ConfirmModal from "@/components/global/ConfirmModal";
+import { getCookie } from "cookies-next";
 
 const columns = [
   { name: "", uid: "avatar" },
   { name: "الإسم", uid: "name" },
-  { name: "الوظيفة", uid: "phone" },
-  { name: "الراتب الأساسي", uid: "email" },
-  { name: "إضافات", uid: "programs" },
-  { name: "خصومات", uid: "last_active" },
-  { name: "صافي الراتب", uid: "salary" },
+  { name: "الوظيفة", uid: "job" },
+  { name: "إضافات", uid: "credit" },
+  { name: "خصومات", uid: "debit" },
+  { name: "صافي الراتب", uid: "total" },
   { name: "الحالة", uid: "status" },
   { name: <Options />, uid: "actions" },
 ];
@@ -51,13 +57,20 @@ const OptionsComponent = ({ id }: { id: number }) => {
   );
 };
 
-export const Salaries = () => {
+export const Salaries = () => { 
   const [nameSearch, setNameSearch] = useState("");
   const [phoneSearch, setPhoneSearch] = useState("");
   const debouncedNameSearch = useDebounce(nameSearch, 500);
-  const debouncedPhoneSearch = useDebounce(phoneSearch, 500);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDate, setSelectedDate] = useState<any>(today("UTC"));
+  const debouncedDateSearch = useDebounce(selectedDate, 500);
+
+  const [confirmAction, setConfirmAction] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const queryClient = useQueryClient()
+
+
 
   const params: Record<string, string | number | boolean> = {
     page: currentPage,
@@ -67,20 +80,85 @@ export const Salaries = () => {
     params.name = debouncedNameSearch;
   }
 
-  const { data: studentsData, isLoading } = useQuery({
-    queryFn: async () =>
-      await fetchClient(`client/user`, {
-        ...axios_config,
-        params,
-      }),
-    queryKey: AllQueryKeys.GetAllUsers(
-      debouncedNameSearch,
-      debouncedPhoneSearch,
-      currentPage
-    ),
-});
+  if (debouncedDateSearch) {
+    params.release_date = debouncedDateSearch.toString();
+  }
 
-  let formattedData: any[] = [];
+  const { data: salariesData, isLoading } = useQuery({
+      queryFn: async () =>
+        await fetchClient(`client/get/salaries`, {
+          ...axios_config,
+          params,
+        }),
+      queryKey: AllQueryKeys.GetAllSalaries(
+        debouncedNameSearch,
+        debouncedDateSearch.toString(),
+        currentPage
+      ),
+    });
+  
+    const formattedData =
+      salariesData?.data?.map((item: any) => ({
+        id: item.id,
+        release_date: item.release_date,
+        name: item.instructor.name,
+        avatar: item.instructor.image,
+        job: "معلم",
+        credit: item.credit,
+        debit: item.debit,
+        total: (item.credit) - (item.debit),
+        status: {
+          name: item.status?.label || "N/A",
+          color:
+            item?.status?.color === "info"
+              ? "warning"
+              : item?.status?.color || "danger",
+        },
+      })) || [];
+
+     const handleIssuing = useMutation({
+    mutationFn: () => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      var formdata = new FormData();
+      formdata.append("release_date", selectedDate);
+
+      return postData("client/issuing/salaries", formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.message !== "success") {
+        addToast({
+          title: data.message.release_date,
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+        queryClient.invalidateQueries({ queryKey: AllQueryKeys.GetAllSalaries(
+        debouncedNameSearch,
+        debouncedDateSearch.toString(),
+        currentPage
+      ) });
+      }
+    },
+    onError: (error) => {
+      console.log(" error ===>>", error);
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
+  const handleConfirmAction = () => {
+    handleIssuing.mutate();
+    setConfirmAction(false);
+  };
 
   return (
     <>
@@ -125,6 +203,14 @@ export const Salaries = () => {
             </DropdownMenu>
           </Dropdown>
 
+        </div>
+
+        <div className="flex items-center gap-2">
+          <DatePicker
+            className="max-w-[284px]"
+            value={selectedDate}
+            onChange={setSelectedDate}
+          />
         </div>
 
         <div className="flex gap-2 flex-wrap">
@@ -176,14 +262,26 @@ export const Salaries = () => {
         />
       )}
 
+      <div className="flex justify-end my-10 px-6">
+        <Button onPress={() => setConfirmAction(true)} variant="solid" color="primary" className="text-white">
+          تصدير المرتبات
+        </Button>
+      </div>
       <div className="my-10 px-6">
         <CustomPagination
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
-          last_page={studentsData?.meta?.last_page}
-          total={studentsData?.meta?.total}
+          last_page={salariesData?.meta?.last_page}
+          total={salariesData?.meta?.total}
         />
       </div>
+      <ConfirmModal
+        open={confirmAction}
+        title={"تصدير المرتبات"}
+        message={"هل أنت متأكد أنك تريد تصدير المرتبات"}
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(false)}
+      />
     </>
   );
 };
