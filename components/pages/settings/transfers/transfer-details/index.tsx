@@ -61,7 +61,14 @@ export const TransferDetails = ({ data }: TransferDetailsProps) => {
             })
             .required();
 
-    type FormData = yup.InferType<typeof schema>;
+    type FormData = {
+        title: string;
+        image: FileList;
+        payment_methods_information: {
+            columns: any[];
+        };
+    };
+
 
     const params = useParams();
     const id = params.id;
@@ -88,7 +95,7 @@ export const TransferDetails = ({ data }: TransferDetailsProps) => {
         }
     }, [data, reset]);
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove } = useFieldArray<FormData>({
         control,
          name: "payment_methods_information.columns",
     });
@@ -246,7 +253,7 @@ export const TransferDetails = ({ data }: TransferDetailsProps) => {
                                  <div key={field.id} className="flex items-center gap-2">
                                      <Input
                                          {...register(`payment_methods_information.columns.${index}` as const)}
-                                         defaultValue={field}
+                                         defaultValue={transferData?.data?.payment_methods_information?.columns?.[index] ?? ""}
                                          placeholder="اسم العمود"
                                          className="flex-1"
                                      />
