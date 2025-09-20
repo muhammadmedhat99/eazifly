@@ -7,7 +7,7 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
-  SERVICE_NAME: eazifly_production_client_landing
+  SERVICE_NAME: eazifly_production_client_dashboard
   SERVER_IP: ${{ secrets.SERVER_IP }}
   SSH_USER: ${{ secrets.SSH_USER }}
 
@@ -87,7 +87,7 @@ jobs:
               docker service update --image $IMAGE ${{ env.SERVICE_NAME }} --update-parallelism 1 --update-delay 10s --force
             else
               echo "Creating new service..."
-              docker service create --name ${{ env.SERVICE_NAME }} --restart-condition any -p 8083:3000 $IMAGE
+              docker service create --name ${{ env.SERVICE_NAME }} --restart-condition any -p 8084:3000 $IMAGE
             fi
 
             docker service ls
@@ -96,4 +96,4 @@ jobs:
       - name: Health check
         run: |
           sleep 10
-          curl -f http://${{ env.SERVER_IP }}:8083 || echo "⚠️ Health check failed - service might still be starting"
+          curl -f http://${{ env.SERVER_IP }}:8084 || echo "⚠️ Health check failed - service might still be starting"

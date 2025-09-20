@@ -3,6 +3,14 @@
 # --------------------
 FROM node:18-alpine AS builder
 
+RUN apk add --no-cache \
+    build-base \
+    vips-dev \
+    python3 \
+    g++ \
+    make
+
+    
 WORKDIR /app
 
 # Copy dependency manifests first
