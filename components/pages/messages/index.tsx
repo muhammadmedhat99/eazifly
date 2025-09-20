@@ -18,21 +18,31 @@ import { useFirebaseMessaging } from "@/lib/hooks/useFirebaseMessaging";
 import { useRouter } from "next/navigation";
 
 type Message = {
-  id: number | string
-  chat_id: number | string
-  sender_type: "User" | "Client" | string
-  message: string
-  created_at: string
-  file?: string | null
-  file_type?: string | null
-}
+  id: number | string;
+  chat_id: number | string;
+  sender_type: "User" | "Client" | string;
+  message: string;
+  created_at: string;
+  file?: string | null;
+  file_type?: string | null;
+};
 
 type ChatResponse = {
   id: number;
-  participant1: { type: string; id: string; name: string; image: string | null };
-  participant2: { type: string; id: string; name: string; image: string | null };
+  participant1: {
+    type: string;
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  participant2: {
+    type: string;
+    id: string;
+    name: string;
+    image: string | null;
+  };
   created_at: string;
-  latest_message?: Message
+  latest_message?: Message;
 };
 
 export const Messages = () => {
@@ -60,7 +70,6 @@ export const Messages = () => {
     const chatId = Number(payload.data?.chat_id);
     const newMessage = payload.data?.message;
 
-    
     setChats((prev) =>
       prev.map((chat) =>
         chat.id === chatId
@@ -70,7 +79,7 @@ export const Messages = () => {
                 id: Date.now(),
                 chat_id: chatId,
                 sender_type: payload.data?.sender_type || "User",
-                message: newMessage ?? "", 
+                message: newMessage ?? "",
                 created_at: new Date().toISOString(),
                 file: payload.data?.file,
                 file_type: payload.data?.file_type,
@@ -159,18 +168,16 @@ export const Messages = () => {
           <Loader />
         ) : chats.length > 0 ? (
           chats
-            .filter((c) =>
-              c.participant2.name
-                .toLowerCase()
-                .includes(debouncedSearch.toLowerCase())
-            )
+            .filter((c) => c?.participant2?.name)
             .map((chat) => (
               <div
                 key={chat.id}
                 className="flex justify-between border-b p-5 cursor-pointer hover:bg-gray-50"
-                    onClick={() =>
-                        router.push(`/messages/${chat.id}?user=${chat.participant2.id}`)
-                    }
+                onClick={() =>
+                  router.push(
+                    `/messages/${chat.id}?user=${chat.participant2.id}`
+                  )
+                }
               >
                 <div className="flex items-center gap-3">
                   <User
@@ -182,8 +189,8 @@ export const Messages = () => {
                     description={
                       <span className="text-sm font-semibold text-[#3D5066]">
                         {chat.latest_message
-                          ? (chat.latest_message.message ||
-                            (chat.latest_message.file ? "📎 مرفق" : "—"))
+                          ? chat.latest_message.message ||
+                            (chat.latest_message.file ? "📎 مرفق" : "—")
                           : "انقر لبدء المحادثة"}
                       </span>
                     }
@@ -216,4 +223,3 @@ export const Messages = () => {
     </>
   );
 };
-
