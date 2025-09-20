@@ -1,43 +1,40 @@
 # --------------------
 # BUILD STAGE
 # --------------------
-FROM node:18-alpine AS builder
+FROM node:20-bullseye AS builder
 
-RUN apk add --no-cache \
-    build-base \
-    vips-dev \
-    python3 \
-    g++ \
-    make
-
-    
 WORKDIR /app
 
 # Copy dependency manifests first
 COPY package*.json ./
 
-# Configure GitHub Packages auth (use ARG to inject the token from GitHub Actions)
+# Configure GitHub Packages auth (ARG token from GitHub Actions)
 ARG NPM_TOKEN
 RUN echo "@hodaelnas:registry=https://npm.pkg.github.com/" > .npmrc \
  && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> .npmrc
 
- # Accept build-time environment variables
+# Accept build-time environment variables
 ARG NEXT_PUBLIC_BASE_URL
-# Add any other environment variables you need
+ARG NEXT_PUBLIC_FIREBASE_API_KEY
+ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
+ARG NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+ARG NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+ARG NEXT_PUBLIC_FIREBASE_APP_ID
+ARG NEXT_PUBLIC_FIREBASE_VAPID_KEY
 
-# Create .env file with the build arguments
-    RUN echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}" >> .env \
-        && echo "NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}" >> .env \
-        && echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}" >> .env \
-        && echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}" >> .env \
-        && echo "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}" >> .env \
-        && echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}" >> .env \
-        && echo "NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}" >> .env \
-        && echo "NEXT_PUBLIC_FIREBASE_VAPID_KEY=${NEXT_PUBLIC_FIREBASE_VAPID_KEY}" >> .env
+# Create .env file for Next.js build
+RUN echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}" >> .env \
+ && echo "NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}" >> .env \
+ && echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}" >> .env \
+ && echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}" >> .env \
+ && echo "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}" >> .env \
+ && echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}" >> .env \
+ && echo "NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}" >> .env \
+ && echo "NEXT_PUBLIC_FIREBASE_VAPID_KEY=${NEXT_PUBLIC_FIREBASE_VAPID_KEY}" >> .env
 
-# Install dependencies
-
-RUN npm install
+# Install all dependencies (including optional like sharp)
+RUN npm install --include=optional
 
 # Copy the rest of the source
 COPY . .
@@ -48,7 +45,7 @@ RUN npm run build
 # --------------------
 # PRODUCTION STAGE
 # --------------------
-FROM node:18-alpine AS runner
+FROM node:20-bullseye AS runner
 
 WORKDIR /app
 
@@ -57,9 +54,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.env ./
-
-# Copy .npmrc for production deps too (if needed)
-COPY --from=builder /app/.npmrc ./
+COPY --from=builder /app/.npmrc ./  # if private packages needed at runtime
 
 # Install production dependencies only
 RUN npm install --production
