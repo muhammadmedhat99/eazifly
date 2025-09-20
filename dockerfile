@@ -3,12 +3,19 @@
 # --------------------
 FROM node:20-bullseye AS builder
 
+# Install build tools
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copy dependency manifests first
 COPY package*.json ./
 
-# Configure GitHub Packages auth (ARG token from GitHub Actions)
+# Configure GitHub Packages auth (inject NPM_TOKEN from GitHub Actions)
 ARG NPM_TOKEN
 RUN echo "@hodaelnas:registry=https://npm.pkg.github.com/" > .npmrc \
  && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> .npmrc
@@ -23,8 +30,8 @@ ARG NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 ARG NEXT_PUBLIC_FIREBASE_APP_ID
 ARG NEXT_PUBLIC_FIREBASE_VAPID_KEY
 
-# Create .env file for Next.js build
-RUN echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}" >> .env \
+# Create .env file
+RUN echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}" > .env \
  && echo "NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}" >> .env \
  && echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}" >> .env \
  && echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}" >> .env \
@@ -33,8 +40,8 @@ RUN echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}" >> .env \
  && echo "NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}" >> .env \
  && echo "NEXT_PUBLIC_FIREBASE_VAPID_KEY=${NEXT_PUBLIC_FIREBASE_VAPID_KEY}" >> .env
 
-# Install all dependencies (including optional like sharp)
-RUN npm install --include=optional
+# Install dependencies
+RUN npm install
 
 # Copy the rest of the source
 COPY . .
@@ -54,7 +61,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.env ./
-COPY --from=builder /app/.npmrc ./  # if private packages needed at runtime
+COPY --from=builder /app/.npmrc ./   # Needed if using private packages
 
 # Install production dependencies only
 RUN npm install --production
