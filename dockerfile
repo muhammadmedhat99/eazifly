@@ -21,7 +21,7 @@ RUN echo "@hodaelnas:registry=https://npm.pkg.github.com/" > .npmrc \
  && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> .npmrc
 
 # Install all dependencies including optional (sharp)
-RUN npm install --include=optional
+RUN npm install --include=optional sharp
 
 # Copy the rest of the source
 COPY . .
