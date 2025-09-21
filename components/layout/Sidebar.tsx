@@ -1,15 +1,19 @@
 "use client";
 
-import React from "react";
-import { Accordion, AccordionItem } from "@heroui/react";
-import { ArrowLeft2 } from "iconsax-reactjs";
+import React, { useState } from "react";
+import { Accordion, AccordionItem, addToast, Button, Tooltip } from "@heroui/react";
+import { ArrowLeft2, Logout } from "iconsax-reactjs";
 import Image from "next/image";
 import Link from "next/link";
 import { axios_config, routes } from "@/lib/const";
-import { fetchClient } from "@/lib/utils";
+import { fetchClient, postData } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
+import ConfirmModal from "../global/ConfirmModal";
+import { getCookie } from "cookies-next";
 
 export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
   const [counts, setCounts] = React.useState<{ new_orders?: number }>({});
+    const [confirmAction, setConfirmAction] = useState(false);
 
   React.useEffect(() => {
     const fetchCounts = async () => {
@@ -23,6 +27,59 @@ export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
 
     fetchCounts();
   }, []);
+
+  const logout = useMutation({
+    mutationFn: () => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      return postData("client/logout", null, myHeaders);
+    },
+
+    onSuccess: async (data) => {
+
+      if (data.message !== "success") {
+        addToast({
+          title: data.message,
+          timeout: 3000,
+          shouldShowTimeoutProgress: true,
+          variant: "solid",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: data.message,
+          timeout: 3000,
+          shouldShowTimeoutProgress: true,
+          variant: "solid",
+          color: "success",
+        });
+
+        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "client_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+        window.location.href = "/login";
+      }
+    },
+
+
+    onError: () => {
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        timeout: 3000,
+        shouldShowTimeoutProgress: true,
+        variant: "solid",
+        color: "danger",
+      });
+    },
+  });
+
+  const handleConfirmAction = () => {
+    logout.mutate();
+    setConfirmAction(false);
+  };
 
   return (
     <div className="md:w-[200px] bg-main md:border-e md:border-stroke min-h-screen">
@@ -100,7 +157,25 @@ export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
             </Link>
           );
         })}
+        <div className="px-4 py-3 border-t">
+          <button
+            onClick={() => setConfirmAction(true)}
+            className="flex items-center gap-1.5"
+          >
+             <Logout size="20" variant="Bulk" />
+            <span className="text-[13px] font-semibold flex items-center gap-2">
+              تسجيل الخروج
+            </span>
+          </button>
+        </div>
       </div>
+      <ConfirmModal
+        open={confirmAction}
+        title={'تسجيل الخروج'}
+        message={"هل أنت متأكد أنك تريد تسجيل الخروج"}
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(false)}
+      />
     </div>
   );
 };
