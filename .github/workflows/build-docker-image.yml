@@ -1,0 +1,91 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  SERVICE_NAME: eazifly_production_client_dashboard
+  SERVER_IP: ${{ secrets.SERVER_IP }}
+  SSH_USER: ${{ secrets.SSH_USER }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            NPM_TOKEN=${{ secrets.NPM_TOKEN }}
+            NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
+            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+            NEXT_PUBLIC_FIREBASE_VAPID_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_VAPID_KEY }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Install SSH client
+        run: sudo apt-get install -y openssh-client
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+            set -e
+            IMAGE=${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+            echo "🔑 Logging in to GHCR..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "📥 Pulling image..."
+            docker pull $IMAGE
+
+            echo "🚀 Deploying to Swarm..."
+            if docker service ls --format '{{.Name}}' | grep -qx '${{ env.SERVICE_NAME }}'; then
+              echo "Updating existing service..."
+              docker service update --image $IMAGE ${{ env.SERVICE_NAME }} --update-parallelism 1 --update-delay 10s --force
+            else
+              echo "Creating new service..."
+              docker service create --name ${{ env.SERVICE_NAME }} --restart-condition any -p 8084:3000 $IMAGE
+            fi
+
+            docker service ls
+          EOF
+
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f http://${{ env.SERVER_IP }}:8084 || echo "⚠️ Health check failed - service might still be starting"
