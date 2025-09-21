@@ -157,6 +157,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
       formdata.append("sender_id", getCookie("client_id") as string);
       formdata.append("receiver_type", "User");
       formdata.append("receiver_id", user_id as string);
+      formdata.append("type", "group");
 
       return postData("client/check/chat", formdata, myHeaders);
     },

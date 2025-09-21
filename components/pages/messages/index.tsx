@@ -29,6 +29,7 @@ type Message = {
 
 type ChatResponse = {
   id: number;
+  name: string;
   participant1: {
     type: string;
     id: string;
@@ -41,8 +42,10 @@ type ChatResponse = {
     name: string;
     image: string | null;
   };
+  participants: any;
   created_at: string;
   latest_message?: Message;
+  receiver: any;
 };
 
 export const Messages = () => {
@@ -60,7 +63,24 @@ export const Messages = () => {
 
   useEffect(() => {
     if (ChatList?.data) {
-      setChats(ChatList.data);
+      const withReceivers = ChatList.data.map((chat: any) => {
+        const receiver = chat.participants.find(
+          (p: any) => p.participant_type !== "Client"
+        )?.participant;
+
+        return {
+          ...chat,
+          receiver: receiver
+            ? {
+              id: receiver.id,
+              name: receiver.name,
+              image: receiver.image,
+            }
+            : null,
+        };
+      });
+
+      setChats(withReceivers);
     }
   }, [ChatList?.data]);
 
@@ -71,24 +91,37 @@ export const Messages = () => {
     const newMessage = payload.data?.message;
 
     setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId
-          ? {
-              ...chat,
-              latest_message: {
-                id: Date.now(),
-                chat_id: chatId,
-                sender_type: payload.data?.sender_type || "User",
-                message: newMessage ?? "",
-                created_at: new Date().toISOString(),
-                file: payload.data?.file,
-                file_type: payload.data?.file_type,
-              },
+      prev.map((chat) => {
+        if (chat.id !== chatId) return chat;
+
+        // نجيب المشارك اللي مش Client
+        const receiver = chat.participants.find(
+          (p: any) => p.participant_type !== "Client"
+        )?.participant;
+
+        return {
+          ...chat,
+          latest_message: {
+            id: Date.now(),
+            chat_id: chatId,
+            sender_type: payload.data?.sender_type || "User",
+            message: newMessage ?? "",
+            created_at: new Date().toISOString(),
+            file: payload.data?.file,
+            file_type: payload.data?.file_type,
+          },
+          receiver: receiver
+            ? {
+              id: receiver.id,
+              name: receiver.name,
+              image: receiver.image,
             }
-          : chat
-      )
+            : null,
+        };
+      })
     );
   });
+console.log('chat', chats);
 
   return (
     <>
@@ -168,14 +201,13 @@ export const Messages = () => {
           <Loader />
         ) : chats.length > 0 ? (
           chats
-            .filter((c) => c?.participant2?.name)
             .map((chat) => (
               <div
                 key={chat.id}
                 className="flex justify-between border-b p-5 cursor-pointer hover:bg-gray-50"
                 onClick={() =>
                   router.push(
-                    `/messages/${chat.id}?user=${chat.participant2.id}`
+                    `/messages/${chat.id}`
                   )
                 }
               >
@@ -183,20 +215,20 @@ export const Messages = () => {
                   <User
                     avatarProps={{
                       radius: "full",
-                      src: chat.participant2.image || "",
+                      src: chat.receiver.image || "",
                       size: "md",
                     }}
                     description={
                       <span className="text-sm font-semibold text-[#3D5066]">
                         {chat.latest_message
                           ? chat.latest_message.message ||
-                            (chat.latest_message.file ? "📎 مرفق" : "—")
+                          (chat.latest_message.file ? "📎 مرفق" : "—")
                           : "انقر لبدء المحادثة"}
                       </span>
                     }
                     name={
                       <span className="text-start text-sm font-bold">
-                        {chat.participant2.name}
+                        {chat.receiver.name}
                       </span>
                     }
                   />

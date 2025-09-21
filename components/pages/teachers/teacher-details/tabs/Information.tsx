@@ -13,6 +13,7 @@ import { postData } from "@/lib/utils";
 import { getCookie } from "cookies-next";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { useParams, useRouter } from "next/navigation";
 
 type TeacherDetailsProps = {
   data: {
@@ -70,7 +71,9 @@ const schema = yup
 type FormData = yup.InferType<typeof schema>;
 
 export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
-  console.log(data)
+  const router = useRouter();
+  const params = useParams();
+  const instructor_id = params.id;
   const [editField, setEditField] = useState<string | null>(null);
   const { control, handleSubmit, watch } = useForm<FormData>({
       defaultValues: {
@@ -134,6 +137,29 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
         title: "عذرا حدث خطأ ما",
         color: "danger",
       });
+    },
+  });
+
+   const CheckOrCreateChat = useMutation({
+    mutationFn: async () => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+      formdata.append("sender_type", "Client");
+      formdata.append("sender_id", getCookie("client_id") as string);
+      formdata.append("receiver_type", "Instructor ");
+      formdata.append("receiver_id", instructor_id as string);
+      formdata.append("type", "group");
+
+      return postData("client/check/chat", formdata, myHeaders);
+    },
+    onSuccess: (response) => {
+      if (response?.data?.id) {
+        router.push(`/messages/${response.data.id}?user=${instructor_id}`);
+      }
     },
   });
 
@@ -553,6 +579,18 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
             {data?.data?.specializations?.map((specialization) => specialization.title).join("، ") || "لا يوجد تخصصات"}
             </span>
         </div>
+      </div>
+
+      <div className="flex items-end justify-end col-span-2">
+        <Button
+          color="primary"
+          variant="solid"
+          className="text-white"
+          onPress={() => CheckOrCreateChat.mutate()}
+          isLoading={CheckOrCreateChat.isPending}
+        >
+          إرسال رسالة
+        </Button>
       </div>
 
       <div className="md:col-span-2 flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">

@@ -135,7 +135,9 @@ useEffect(() => {
     formData.append("sender_type", "Client");
     formData.append("sender_id", client_id as string);
     formData.append("receiver_type", "User");
-    formData.append("receiver_id", USER_ID as string);
+    USER_ID && formData.append("receiver_id", USER_ID.toString());
+    CHAT_ID && formData.append("chat_id", CHAT_ID as string);
+    formData.append("type", "group");
     if (input.trim()) formData.append("message", input);
     if (selectedFile) formData.append("file", selectedFile);
 
