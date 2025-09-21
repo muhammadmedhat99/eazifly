@@ -16,6 +16,7 @@ import { ArrowDown2, SearchNormal1 } from "iconsax-reactjs";
 import { useState, useEffect } from "react";
 import { useFirebaseMessaging } from "@/lib/hooks/useFirebaseMessaging";
 import { useRouter } from "next/navigation";
+import SearchUsers from "./SearchUsers";
 
 type Message = {
   id: number | string;
@@ -121,30 +122,13 @@ export const Messages = () => {
       })
     );
   });
-console.log('chat', chats);
 
   return (
     <>
       {/* 🔍 Search + Filter */}
       <div className="p-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2">
-          <div className="relative md:min-w-80">
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <SearchNormal1
-                size="18"
-                className="text-gray-400"
-                variant="Outline"
-              />
-            </div>
-            <input
-              type="text"
-              placeholder="بحث..."
-              className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
+          <SearchUsers />
           <Dropdown classNames={{ content: "min-w-36" }} showArrow>
             <DropdownTrigger>
               <Button
