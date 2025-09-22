@@ -28,6 +28,7 @@ import { formatDate } from "@/lib/helper";
 import { today } from "@internationalized/date";
 import ConfirmModal from "@/components/global/ConfirmModal";
 import { getCookie } from "cookies-next";
+import { usePathname } from "next/navigation";
 
 const columns = [
   { name: "", uid: "avatar" },
@@ -57,7 +58,8 @@ const OptionsComponent = ({ id }: { id: number }) => {
   );
 };
 
-export const Salaries = () => { 
+export const Salaries = () => {
+  const pathname = usePathname();
   const [nameSearch, setNameSearch] = useState("");
   const [phoneSearch, setPhoneSearch] = useState("");
   const debouncedNameSearch = useDebounce(nameSearch, 500);
@@ -97,7 +99,7 @@ export const Salaries = () => {
       ),
     });
   
-    const formattedData =
+    let formattedData =
       salariesData?.data?.map((item: any) => ({
         id: item.id,
         release_date: item.release_date,
@@ -108,6 +110,7 @@ export const Salaries = () => {
         debit: item.debit,
         total: (item.credit) - (item.debit),
         status: {
+          key: item.status?.key,
           name: item.status?.label || "N/A",
           color:
             item?.status?.color === "info"
@@ -116,6 +119,11 @@ export const Salaries = () => {
         },
       })) || [];
 
+  if (pathname === "/en/financials/instructors/salaries") {
+    formattedData = formattedData.filter((item: any) => item.status.key === "approved");
+  }
+  console.log(pathname);
+  
      const handleIssuing = useMutation({
     mutationFn: () => {
       var myHeaders = new Headers();

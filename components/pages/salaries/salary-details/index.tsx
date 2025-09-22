@@ -1,5 +1,9 @@
 "use client";
 
+import ConfirmModal from "@/components/global/ConfirmModal";
+import { Loader } from "@/components/global/Loader";
+import { axios_config } from "@/lib/const";
+import { fetchClient, postData } from "@/lib/utils";
 import {
   Button,
   Modal,
@@ -10,13 +14,32 @@ import {
   Input,
   useDisclosure,
   Image,
+  Chip,
+  addToast,
 } from "@heroui/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getCookie } from "cookies-next";
+import { useParams } from "next/navigation";
 import { useState } from "react";
 
-export const SalaryDetails = ({ data }: any) => {
+export const SalaryDetails = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalType, setModalType] = useState<"bonus" | "deduction" | null>(null);
   const [value, setValue] = useState("");
+  const [confirmAction, setConfirmAction] = useState(false);
+
+  const params = useParams();
+  const salary_id = params.id;
+
+  const { data, isLoading, refetch } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/get/salary/${salary_id}`, {
+        ...axios_config,
+        params,
+      }),
+    queryKey: ['salaryDetails', salary_id],
+  });
+
 
   const handleOpen = (type: "bonus" | "deduction") => {
     setModalType(type);
@@ -31,8 +54,59 @@ export const SalaryDetails = ({ data }: any) => {
     onClose();
   };
 
+  const handleConfirmAction = () => {
+    UpdateStatus.mutate();
+    setConfirmAction(false);
+  };
+
+  const UpdateStatus = useMutation({
+    mutationFn: () => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+      formdata.append("status", "approved");
+
+      return postData(
+        `client/change/instructor/total/salary/status/${salary_id}`,
+        formdata,
+        myHeaders
+      );
+    },
+    onSuccess: (response) => {
+      if (response.message !== "success") {
+        addToast({
+          title: "error",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: response?.message,
+          color: "success",
+        });
+        refetch();
+      }
+    },
+    onError: () => {
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
   return (
-    <div className="p-5 grid grid-cols-1 gap-5">
+   isLoading ? (<Loader />) : (
+     <div className="p-5 grid grid-cols-1 gap-5">
+      <ConfirmModal
+        open={confirmAction}
+        title={"موافقة علي الراتب"}
+        message={"هل أنت متأكد أنك تريد الموافقة"}
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(false)}
+      />
       <div className="flex flex-col gap-5 bg-main p-5 rounded-2xl border border-stroke w-1/2 mx-auto">
         {/* البرامج */}
         {data?.data?.programs?.map((program: any) => {
@@ -61,20 +135,30 @@ export const SalaryDetails = ({ data }: any) => {
               key={program.program_id}
               className="flex flex-col gap-3 pb-4 border-b border-stroke"
             >
-              <span className="text-[#5E5E5E] text-sm font-bold">
-                اسم البرنامج
-              </span>
-              <div className="flex items-center gap-3">
-                {program.program_image && (
-                  <Image
-                    src={program.program_image}
-                    alt={program.program_name}
-                    className="w-10 h-10 rounded-lg object-cover"
-                  />
-                )}
-                <span className="text-black-text font-bold text-[15px]">
-                  {program.program_name}
-                </span>
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-black-text font-bold text-[15px]">
+                    {data?.data?.total.instructor}
+                  </span>
+                  <span className="text-[#5E5E5E] text-sm font-semibold">
+                    {data?.data?.total?.release_date &&
+                      new Date(data.data.total.release_date).toLocaleDateString("ar-EG", {
+                        year: "numeric",
+                        month: "long",
+                      })}
+                  </span>
+                </div>
+
+                {/* الحالة Chip */}
+                <Chip
+                  className="capitalize px-4 min-w-24 text-center"
+                  color={data?.data?.total?.status?.color}
+                  variant="flat"
+                >
+                  <span className={`text-${data?.data?.total?.status?.color} font-bold`}>
+                    {data?.data?.total?.status?.label}
+                  </span>
+                </Chip>
               </div>
 
               <div className="flex flex-col gap-2 pl-3 mt-2 ps-5">
@@ -156,13 +240,17 @@ export const SalaryDetails = ({ data }: any) => {
 
       {/* الأزرار */}
       <div className="flex items-center justify-end gap-4 mt-8">
-        <Button variant="solid" color="primary" className="text-white">
+        {data?.data?.total.status.key === "pending" && <Button onPress={() => setConfirmAction(true)} variant="solid" color="primary" className="text-white">
           موافقة
-        </Button>
+        </Button>}
         <Button
           onPress={() => handleOpen("bonus")}
           variant="flat"
           color="success"
+          disabled={data?.data?.total.status.key !== "pending"}
+           className={data?.data?.total.status.key !== "pending"
+        ? "opacity-50 cursor-not-allowed text-gray-500"
+        : "hover:opacity-90"}
         >
           إضافة حافز
         </Button>
@@ -170,6 +258,10 @@ export const SalaryDetails = ({ data }: any) => {
           onPress={() => handleOpen("deduction")}
           variant="flat"
           color="danger"
+          disabled={data?.data?.total.status.key !== "pending"}
+          className={data?.data?.total.status.key !== "pending"
+        ? "opacity-50 cursor-not-allowed text-gray-500"
+        : "hover:opacity-90"}
         >
           إضافة خصم
         </Button>
@@ -205,5 +297,6 @@ export const SalaryDetails = ({ data }: any) => {
         </ModalContent>
       </Modal>
     </div>
+   )
   );
 };

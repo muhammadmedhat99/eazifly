@@ -30,13 +30,13 @@ export default async function page({
   const { id } = await params;
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
-  const data = await fetchData(`client/session/show/${id}`, token?.value);
+  const data = await fetchData(`client/get/salary/${id}`, token?.value);
   return (
     <>
       <BreadCrumb items={BreadCrumbItems}>
       </BreadCrumb>
 
-      <FinancialSalaryDetails/>
+      <FinancialSalaryDetails />
     </>
   );
 }

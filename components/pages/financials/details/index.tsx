@@ -1,11 +1,11 @@
 "use client";
 
+import ConfirmModal from "@/components/global/ConfirmModal";
+import { Loader } from "@/components/global/Loader";
+import { axios_config } from "@/lib/const";
+import { fetchClient, postData } from "@/lib/utils";
 import {
   Button,
-  Card,
-  CardBody,
-  Radio,
-  RadioGroup,
   Modal,
   ModalContent,
   ModalHeader,
@@ -13,15 +13,20 @@ import {
   ModalFooter,
   Input,
   useDisclosure,
+  Image,
+  Chip,
+  addToast,
+  Card,
+  CardBody,
+  Radio,
+  RadioGroup,
 } from "@heroui/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getCookie } from "cookies-next";
+import { useParams } from "next/navigation";
 import { useState } from "react";
 
-export const FinancialSalaryDetails = () => {
-  const [selected, setSelected] = useState("1");
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [amount, setAmount] = useState("");
-
-  const methods = [
+const methods = [
     {
       id: "1",
       type: "MasterCard",
@@ -45,78 +50,213 @@ export const FinancialSalaryDetails = () => {
     },
   ];
 
-  const handleConfirm = () => {
-    const method = methods.find((m) => m.id === selected);
-    console.log("✅ تم الصرف", {
-      method,
-      amount,
+export const FinancialSalaryDetails = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [modalType, setModalType] = useState<"bonus" | "deduction" | null>(null);
+  const [value, setValue] = useState("");
+  const [confirmAction, setConfirmAction] = useState(false);
+  const [selected, setSelected] = useState("1");
+  const [amount, setAmount] = useState("");
+
+  const params = useParams();
+  const salary_id = params.id;
+
+  const { data, isLoading, refetch } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/get/salary/${salary_id}`, {
+        ...axios_config,
+        params,
+      }),
+    queryKey: ['salaryDetails', salary_id],
+  });
+
+const handleConfirm = () => {
+  setConfirmAction(true);
+};
+
+const TransferSalary = useMutation({
+  mutationFn: () => {
+    const myHeaders = new Headers();
+    myHeaders.append("local", "ar");
+    myHeaders.append("Accept", "application/json");
+    myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+    const formdata = new FormData();
+    formdata.append("status", "transferred");
+    formdata.append("amount", amount);
+
+    return postData(
+      `client/change/instructor/total/salary/status/${salary_id}`,
+      formdata,
+      myHeaders
+    );
+  },
+  onSuccess: (response) => {
+    if (response.message !== "success") {
+      addToast({
+        title: "error",
+        color: "danger",
+      });
+    } else {
+      addToast({
+        title: "تم التحويل بنجاح",
+        color: "success",
+      });
+      refetch();
+      setConfirmAction(false);
+      onClose(); 
+    }
+  },
+  onError: () => {
+    addToast({
+      title: "عذرا حدث خطأ ما",
+      color: "danger",
     });
-    onClose();
-  };
+  },
+});
 
+const handleConfirmAction = () => {
+  TransferSalary.mutate();
+};
+  
   return (
-    <div className="p-5 grid grid-cols-1 gap-5">
-      {/* الكارت الأول */}
+    isLoading ? (<Loader />) : (
+      <div className="p-5 grid grid-cols-1 gap-5">
+      <ConfirmModal
+        open={confirmAction}
+        title={"تأكيد عملية الصرف"}
+        message={`هل أنت متأكد من صرف مبلغ ${amount} ج.م ؟`}
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(false)}
+      />
       <div className="flex flex-col gap-5 bg-main p-5 rounded-2xl border border-stroke w-1/2 mx-auto">
-        <div className="flex flex-col gap-2">
-          <span className="text-[#5E5E5E] text-sm font-bold">اسم البرنامج</span>
-          <span className="text-black-text font-bold text-[15px]">
-            {`الرياضيات الصف الاول`}
-          </span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">اجمالي الساعات</span>
-          <span className="text-black-text font-bold text-[15px]">{`20 ساعة`}</span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">سعر ساعة البرنامج</span>
-          <span className="text-black-text font-bold text-[15px]">{`400 ج.م`}</span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">الإجمالي</span>
-          <span className="text-black-text font-bold text-[15px]">{`6000 ج.م`}</span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">الخصومات</span>
-          <span className="text-black-text font-bold text-[15px]">{`300 ج.م`}</span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">
-            الإجمالي بعد الخصومات
-          </span>
-          <span className="text-black-text font-bold text-[15px]">{`5000 ج.م`}</span>
-        </div>
-      </div>
+        {/* البرامج */}
+        {data?.data?.programs?.map((program: any) => {
+          const totalCredit = program.transactions.reduce(
+            (sum: number, t: any) => sum + (t.credit || 0),
+            0
+          );
+          const totalDebit = program.transactions.reduce(
+            (sum: number, t: any) => sum + (t.debit || 0),
+            0
+          );
+          const net = totalCredit - totalDebit;
 
-      {/* الكارت التاني */}
-      <div className="flex flex-col gap-5 bg-main p-5 rounded-2xl border border-stroke w-1/2 mx-auto">
-        <div className="flex flex-col gap-2">
-          <span className="text-[#5E5E5E] text-sm font-bold">اسم البرنامج</span>
-          <span className="text-black-text font-bold text-[15px]">
-            {`الرياضيات الصف الاول`}
-          </span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">اجمالي الساعات</span>
-          <span className="text-black-text font-bold text-[15px]">{`20 ساعة`}</span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">سعر ساعة البرنامج</span>
-          <span className="text-black-text font-bold text-[15px]">{`400 ج.م`}</span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">الإجمالي</span>
-          <span className="text-black-text font-bold text-[15px]">{`6000 ج.م`}</span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">الخصومات</span>
-          <span className="text-black-text font-bold text-[15px]">{`300 ج.م`}</span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold">
-            الإجمالي بعد الخصومات
-          </span>
-          <span className="text-black-text font-bold text-[15px]">{`5000 ج.م`}</span>
+          // ✅ إجمالي الساعات
+          const totalHours = program.transactions.reduce(
+            (sum: number, t: any) => sum + Number(t.duration || 0) / 60,
+            0
+          );
+
+          // سعر الساعة (الاضافات / اجمالي الساعات)
+          const hourRate = totalHours > 0 ? totalCredit / totalHours : 0;
+
+
+          return (
+            <div
+              key={program.program_id}
+              className="flex flex-col gap-3 pb-4 border-b border-stroke"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-black-text font-bold text-[15px]">
+                    {data?.data?.total.instructor}
+                  </span>
+                  <span className="text-[#5E5E5E] text-sm font-semibold">
+                    {data?.data?.total?.release_date &&
+                      new Date(data.data.total.release_date).toLocaleDateString("ar-EG", {
+                        year: "numeric",
+                        month: "long",
+                      })}
+                  </span>
+                </div>
+
+                {/* الحالة Chip */}
+                <Chip
+                  className="capitalize px-4 min-w-24 text-center"
+                  color={data?.data?.total?.status?.color}
+                  variant="flat"
+                >
+                  <span className={`text-${data?.data?.total?.status?.color} font-bold`}>
+                    {data?.data?.total?.status?.label}
+                  </span>
+                </Chip>
+              </div>
+
+              <div className="flex flex-col gap-2 pl-3 mt-2 ps-5">
+                <div className="flex justify-between">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    اجمالي الساعات
+                  </span>
+                  <span className="text-black font-bold text-[15px]">
+                    {totalHours} ساعة
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    سعر ساعة البرنامج
+                  </span>
+                  <span className="text-black font-bold text-[15px]">
+                    {hourRate.toFixed(2)} ج.م
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    الإضافات
+                  </span>
+                  <span className="text-green-600 font-bold text-[15px]">
+                    +{Number(totalCredit)} ج.م
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    الخصومات
+                  </span>
+                  <span className="text-red-600 font-bold text-[15px]">
+                    -{Number(totalDebit)} ج.م
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#5E5E5E] text-sm font-bold">
+                    الإجمالي
+                  </span>
+                  <span className="text-black-text font-bold text-[15px]">
+                    {net} ج.م
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* الملخص */}
+        <div className="flex flex-col gap-2 mt-2">
+          <div className="flex justify-between">
+            <span className="text-[#5E5E5E] text-sm font-bold">اجمالي الساعات</span>
+            <span className="text-black font-bold text-[15px]">
+              {data?.data?.total?.duration / 60} ساعة
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#5E5E5E] text-sm font-bold">الإضافات</span>
+            <span className="text-green-600 font-bold text-[15px]">
+              +{data?.data?.total?.credit} ج.م
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#5E5E5E] text-sm font-bold">الخصومات</span>
+            <span className="text-red-600 font-bold text-[15px]">
+              -{data?.data?.total?.debit} ج.م
+            </span>
+          </div>
+          <div className="flex justify-between border-t border-stroke pt-2">
+            <span className="text-[#5E5E5E] text-sm font-bold">
+              الإجمالي الكلي
+            </span>
+            <span className="text-black-text font-bold text-[15px]">
+              {data?.data?.total?.credit - data?.data?.total?.debit} ج.م
+            </span>
+          </div>
         </div>
       </div>
 
@@ -167,8 +307,11 @@ export const FinancialSalaryDetails = () => {
         <Button
           variant="solid"
           color="primary"
-          className="text-white"
           onPress={onOpen}
+          disabled={data?.data?.total.status.key !== "approved"}
+           className={data?.data?.total.status.key !== "approved"
+        ? "opacity-50 cursor-not-allowed text-gray-500 text-white"
+        : "hover:opacity-90 text-white"}
         >
           تم الصرف
         </Button>
@@ -198,5 +341,6 @@ export const FinancialSalaryDetails = () => {
         </ModalContent>
       </Modal>
     </div>
+    )
   );
 };

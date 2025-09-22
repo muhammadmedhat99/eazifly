@@ -37,7 +37,7 @@ export default async function page({
       <BreadCrumb items={BreadCrumbItems}>
       </BreadCrumb>
 
-      <SalaryDetails data={data}/>
+      <SalaryDetails />
     </>
   );
 }
