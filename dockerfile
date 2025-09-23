@@ -23,7 +23,7 @@ RUN echo "@hodaelnas:registry=https://npm.pkg.github.com/" > .npmrc \
 # Install all dependencies including optional (sharp)
 RUN npm install --include=optional sharp
 
-# Copy the rest of the source
+## Copy the rest of the source
 COPY . .
 
 # Inject environment variables
