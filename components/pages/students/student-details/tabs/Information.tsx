@@ -383,7 +383,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         </div>
       </div>
 
-      <div className="flex items-end justify-end col-span-2">
+      <div className="flex items-end justify-end md:col-span-2">
         <Button
           color="primary"
           variant="solid"

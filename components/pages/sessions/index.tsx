@@ -244,7 +244,7 @@ export const AllSessions = () => {
       <div className="p-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="relative w-20 md:min-w-48" ref={instructorDropdownRef}>
+            <div className="relative md:min-w-48" ref={instructorDropdownRef}>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <SearchNormal1
                   size="18"
@@ -298,7 +298,7 @@ export const AllSessions = () => {
                 </ul>
               )}
             </div>
-            <div className="relative w-20 md:min-w-48" ref={programDropdownRef}>
+            <div className="relative md:min-w-48" ref={programDropdownRef}>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <SearchNormal1
                   size="18"
