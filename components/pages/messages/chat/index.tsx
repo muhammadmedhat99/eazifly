@@ -1,23 +1,53 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Input, Button, Card } from "@heroui/react";
+import { Input, Button, Card, User, Avatar } from "@heroui/react";
 import { CloseCircle, Image, Microphone, Send2 } from "iconsax-reactjs";
 import { getCookie } from "cookies-next";
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { useFirebaseMessaging } from "@/lib/hooks/useFirebaseMessaging";
-import { useQuery } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 import { useParams, useSearchParams } from "next/navigation";
 
-type Message = {
+// Message type
+ type Message = {
   id: number;
   message?: string;
   file?: string;
   sender_type: "Client" | "User";
+  created_at?: string;
+  sender?: {
+    id: number;
+    name: string;
+    image: string | null;
+  };
 };
 
+// Helper: group messages by minute
+const groupMessagesByMinute = (messages: Message[]) => {
+  const groups: { time: string; messages: Message[] }[] = [];
+
+  messages.forEach((msg) => {
+    const time = msg.created_at
+      ? new Date(msg.created_at).toLocaleString("ar-EG", {
+          hour: "2-digit",
+          minute: "2-digit",
+          day: "2-digit",
+          month: "short",
+        })
+      : "";
+
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup && lastGroup.time === time) {
+      lastGroup.messages.push(msg);
+    } else {
+      groups.push({ time, messages: [msg] });
+    }
+  });
+
+  return groups;
+};
 
 export const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,33 +64,18 @@ export const Chat = () => {
   const USER_ID = searchParams.get("user");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  
   const endRef = useRef<HTMLDivElement | null>(null);
 
+  // Scroll to bottom on first load
   useEffect(() => {
     if (firstLoad && messages.length > 0) {
       endRef.current?.scrollIntoView({ block: "end" });
       setFirstLoad(false);
     }
   }, [messages, firstLoad]);
-  
-  // Handle incoming FCM message
+
+  // Handle incoming FCM
   useFirebaseMessaging((payload) => {
-    console.log("📨 Chat received FCM message:", payload);
-
-    // Play notification sound (optional: add notification.mp3 to public folder)
-    try {
-      const audio = new Audio("/notification.mp3");
-      audio.volume = 0.3; // Lower volume
-      audio.play().catch(() => {
-        // Fallback: use browser's built-in notification sound
-        console.log("🔊 Playing notification sound");
-      });
-    } catch (error) {
-      console.log("🔇 Could not play notification sound");
-    }
-
-    // Show notification toast
     addToast({
       title: "رسالة جديدة",
       description: payload.data?.message || "لديك رسالة جديدة",
@@ -70,7 +85,6 @@ export const Chat = () => {
       color: "warning",
     });
 
-    // Increment new message counter
     setNewMessageCount((prev) => prev + 1);
 
     const incomingMessage: Message = {
@@ -78,46 +92,47 @@ export const Chat = () => {
       message: payload.data?.message,
       file: payload.data?.file,
       sender_type: "User",
+      created_at: new Date().toISOString(),
+      sender: {
+        id: Number(payload.data?.sender_id) || 0,
+        name: payload.data?.sender_name || "المستخدم",
+        image: payload.data?.sender_avatar || null,
+      },
     };
     setMessages((prev) => [...prev, incomingMessage]);
   });
 
-useEffect(() => {
-  const fetchMessages = async () => {
-    const el = scrollRef.current;
-    const oldScrollHeight = el?.scrollHeight || 0;
-    setIsFetching(true);
-    try {
-      const res = await fetchClient(
-        `client/chat/get-message?offset=${offset}&chat_id=${CHAT_ID}&sort=desc`,
-        axios_config
-      );
-      if (res?.data?.length) {
-        setMessages((prev) => [...res.data, ...prev]);
-        requestAnimationFrame(() => {
-        if (el) {
-          const newScrollHeight = el.scrollHeight;
-          el.scrollTop = newScrollHeight - oldScrollHeight;
-        }
-      });
-      }
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    } finally {
-      setIsFetching(false); // انتهى التحميل
-    }
-  };
-
-  fetchMessages();
-}, [offset]);
-
-  // Initialize messages from API data
+  // Fetch messages with pagination
   useEffect(() => {
-    if (messages && messages.length === 0) {
-      setMessages(messages);
-    }
-  }, [messages, messages.length]);
+    const fetchMessages = async () => {
+      const el = scrollRef.current;
+      const oldScrollHeight = el?.scrollHeight || 0;
+      setIsFetching(true);
+      try {
+        const res = await fetchClient(
+          `client/chat/get-message?offset=${offset}&chat_id=${CHAT_ID}&sort=desc`,
+          axios_config
+        );
+        if (res?.data?.length) {
+          setMessages((prev) => [...res.data, ...prev]);
+          requestAnimationFrame(() => {
+            if (el) {
+              const newScrollHeight = el.scrollHeight;
+              el.scrollTop = newScrollHeight - oldScrollHeight;
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setIsFetching(false);
+      }
+    };
 
+    fetchMessages();
+  }, [offset]);
+
+  // File change handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -129,6 +144,7 @@ useEffect(() => {
     setSelectedFile(null);
   };
 
+  // Send message
   const sendMessage = async () => {
     if (!input.trim() && !selectedFile) return;
     const formData = new FormData();
@@ -153,16 +169,14 @@ useEffect(() => {
         message: res.data.message,
         file: res.data.file,
         sender_type: res.data.sender_type,
+        created_at: res.data.created_at,
+        sender: res.data.sender,
       };
       setMessages((prev) => [...prev, newMessage]);
       resetInput();
-
-      // Clear new message counter when user sends a message
       setNewMessageCount(0);
     } catch (err) {
       console.error("Error sending message:", err);
-
-      // Show error notification
       addToast({
         title: "خطأ في الإرسال",
         description: "فشل في إرسال الرسالة",
@@ -178,7 +192,7 @@ useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
-    const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50; // 50px tolerance
+    const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
     setIsAtBottom(isBottom);
 
     if (el.scrollTop === 0 && !isFetching) {
@@ -192,9 +206,21 @@ useEffect(() => {
     }
   }, [messages]);
 
+  const grouped = groupMessagesByMinute(messages);
+
+  // Get initials for avatar fallback
+  const getInitials = (name?: string) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase();
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      {/* Chat Header */}
+      {/* Header */}
       <div className="bg-white p-4 border-b flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">المحادثة</h2>
@@ -212,61 +238,86 @@ useEffect(() => {
         </button>
       </div>
 
-      {/* Messages List */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3 scroll" onScroll={handleScroll}
-        ref={scrollRef}>
+      {/* Messages */}
+      <div
+        className="flex-1 p-4 overflow-y-auto space-y-6 scroll"
+        onScroll={handleScroll}
+        ref={scrollRef}
+      >
         {isFetching && (
           <div className="flex justify-center py-4">
             <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
-        {messages.map((msg: any) => (
-          <div className="flex flex-col gap-2" key={msg.id}>
+
+        {grouped.map((group, idx) => (
+          <div key={idx} className="space-y-2">
+            {group.messages.map((msg) => (
+              <div className="flex flex-col gap-1" key={msg.id}>
+                <div
+                  className={`flex ${
+                    msg.sender_type === "Client"
+                      ? "justify-end"
+                      : "justify-start"
+                  }`}
+                >
+                  <div className="flex flex-col max-w-[70%]">
+                    {/* Sender Info */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <Avatar
+                        alt={msg.sender?.image ? msg.sender?.name : getInitials(msg.sender?.name)}
+                        radius="full"
+                        className="w-6 h-6"
+                        src={msg.sender?.image || undefined}
+                        name={msg.sender?.name ? getInitials(msg.sender?.name) : "?"}
+                      />
+                      <span className="text-xs text-gray-600">{msg.sender?.name || "مستخدم مجهول"}</span>
+                    </div>
+
+                    <Card
+                      className={`p-3 rounded-2xl shadow ${
+                        msg.sender_type === "Client"
+                          ? "bg-blue-500 text-white rounded-br-none"
+                          : "bg-gray-200 text-black rounded-bl-none"
+                      }`}
+                    >
+                      {msg.message && <p>{msg.message}</p>}
+                      {msg.file && (
+                        <img
+                          src={msg.file}
+                          alt="attachment"
+                          className="rounded-lg max-w-[200px] mt-2"
+                        />
+                      )}
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {/* Shared group timestamp */}
             <div
-            className={`flex ${msg.sender_type === "Client" ? "justify-end" : "justify-start"}`}
-          >
-            <Card
-              className={`p-3 rounded-2xl max-w-[70%] shadow ${
-                msg.sender_type === "Client"
-                  ? "bg-blue-500 text-white rounded-br-none"
-                  : "bg-gray-200 text-black rounded-bl-none"
-              }`}
+              className={`flex ${group.messages[0]?.sender_type === "Client"
+                  ? "justify-end"
+                  : "justify-start"
+                }`}
             >
-              {msg.message && <p>{msg.message}</p>}
-              {msg.file && (
-                <img
-                  src={msg.file}
-                  alt="attachment"
-                  className="rounded-lg max-w-[200px] mt-2"
-                />
-              )}
-            </Card>
-          </div>
-          <span className={`text-start text-xs font-bold text-[#3D5066] flex ${msg.sender_type === "Client" ? "justify-end" : "justify-start"}`}>
-                  {msg?.created_at
-                    ? new Date(msg.created_at).toLocaleString(
-                        "ar-EG",
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          day: "2-digit",
-                          month: "short",
-                        }
-                      )
-                    : ""}
-                </span>
+              <span className="text-xs text-gray-400 font-semibold">
+                {group.time}
+              </span>
+            </div>
+
           </div>
         ))}
+
         <div ref={endRef} />
       </div>
 
-      {/* Message Input */}
+      {/* Input */}
       <div className="p-3 bg-white flex items-center gap-2 border-t">
         <Button onPress={sendMessage} className="rounded-full" isIconOnly>
           <Microphone size={20} />
         </Button>
 
-        {/* File Input */}
         <div className="relative">
           <input
             type="file"
@@ -284,7 +335,6 @@ useEffect(() => {
           </Button>
         </div>
 
-        {/* File Preview */}
         {selectedFile && (
           <div className="relative">
             <img
@@ -301,7 +351,6 @@ useEffect(() => {
           </div>
         )}
 
-        {/* Text Input */}
         <Input
           placeholder="اكتب رسالتك..."
           value={input}
@@ -309,7 +358,6 @@ useEffect(() => {
           className="flex-1"
         />
 
-        {/* Send Button */}
         <Button onPress={sendMessage} className="rounded-full" isIconOnly>
           <Send2 size={20} />
         </Button>
