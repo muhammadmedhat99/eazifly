@@ -19,6 +19,7 @@ import { fetchClient } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
+import { formatDate } from "@/lib/helper";
 
 const columns = [
   { name: "", uid: "avatar" },
@@ -93,6 +94,7 @@ const formattedData =
   teachersData?.data?.map((item: any) => ({
     id: item.id,
     name: item.name_ar || item.name_en || "N/A",
+    created_at: formatDate(item.created_at),
     avatar: item.image,
     phone: item.phone || "N/A",
     whats_app: item.whats_app || "N/A",
