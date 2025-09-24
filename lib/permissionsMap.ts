@@ -1,0 +1,17 @@
+export const permissionsMap: Record<string, string> = {
+  "/students": "user_read",
+  "/students/subscriptions": "order_read",
+  "/teachers": "instructor_read",
+  "/programs": "program_read",
+  "/programs/create": "program_create",
+  "/messages": "chat",
+  "/settings/general": "permission_read",
+  "/settings/countries": "country_read",
+  "/settings/specializations": "specialization_read",
+  "/settings/payment-methods": "paymentMethod_read",
+  "/settings/cancel-sessions": "reasonCancelSession_read",
+  "/settings/user-responses": "userResponse_read",
+  "/settings/sessions-time": "program_read",
+  "/settings/coupons": "coupon_read",
+  "/settings/transfers": "instructorPaymentMethod_read",
+};
