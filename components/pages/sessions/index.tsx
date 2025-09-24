@@ -187,38 +187,44 @@ export const AllSessions = () => {
 
   const { data: teachersData, isLoading: isTeachersLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/instructors`, {
+      await fetchClient(`client/instructors?status=active&per_page=9999`, {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllInstructors("", "", 1),
+    queryKey: AllQueryKeys.GetAllInstructors("", "", "", 1),
   });
 
   const { data: programsData, isLoading: isProgramsLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/program`, {
+      await fetchClient(`client/program?status=published&per_page=9999`, {
         ...axios_config,
         params: { name: debouncedProgramSearch },
       }),
     queryKey: AllQueryKeys.GetAllPrograms("", 1),
   });
 
-
-
   const filteredTeachers =
     teachersData?.data?.filter((t: any) =>
       (t?.name || "").toLowerCase().includes((nameSearch || "").toLowerCase())
     ) || [];
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const instructorDropdownRef = useRef<HTMLDivElement>(null);
+  const programDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        instructorDropdownRef.current &&
+        !instructorDropdownRef.current.contains(event.target as Node)
       ) {
         setShowDropdown(false);
+      }
+
+      if (
+        programDropdownRef.current &&
+        !programDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowProgramDropdown(false);
       }
     };
 
@@ -232,14 +238,13 @@ export const AllSessions = () => {
     const jsDate = new Date(date.toString());
     return new Intl.DateTimeFormat("ar-EG", { weekday: "long" }).format(jsDate);
   };
-console.log(programsData);
 
   return (
     <>
       <div className="p-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="relative w-20 md:min-w-48" ref={dropdownRef}>
+            <div className="relative w-20 md:min-w-48" ref={instructorDropdownRef}>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <SearchNormal1
                   size="18"
@@ -293,7 +298,7 @@ console.log(programsData);
                 </ul>
               )}
             </div>
-            <div className="relative w-20 md:min-w-48" ref={dropdownRef}>
+            <div className="relative w-20 md:min-w-48" ref={programDropdownRef}>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <SearchNormal1
                   size="18"
