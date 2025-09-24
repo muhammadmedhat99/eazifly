@@ -407,7 +407,7 @@ export const Programs = ({
           ...axios_config,
           params: {
             program_id: subscription.program_id,
-            subscription_id: subscription.id,
+            subscription_id: subscription.main_subscription_id,
           },
         }),
     })),
