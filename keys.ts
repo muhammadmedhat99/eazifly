@@ -38,4 +38,6 @@ export const AllQueryKeys = {
       selectedProgramId ?? null,
     ],
   GetAllSalaries: (nameSearch: string, selectedDate: string, currentPage: number) => ['GetAllSalaries', axios_config, nameSearch, selectedDate, currentPage],
+  GetAllRenewals: (nameSearch: string, phoneSearch: string, selectedStatus: string, subscriptionStatus: string, currentPage: number) => ['GetAllRenewals', axios_config, nameSearch, phoneSearch, selectedStatus, subscriptionStatus, currentPage],
+
 };

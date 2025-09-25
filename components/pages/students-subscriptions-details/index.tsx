@@ -311,7 +311,7 @@ export const StudentsSubscriptionDetails = ({
                   </span>
 
                   <span className="text-black-text font-bold text-[15px]">
-                    {data?.data.order_details[0]?.student_number}
+                    {data?.data.program_data?.student_number}
                   </span>
                 </div>
                 <div className="bg-stroke flex flex-col gap-2 px-5 py-4 rounded-lg">
