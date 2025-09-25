@@ -241,7 +241,7 @@ export const AllSessions = () => {
 
   return (
     <>
-      <div className="p-4 flex items-center justify-between flex-wrap gap-4">
+      <div className="p-4 flex items-center justify-between flex-wrap sm:flex-nowrap gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="relative md:min-w-48" ref={instructorDropdownRef}>
@@ -410,7 +410,7 @@ export const AllSessions = () => {
             <ArrowLeft2 size={14} color={"blue"} />
           </button>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           <Button
             id="all"
             variant="flat"

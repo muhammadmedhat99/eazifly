@@ -182,7 +182,7 @@ export const StudentsSubscriptionDetails = ({
     <Loader />
   ) : (
     <>
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <Accordion variant="splitted" defaultExpandedKeys={["1"]}>
           <AccordionItem
             key="1"
@@ -422,47 +422,60 @@ export const StudentsSubscriptionDetails = ({
           />
         </div>}
 
-        <div className="flex items-center justify-end gap-3">
-          {data?.data.status.key !== "approved" && <Button
-            variant="solid"
-            color="primary"
-            className="text-white"
-            onPress={() => {
-              ChangeOrderStatus.mutate({
-                status: "canceled",
-                paid: paidValue,
-              });
-            }}
-          >
-            رفض الطلب
-          </Button>}
-          <Button onPress={() => router.push('/messages')} variant="solid" color="primary" className="text-white">
-            إرسال رسالة
-          </Button>
-          {data?.data.status.key !== "approved" && <Button
-            variant="solid"
-            color="primary"
-            className="text-white"
-            onPress={() => {
-              ChangeOrderStatus.mutate({
-                status: "approved",
-                paid: paidValue,
-              });
-            }}
-          >
-            الموافقة علي الطلب
-          </Button>}
-          <Button
-            variant="solid"
-            color="primary"
-            className="text-white"
-            onPress={() => {
-              setIsModalOpen(true);
-            }}
-          >
-            إضافة ملاحظة
-          </Button>
-        </div>
+          <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-end gap-3">
+            {data?.data.status.key !== "approved" && (
+              <Button
+                variant="solid"
+                color="primary"
+                className="text-white w-full sm:w-auto"
+                onPress={() => {
+                  ChangeOrderStatus.mutate({
+                    status: "canceled",
+                    paid: paidValue,
+                  });
+                }}
+              >
+                رفض الطلب
+              </Button>
+            )}
+
+            <Button
+              onPress={() => router.push('/messages')}
+              variant="solid"
+              color="primary"
+              className="text-white w-full sm:w-auto"
+            >
+              إرسال رسالة
+            </Button>
+
+            {data?.data.status.key !== "approved" && (
+              <Button
+                variant="solid"
+                color="primary"
+                className="text-white w-full sm:w-auto"
+                onPress={() => {
+                  ChangeOrderStatus.mutate({
+                    status: "approved",
+                    paid: paidValue,
+                  });
+                }}
+              >
+                الموافقة علي الطلب
+              </Button>
+            )}
+
+            <Button
+              variant="solid"
+              color="primary"
+              className="text-white w-full sm:w-auto"
+              onPress={() => {
+                setIsModalOpen(true);
+              }}
+            >
+              إضافة ملاحظة
+            </Button>
+          </div>
+
       </div>
 
       <Modal
