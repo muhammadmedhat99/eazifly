@@ -11,7 +11,7 @@ export const AllQueryKeys = {
   GetAllSpecializations: ["GetAllSpecializations", axios_config],
   GetAllClients: ["GetAllClients", axios_config],
   GetAllHost: ["GetAllHost", axios_config],
-  GetAllInstructors: (nameSearch: string, phoneSearch: string, currentPage: number) => ['GetAllInstructors', axios_config, nameSearch, phoneSearch, currentPage],
+  GetAllInstructors: (nameSearch: string, phoneSearch: string, selectedStatus: string, currentPage: number) => ['GetAllInstructors', axios_config, nameSearch, phoneSearch, selectedStatus, currentPage],
   GetAllPaymentMethods: ["GetAllPaymentMethods", axios_config],
   GetAllSubscriptionPeriods: ["GetAllSubscriptionsPeriods", axios_config],
   GetAllSessionTimes: ["GetAllSessionTimes", axios_config],
@@ -22,6 +22,20 @@ export const AllQueryKeys = {
   GetAllProgramContents: ["GetAllProgramContents", axios_config],
   GetAllLanguages: ["GetAllLanguages", axios_config],
   GetAllInstructorsRequests: (currentPage: number) => ['GetAllInstructors', axios_config, currentPage],
-  GetAllSessions: (nameSearch: string, selectedDate: string, currentPage: number) => ['GetAllSessions', axios_config, nameSearch, selectedDate, currentPage],
+  GetAllSessions: (
+    nameSearch: string,
+    selectedDate: string,
+    currentPage: number,
+    selectedInstructorId?: number | null,
+    selectedProgramId?: number | null
+  ) => [
+      "GetAllSessions",
+      axios_config,
+      nameSearch,
+      selectedDate,
+      currentPage,
+      selectedInstructorId ?? null,
+      selectedProgramId ?? null,
+    ],
   GetAllSalaries: (nameSearch: string, selectedDate: string, currentPage: number) => ['GetAllSalaries', axios_config, nameSearch, selectedDate, currentPage],
 };

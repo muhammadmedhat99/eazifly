@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import TableComponent from "@/components/global/Table";
 import { Options } from "@/components/global/Icons";
 import {
@@ -19,6 +19,7 @@ import { fetchClient } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { AllQueryKeys } from "@/keys";
 import { Loader } from "@/components/global/Loader";
+import { formatDate } from "@/lib/helper";
 
 const columns = [
   { name: "", uid: "avatar" },
@@ -53,81 +54,72 @@ const OptionsComponent = ({ id }: { id: number }) => {
 
 export const AllTeachers = () => {
   const [nameSearch, setNameSearch] = useState("");
-  const [phoneSearch, setPhoneSearch] = useState("");
-  const debouncedNameSearch = useDebounce(nameSearch, 500);
-  const debouncedPhoneSearch = useDebounce(phoneSearch, 500);
-  const [selectedStatus, setSelectedStatus] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
+const [phoneSearch, setPhoneSearch] = useState("");
+const debouncedNameSearch = useDebounce(nameSearch, 500);
+const debouncedPhoneSearch = useDebounce(phoneSearch, 500);
+const [selectedStatus, setSelectedStatus] = useState("all");
+const [currentPage, setCurrentPage] = useState(1);
 
-  const params: Record<string, string | number> = {
-    page: currentPage,
-  };
+const params: Record<string, string | number> = {
+  page: currentPage,
+};
 
-  if (debouncedNameSearch) {
-    params.name = debouncedNameSearch;
-  }
+if (debouncedNameSearch) {
+  params.name = debouncedNameSearch;
+}
 
-  if (debouncedPhoneSearch) {
-    params.phone = debouncedPhoneSearch;
-  }
+if (debouncedPhoneSearch) {
+  params.phone = debouncedPhoneSearch;
+}
 
-  const { data: teachersData, isLoading } = useQuery({
-    queryFn: async () =>
-      await fetchClient(`client/instructors`, {
-        ...axios_config,
-        params,
-      }),
-    queryKey: AllQueryKeys.GetAllInstructors(
-      debouncedNameSearch,
-      debouncedPhoneSearch,
-      currentPage
-    ),
-  });
+if (selectedStatus !== "all") {
+  params.status = selectedStatus;
+}
 
-  const formattedData =
-    teachersData?.data?.map((item: any) => ({
-      id: item.id,
-      name: item.name_ar || item.name_en || "N/A",
-      avatar: item.image,
-      phone: item.phone || "N/A",
-      whats_app: item.whats_app || "N/A",
-      specializations:
-        item.specializations?.length > 0
-          ? `${item.specializations[0]?.title}${item.specializations.length > 1 ? ` (+${item.specializations.length})` : ""}`
-          : "N/A",
-      working_hours:
-        item.AvailabilityTime?.length > 0
-          ? `${item.AvailabilityTime[0].day} ${item.AvailabilityTime[0].start_time} - ${item.AvailabilityTime[0].end_time}`
-          : "N/A",
-      status: {
-        name: item.status?.label || "N/A",
-        key: item.status?.key || null,
-        color:
-          item?.status?.color || "",
-      },
-    })).reverse() || [];
+const { data: teachersData, isLoading } = useQuery({
+  queryFn: async () =>
+    await fetchClient(`client/instructors`, {
+      ...axios_config,
+      params,
+    }),
+  queryKey: AllQueryKeys.GetAllInstructors(
+    debouncedNameSearch,
+    debouncedPhoneSearch,
+    selectedStatus,
+    currentPage
+  ),
+});
 
-  const STATUS_GROUPS: any = {
-    active: ["active", "available", "medium", "fully_booked"],
-    hold: ["fired", "Hold"],
-    new: ["in_review", "new"],
-  };
+const formattedData =
+  teachersData?.data?.map((item: any) => ({
+    id: item.id,
+    name: item.name_ar || item.name_en || "N/A",
+    created_at: formatDate(item.created_at),
+    avatar: item.image,
+    phone: item.phone || "N/A",
+    whats_app: item.whats_app || "N/A",
+    specializations:
+      item.specializations?.length > 0
+        ? `${item.specializations[0]?.title}${
+            item.specializations.length > 1
+              ? ` (+${item.specializations.length})`
+              : ""
+          }`
+        : "N/A",
+    working_hours:
+      item.AvailabilityTime?.length > 0
+        ? `${item.AvailabilityTime[0].day} ${item.AvailabilityTime[0].start_time} - ${item.AvailabilityTime[0].end_time}`
+        : "N/A",
+    status: {
+      name: item.status?.label || "N/A",
+      key: item.status?.key || null,
+      color: item?.status?.color || "",
+    },
+  })).reverse() || [];
 
-  const filteredData = useMemo(() => {
-    if (selectedStatus === "all") return formattedData;
-
-    const groupKeys = STATUS_GROUPS[selectedStatus];
-
-    return formattedData.filter((item: any) => {
-      const userStatusKey = item?.status?.key;
-
-      if (groupKeys) {
-        return groupKeys.includes(userStatusKey);
-      }
-
-      return userStatusKey === selectedStatus;
-    });
-  }, [formattedData, selectedStatus]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedStatus]);
 
   return (
     <>
@@ -183,7 +175,7 @@ export const AllTeachers = () => {
           </Dropdown>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             id="all"
             variant="flat"
@@ -220,6 +212,15 @@ export const AllTeachers = () => {
           >
             معلق
           </Button>
+          <Button
+            id="in_review"
+            variant="flat"
+            color={selectedStatus === "in_review" ? "primary" : "default"}
+            className="font-semibold"
+            onPress={(e) => setSelectedStatus(e.target.id)}
+          >
+            تحت المراجعة
+          </Button>
         </div>
       </div>
       {isLoading ? (
@@ -227,7 +228,7 @@ export const AllTeachers = () => {
       ) : (
         <TableComponent
           columns={columns}
-          data={filteredData}
+          data={formattedData}
           ActionsComponent={OptionsComponent}
           selectable={true}
         />

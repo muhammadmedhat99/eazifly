@@ -3,27 +3,17 @@
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { useEffect, useState } from 'react';
 
 import { addToast, Avatar, Button, Checkbox, Input, Spinner } from "@heroui/react";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { postData } from "@/lib/utils";
 import { getToken } from "firebase/messaging";
-import { messaging } from "../../../../firebase";
+import { messaging } from "../../../../lib/FirebaseClient";
 import { getCookie } from "cookies-next";
-import dynamic from "next/dynamic";
-import countries from "world-countries";
-import { whitePhoneCodeCustomStyles } from "@/lib/const";
-const SelectReact = dynamic(() => import("react-select"), { ssr: false });
-
-const allCountries = countries.map((country) => ({
-  name: country.name.common,
-  flag: country.flag,
-  code: country.cca2,
-  phone_code: country.idd.root
-    ? `${country.idd.root}${country.idd.suffixes?.[0] || ""}`
-    : "",
-}))
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 
 const emailOrEgyptPhoneSchema = yup
@@ -46,14 +36,13 @@ const emailOrEgyptPhoneSchema = yup
 
 const schema = yup
   .object({
-    phone: emailOrEgyptPhoneSchema.required(
+    phone: yup.string().required(
       "برجاء إدخال رقم هاتف "
     ),
     password: yup
       .string()
       .required("من فضلك قم بإدخال كلمة المرور")
       .min(5, "كلمة المرور لا يجب ان تقل عن ٥ احرف"),
-    country_code: yup.string().required("برجاء إختيار كود الدولة"),
   })
   
   .required();
@@ -69,40 +58,49 @@ export const LoginForm = () => {
   } = useForm<FormData>({
     resolver: yupResolver(schema),
   });
+
   const onSubmit = (data: FormData) => login.mutate(data);
 
-  const retrieveFcmToken = async (registration: ServiceWorkerRegistration): Promise<string | null> => {
-    try {
-      if (registration.installing) {
-        await new Promise<void>((resolve) => {
-          registration.installing?.addEventListener("statechange", function (e) {
-            if ((e.target as ServiceWorker).state === "activated") {
-              resolve();
-            }
-          });
+  const retrieveFcmToken = async (
+  registration: ServiceWorkerRegistration
+): Promise<string | null> => {
+  try {
+    if (registration.installing) {
+      await new Promise<void>((resolve) => {
+        registration.installing?.addEventListener("statechange", function (e) {
+          if ((e.target as ServiceWorker).state === "activated") {
+            resolve();
+          }
         });
-      } else if (registration.waiting) {
-        await new Promise<void>((resolve) => {
-          registration.waiting?.addEventListener("statechange", function (e) {
-            if ((e.target as ServiceWorker).state === "activated") {
-              resolve();
-            }
-          });
+      });
+    } else if (registration.waiting) {
+      await new Promise<void>((resolve) => {
+        registration.waiting?.addEventListener("statechange", function (e) {
+          if ((e.target as ServiceWorker).state === "activated") {
+            resolve();
+          }
         });
-      } else if (registration.active) {
-      }
+      });
+    } else if (!registration.active) {
+      return null;
+    }
 
+    if (messaging) {
       const token = await getToken(messaging, {
         vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
         serviceWorkerRegistration: registration,
       });
 
-      return token;
-    } catch (error) {
-      console.error("❌ Error getting FCM token:", error);
-      return 'empty';
+      return token || null;
     }
-  };
+
+    return null;
+  } catch (error) {
+    console.error("❌ Error getting FCM token:", error);
+    return null;
+  }
+};
+
 
   const registerServiceWorker = async (): Promise<ServiceWorkerRegistration> => {
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
@@ -137,21 +135,31 @@ export const LoginForm = () => {
   }
 };
 
+  const getMessageString = (msg: any): string => {
+  if (typeof msg === "string") return msg;
+  if (typeof msg === "object") {
+    return Object.values(msg)[0] as string;
+  }
+  return "حدث خطأ غير متوقع";
+};
+
   const login = useMutation({
     mutationFn: (submitData: FormData) => {
       var myHeaders = new Headers();
       myHeaders.append("local", "ar");
       myHeaders.append("Accept", "application/json");
       var formdata = new FormData();
-      formdata.append("phone", submitData.phone);
+        formdata.append("phone", submitData.phone);
       formdata.append("password", submitData.password);
       return postData("client/login", formdata, myHeaders);
     },
 
     onSuccess: async (data) => {
-      if (data.message !== "success") {
+      const message = getMessageString(data?.message);
+
+      if (message !== "success") {
         addToast({
-          title: data?.message,
+          title: message,
           timeout: 3000,
           shouldShowTimeoutProgress: true,
           variant: "solid",
@@ -159,7 +167,7 @@ export const LoginForm = () => {
         });
       } else {
         addToast({
-          title: data?.message,
+          title: message,
           timeout: 3000,
           shouldShowTimeoutProgress: true,
           variant: "solid",
@@ -179,6 +187,7 @@ export const LoginForm = () => {
       }
     },
 
+
     onError: () => {
       addToast({
         title: "عذرا حدث خطأ ما",
@@ -191,93 +200,46 @@ export const LoginForm = () => {
   });
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-      <Input
-          label="رقم الهاتف"
-          placeholder="نص الكتابه"
-          type="text"
-          {...register("phone")}
-          isInvalid={!!errors.phone?.message}
-          errorMessage={errors.phone?.message}
-          labelPlacement="outside"
-          classNames={{
-            label: "text-[#272727] font-bold text-sm",
-            inputWrapper: "shadow-none border-stroke border-1 ps-3 pe-0",
-            base: "mb-4",
-          }}
-          variant="bordered"
-          endContent={
-            <Controller
-              name="country_code"
-              control={control}
-              defaultValue=""
-              render={({ field }) => (
-                <SelectReact
-                  placeholder="(+)"
-                  {...field}
-                  options={allCountries.map((country: any) => ({
-                    value: country.phone_code,
-                    label: (
-                      <div className="flex items-center gap-2">
-                        <Avatar
-                          className="w-6 h-4"
-                          radius="none"
-                          src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
-                          alt={country.name}
-                        />
-                        <span>
-                          {country.name} ({country.phone_code})
-                        </span>
-                      </div>
-                    ),
-                  }))}
-                  styles={whitePhoneCodeCustomStyles}
-                  isSearchable
-                  onChange={(option: any) => field.onChange(option?.value)}
-                  value={
-                    field.value
-                      ? {
-                        value: field.value,
-                        label: (
-                          <div className="flex items-center gap-2">
-                            <Avatar
-                              className="w-6 h-4"
-                              radius="none"
-                              src={`https://flagcdn.com/w20/${allCountries.find(
-                                (c: any) => c.phone_code === field.value
-                              )?.code.toLowerCase()}.png`}
-                              alt={
-                                allCountries.find(
-                                  (c: any) => c.phone_code === field.value
-                                )?.name
-                              }
-                            />
-                            <span>
-                              {
-                                allCountries.find(
-                                  (c: any) => c.phone_code === field.value
-                                )?.name
-                              }{" "}
-                              ({field.value})
-                            </span>
-                          </div>
-                        ),
-                      }
-                      : null
-                  }
-                />
-                
-              )}
-            />
-            
-          }
-        />
-      <div>
-        {errors.country_code && (
+      {/* Phone Input */}
+      <div className="flex flex-col gap-1">
+        <label className="text-[#272727] font-bold text-sm">رقم الهاتف</label>
+        <div
+        style ={{"direction" : "ltr"}}
+          className={`
+      shadow-none border-stroke border rounded-lg px-3 py-2 flex items-center
+      focus-within:border-primary transition dir-ltr
+    `}
+        >
+          <Controller
+            name="phone"
+            control={control}
+            rules={{
+              required: "برجاء إدخال رقم هاتف",
+              validate: (value) =>
+                isValidPhoneNumber(value || "") || "رقم الهاتف غير صحيح",
+            }}
+            render={({ field }) => (
+              <PhoneInput
+                {...field}
+                defaultCountry="EG"
+                value={field.value}
+                onChange={field.onChange}
+                international
+                countryCallingCodeEditable={false}
+                placeholder="ادخل رقم الهاتف"
+                className="flex-1 text-sm outline-none border-0 focus:ring-0"
+              />
+            )}
+          />
+
+        </div>
+        {errors.phone && (
           <p className="text-red-500 text-xs mt-1">
-            {errors.country_code.message}
+            {errors.phone.message}
           </p>
         )}
       </div>
+
       <Input
         label="كلمة المرور"
         placeholder="نص الكتابه"
@@ -308,6 +270,7 @@ export const LoginForm = () => {
         {login?.isPending && <Spinner color="white" />}
         تسجيل الدخول
       </Button>
+
     </form>
   );
 };

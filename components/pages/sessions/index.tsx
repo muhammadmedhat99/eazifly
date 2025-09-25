@@ -74,33 +74,39 @@ export const AllSessions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDate, setSelectedDate] = useState<any>(today("UTC"));
   const debouncedDateSearch = useDebounce(selectedDate, 500);
+  const [programSearch, setProgramSearch] = useState("");
+  const [showProgramDropdown, setShowProgramDropdown] = useState(false);
+  const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
+  const debouncedProgramSearch = useDebounce(programSearch, 500);
 
-  const [selectedInstructorId, setSelectedInstructorId] = useState<
-    number | null
-  >(null);
+  const [selectedInstructorId, setSelectedInstructorId] = useState<number | null>(null);
 
   const params: Record<string, string | number | boolean> = {
     page: currentPage,
   };
 
-  if (selectedInstructorId) {
+  if (selectedInstructorId !== null) {
     params.instructor_id = selectedInstructorId;
-  } else if (debouncedNameSearch) {
-    params.name = debouncedNameSearch;
-  } else {
-    params.parent = "true";
+  }
+
+  if (selectedProgramId !== null) {
+    params.program_id = selectedProgramId;
   }
 
   if (debouncedNameSearch) {
     params.name = debouncedNameSearch;
   }
 
-  if (!debouncedNameSearch) {
-    params.parent = "true";
-  }
-
   if (debouncedDateSearch) {
     params.date = debouncedDateSearch.toString();
+  }
+
+  if (
+    !selectedInstructorId &&
+    !debouncedNameSearch &&
+    !selectedProgramId
+  ) {
+    params.parent = "true";
   }
 
   const { data: sessionsData, isLoading } = useQuery({
@@ -112,9 +118,12 @@ export const AllSessions = () => {
     queryKey: AllQueryKeys.GetAllSessions(
       debouncedNameSearch,
       debouncedDateSearch.toString(),
-      currentPage
+      currentPage,
+      selectedInstructorId,
+      selectedProgramId
     ),
   });
+
 
   const formattedData =
     sessionsData?.data?.map((item: any) => ({
@@ -178,11 +187,20 @@ export const AllSessions = () => {
 
   const { data: teachersData, isLoading: isTeachersLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/instructors`, {
+      await fetchClient(`client/instructors?status=active&per_page=9999`, {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllInstructors("", "", 1),
+    queryKey: AllQueryKeys.GetAllInstructors("", "", "", 1),
+  });
+
+  const { data: programsData, isLoading: isProgramsLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/program?status=published&per_page=9999`, {
+        ...axios_config,
+        params: { name: debouncedProgramSearch },
+      }),
+    queryKey: AllQueryKeys.GetAllPrograms("", 1),
   });
 
   const filteredTeachers =
@@ -190,15 +208,23 @@ export const AllSessions = () => {
       (t?.name || "").toLowerCase().includes((nameSearch || "").toLowerCase())
     ) || [];
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const instructorDropdownRef = useRef<HTMLDivElement>(null);
+  const programDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        instructorDropdownRef.current &&
+        !instructorDropdownRef.current.contains(event.target as Node)
       ) {
         setShowDropdown(false);
+      }
+
+      if (
+        programDropdownRef.current &&
+        !programDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowProgramDropdown(false);
       }
     };
 
@@ -218,7 +244,7 @@ export const AllSessions = () => {
       <div className="p-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="relative w-full md:min-w-48" ref={dropdownRef}>
+            <div className="relative md:min-w-48" ref={instructorDropdownRef}>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <SearchNormal1
                   size="18"
@@ -272,9 +298,65 @@ export const AllSessions = () => {
                 </ul>
               )}
             </div>
-          </div>
+            <div className="relative md:min-w-48" ref={programDropdownRef}>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <SearchNormal1
+                  size="18"
+                  className="text-gray-400"
+                  variant="Outline"
+                />
+              </div>
+              <input
+                type="text"
+                placeholder="بحث باسم البرنامج..."
+                className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
+                value={programSearch}
+                onChange={(e) => {
+                  setProgramSearch(e.target.value);
+                  setShowProgramDropdown(true);
+                  setSelectedProgramId(null);
+                }}
+                onFocus={() => setShowProgramDropdown(true)}
+              />
 
-          <Dropdown classNames={{ content: "min-w-36" }} showArrow>
+              {showProgramDropdown && (
+                <ul className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg">
+                  {isProgramsLoading ? (
+                    <li className="px-4 py-2 text-gray-500 text-sm">
+                      جاري التحميل...
+                    </li>
+                  ) : programsData?.data?.length ? (
+                    programsData.data.map((program: any) => (
+                      <li
+                        key={program.id}
+                        className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+                        onClick={() => {
+                          setProgramSearch(program.title);
+                          setSelectedProgramId(program.id);
+                          setShowProgramDropdown(false);
+                        }}
+                      >
+                        {program.image && (
+                          <img
+                            src={program.image}
+                            alt={program.title}
+                            className="w-6 h-6 rounded-full"
+                          />
+                        )}
+                        {program.title}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="px-4 py-2 text-gray-500 text-sm">
+                      لا يوجد نتائج
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
+
+          </div>
+          {/* <Dropdown classNames={{ content: "min-w-36" }} showArrow>
             <DropdownTrigger>
               <Button
                 variant="flat"
@@ -296,7 +378,7 @@ export const AllSessions = () => {
               <DropdownItem key="last_active">أخر ظهور</DropdownItem>
               <DropdownItem key="status">الحالة</DropdownItem>
             </DropdownMenu>
-          </Dropdown>
+          </Dropdown> */}
         </div>
 
         <div className="flex items-center gap-2">

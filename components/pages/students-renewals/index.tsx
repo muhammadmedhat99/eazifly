@@ -97,7 +97,7 @@ export const Renewals = () => {
 
   const { data: renewalsData, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/user/subscriptions?search=${debouncedSearch}`, axios_config),
+      await fetchClient(`client/user/subscriptions?search=${debouncedSearch}`, {...axios_config, params}),
     queryKey: AllQueryKeys.GetAllUsers(debouncedSearch, '', currentPage),
   });
 
@@ -146,7 +146,7 @@ export const Renewals = () => {
             ? "danger"
             : item?.status_label?.color,
       },
-    })).reverse() || [];
+    })) || [];
 
   return (
     <>

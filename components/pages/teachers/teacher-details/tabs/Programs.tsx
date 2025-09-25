@@ -26,7 +26,7 @@ import { Options } from "@/components/global/Icons";
 import { fetchClient } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Loader } from "@/components/global/Loader";
 import TableComponent from "@/components/global/Table";
 import { formatDate } from "@/lib/helper";
@@ -77,6 +77,7 @@ const OptionsComponent = () => {
 };
 
 export const Programs = () => {
+  const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const params = useParams();
@@ -217,10 +218,11 @@ export const Programs = () => {
         res?.data?.map((item: any) => ({
           id: item.id,
           name: item.name,
+          user_id: item.user_id,
           avatar: item.image,
           phone: item.phone,
           email: item.email,
-          created_at: item.user_created_at,
+          created_at: formatDate(item.created_at),
           expire_date: item.expire_date,
           DaysToExpire: `${item.DaysToExpire} يوم`,
         })) || [];
@@ -587,6 +589,7 @@ export const Programs = () => {
                             columns={sessionsColumns}
                             data={tabsState[program.id]?.sessions}
                             ActionsComponent={OptionsComponent}
+                            handleRowClick={() => {}}
                           />
                           <div className="my-10 px-6">
                             <CustomPagination
@@ -607,6 +610,7 @@ export const Programs = () => {
                             columns={columns}
                             data={tabsState[program.id]?.students}
                             ActionsComponent={OptionsComponent}
+                            handleRowClick={(item: any) => router.push(`/students/${item.user_id}`)}
                           />
                           <div className="my-10 px-6">
                             <CustomPagination

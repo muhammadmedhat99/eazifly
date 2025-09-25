@@ -21,6 +21,8 @@ import { axios_config } from "@/lib/const";
 import { useParams } from "next/navigation";
 import { Loader } from "@/components/global/Loader";
 import { AllQueryKeys } from "@/keys";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 type StudentDetailsProps = {
   data: {
@@ -48,7 +50,6 @@ const schema = yup
       .email("ادخل بريد إلكتروني صحيح")
       .required("ادخل بريد إلكتروني"),
     phone: yup.string().required("ادخل رقم الهاتف"),
-    country_code: yup.string().required("ادخل كود الدولة"),
     password: yup.string().required("ادخل كلمة المرور"),
     password_confirmation: yup
       .string()
@@ -269,16 +270,39 @@ export const ClientsDetails = ({ data }: StudentDetailsProps) => {
       <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">رقم الهاتف</span>
-          {editField === "phone" ? (
-            <Controller
-              name="phone"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} placeholder="رقم الهاتف" size="sm" />
-              )}
-            />
-          ) : (
-            <span className="text-black-text font-bold text-[15px]">
+            {editField === "phone" ? (
+              <div
+                style={{ "direction": "ltr" }}
+                className={`
+                  shadow-none border-stroke border rounded-lg px-3 py-2 flex items-center
+                  focus-within:border-primary transition dir-ltr
+                `}
+              >
+                <Controller
+                  name="phone"
+                  control={control}
+                  rules={{
+                    required: "برجاء إدخال رقم هاتف",
+                    validate: (value) =>
+                      isValidPhoneNumber(value || "") || "رقم الهاتف غير صحيح",
+                  }}
+                  render={({ field }) => (
+                    <PhoneInput
+                      {...field}
+                      defaultCountry="EG"
+                      value={field.value}
+                      onChange={field.onChange}
+                      international
+                      countryCallingCodeEditable={false}
+                      placeholder="ادخل رقم الهاتف"
+                      className="flex-1 text-sm outline-none border-0 focus:ring-0"
+                    />
+                  )}
+                />
+
+              </div>
+            ) : (
+              <span className="text-black-text font-bold text-[15px]">
               {clientData?.data?.phone}
             </span>
           )}

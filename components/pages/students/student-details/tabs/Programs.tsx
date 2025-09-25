@@ -371,7 +371,7 @@ export const Programs = ({
 
   const instructorsResults = useQueries({
     queries: subscriptionsData.data.map((subscription: Subscription) => ({
-      queryKey: ["instructors", subscription.id],
+      queryKey: ["instructors", subscription.main_subscription_id],
       queryFn: async () =>
         await fetchClient("client/program/instructors", {
           ...axios_config,
@@ -401,12 +401,13 @@ export const Programs = ({
 
   const subaccountsResults = useQueries({
     queries: subscriptionsData.data.map((subscription: Subscription) => ({
-      queryKey: ["programsubaccounts", subscription.id],
+      queryKey: ["programsubaccounts", subscription.main_subscription_id],
       queryFn: async () =>
         await fetchClient(`client/children/users/${user_id}`, {
           ...axios_config,
           params: {
             program_id: subscription.program_id,
+            subscription_id: subscription.main_subscription_id,
           },
         }),
     })),
