@@ -68,46 +68,46 @@ export const ProgramStatistics = () => {
   return (
     <div className="bg-main p-5 flex flex-col gap-5">
       <div className="w-full h-[450px] border border-stroke rounded-xl">
-        <AreaChart
-          width={1280}
-          height={430}
-          data={data}
-          margin={{
-            top: 40,
-            right: 0,
-            left: 20, // Increased to make space for Y-axis outside
-            bottom: 0,
-          }}
-        >
-          <XAxis
-            dataKey="name"
-            strokeOpacity={0.3}
-            tick={{ dx: -10, dy: 10 }}
-            className="font-semibold text-xs"
-          />
-          <YAxis
-            strokeOpacity={0}
-            tick={{ dx: -50 }} // Push ticks outward (left)
-            axisLine={false}
-            tickLine={false}
-            className="text-xs font-semibold"
-          />
-          <Area
-            type="monotone"
-            dataKey="uv"
-            stackId="1"
-            strokeDasharray={"10 10"}
-            stroke="#00000030"
-            fill="#fff"
-          />
-          <Area
-            type="monotone"
-            dataKey="pv"
-            stackId="1"
-            stroke="#000"
-            fill="#00000020"
-          />
-        </AreaChart>
+        <ResponsiveContainer width="100%" height={430}>
+          <AreaChart
+            data={data}
+            margin={{
+              top: 40,
+              right: 0,
+              left: 20,
+              bottom: 0,
+            }}
+          >
+            <XAxis
+              dataKey="name"
+              strokeOpacity={0.3}
+              tick={{ dx: -10, dy: 10 }}
+              className="font-semibold text-xs"
+            />
+            <YAxis
+              strokeOpacity={0}
+              tick={{ dx: -50 }}
+              axisLine={false}
+              tickLine={false}
+              className="text-xs font-semibold"
+            />
+            <Area
+              type="monotone"
+              dataKey="uv"
+              stackId="1"
+              strokeDasharray={"10 10"}
+              stroke="#00000030"
+              fill="#fff"
+            />
+            <Area
+              type="monotone"
+              dataKey="pv"
+              stackId="1"
+              stroke="#000"
+              fill="#00000020"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
       <div className="w-full h-[450px] border border-stroke rounded-xl">
         <ResponsiveContainer width="100%" height={420}>

@@ -172,7 +172,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
       onSubmit={handleSubmit(onSubmit)}
       className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5"
     >
-      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+      <div className="flex items-start justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">الإسم</span>
           {editField === "name" ? (
@@ -243,7 +243,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         )}
       </div>
 
-      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+      <div className="flex items-start justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">
             البريد الإلكتروني
@@ -285,7 +285,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         )}
       </div>
 
-      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+      <div className="flex items-start justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">
             تاريخ الإنشاء
@@ -296,7 +296,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+      <div className="flex items-start justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">رقم الهاتف</span>
           {editField === "phone" ? (
@@ -359,7 +359,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         )}
       </div>
 
-      {!data.data?.parent_id &&<div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+      {!data.data?.parent_id &&<div className="flex items-start justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">الحالة</span>
           <div
@@ -372,7 +372,7 @@ export const Information = ({ data, onUpdated }: StudentDetailsProps) => {
         </div>
       </div>}
 
-      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
+      <div className="flex items-start justify-between bg-main p-5 rounded-2xl border border-stroke">
         <div className="flex flex-col gap-4">
           <span className="text-[#5E5E5E] text-sm font-bold">
             نوع الحساب

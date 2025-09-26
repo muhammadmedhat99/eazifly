@@ -26,6 +26,7 @@ import { useParams } from "next/navigation";
 import { ProgramReportQuestions } from "./tabs/ProgramReportQuestions";
 import { AllQueryKeys } from "@/keys";
 import { Settings } from "./tabs/Settings";
+import { SessionContent } from "./tabs/SessionContent";
 
 type ProgramDetailsProps = {
   data: {
@@ -142,6 +143,9 @@ export const ProgramDetails = () => {
         </Tab>
         <Tab key="report-questions" title="أسئلة التقارير">
           <ProgramReportQuestions data={questionsData} isLoading={isLoading} />
+        </Tab>
+        <Tab key="session-content" title="محتوي الحصة">
+          <SessionContent />
         </Tab>
         <Tab key="statistics" title="الإحصائيات">
           <ProgramStatistics />

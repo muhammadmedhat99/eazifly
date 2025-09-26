@@ -454,11 +454,11 @@ export const Programs = () => {
                     {program.title}
                   </span>
                 </div>
-                <div className="py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="py-4 grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
                   <div className="flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2 md:gap-4">
                       <span className="text-[#5E5E5E] text-sm font-bold text-primary">
-                        عدد الطلاب المشتركين
+                        عدد الطلاب 
                       </span>
                       <span className="text-black-text font-bold text-[15px]">
                         {program.number_of_students}
@@ -466,9 +466,9 @@ export const Programs = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2 md:gap-4">
                       <span className="text-[#5E5E5E] text-sm font-bold text-primary">
-                        سعر ساعة البرنامج
+                        سعر الساعة
                       </span>
                       <span className="text-black-text font-bold text-[15px]">
                         {program.price_per_hour} ج.م
@@ -476,7 +476,7 @@ export const Programs = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2 md:gap-4">
                       <span className="text-[#5E5E5E] text-sm font-bold text-primary">
                         نسبة التجديد
                       </span>

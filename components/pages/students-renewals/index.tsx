@@ -23,6 +23,79 @@ import { Loader } from "@/components/global/Loader";
 import { formatDate } from "@/lib/helper";
 import StudentModal from "./StudentModal";
 
+const statusOptions : any  = {
+  all: "الكل",
+  renew: "سيتم التجديد",
+  not_renewed: "لم يتم التجديد",
+  connected: "تم الاتصال",
+  postpone: "تم تأجيله",
+  no_connections: "لا توجد اتصالات",
+};
+
+const subscriptionOptions : any  = {
+  all: "الكل",
+  expired: "منتهي الصلاحية",
+  expiring_soon: "قريباً",
+};
+
+function StatusDropdown({ selectedStatus, setSelectedStatus } : any) {
+  return (
+    <Dropdown classNames={{ content: "min-w-36" }} showArrow>
+      <DropdownTrigger>
+        <Button
+          variant="flat"
+          color="primary"
+          className="text-primary font-semibold gap-1"
+          radius="sm"
+        >
+          <ArrowDown2 size={14} />
+           حالة التجديد : {statusOptions[selectedStatus] || "اختر الحالة"}
+        </Button>
+      </DropdownTrigger>
+
+      <DropdownMenu
+        aria-label="تغيير حالة التجديد"
+        selectedKeys={[selectedStatus]}
+        selectionMode="single"
+        onAction={(key) => setSelectedStatus(key)}
+      >
+        {Object.entries(statusOptions).map(([key, label]) => (
+          <DropdownItem key={key}>{label as string}</DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
+  );
+}
+
+function SubscriptionDropdown({ subscriptionStatus, setSubscriptionStatus }: any) {
+  return (
+    <Dropdown classNames={{ content: "min-w-36" }} showArrow>
+      <DropdownTrigger>
+        <Button
+          variant="flat"
+          color="primary"
+          className="text-primary font-semibold gap-1"
+          radius="sm"
+        >
+          <ArrowDown2 size={14} />
+          حالة الاشتراك :  {subscriptionOptions[subscriptionStatus] || "حالة الاشتراك"}
+        </Button>
+      </DropdownTrigger>
+
+      <DropdownMenu
+        aria-label="تغيير حالة الاشتراك"
+        selectedKeys={[subscriptionStatus]}
+        selectionMode="single"
+        onAction={(key) => setSubscriptionStatus(key)}
+      >
+        {Object.entries(subscriptionOptions).map(([key, label]) => (
+          <DropdownItem key={key}>{label as string}</DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
+  );
+}
+
 const columns = [
   { name: "إسم الطالب", uid: "renewal_student_name" },
   { name: "بيانات التواصل", uid: "contact_info" },
@@ -57,17 +130,39 @@ const OptionsComponent = ({ id }: { id: number }) => {
 };
 
 export const Renewals = () => {
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 500);
+  const [nameSearch, setNameSearch] = useState("");
+  const [phoneSearch, setPhoneSearch] = useState("");
+  const debouncedNameSearch = useDebounce(nameSearch, 500);
+  const debouncedPhoneSearch = useDebounce(phoneSearch, 500);
+ const [selectedStatus, setSelectedStatus] = useState("all");
+ const [subscriptionStatus, setSubscriptionStatus] = useState("all");
+
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [studentDetails, setStudentDetails] = useState<any>(null)
   const [currentPage, setCurrentPage] = useState(1);
   
-    const params: Record<string, string | number> = {
-      page: currentPage,
-    };
+
+  const params: Record<string, string | number | boolean> = {
+    page: currentPage,
+  };
+
+  if (debouncedNameSearch) {
+    params.user_name = debouncedNameSearch;
+  }
+
+  if (debouncedPhoneSearch) {
+    params.phone = debouncedPhoneSearch;
+  }
+
+  if (selectedStatus !== "all") {
+  params.renewal_status = selectedStatus;
+  }
+
+  if (subscriptionStatus !== "all") {
+  params.subscription_status = subscriptionStatus;
+  }
 
   const handleRowClick = (student: any) => {
     setSelectedStudent(student);
@@ -97,8 +192,14 @@ export const Renewals = () => {
 
   const { data: renewalsData, isLoading } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/user/subscriptions?search=${debouncedSearch}`, {...axios_config, params}),
-    queryKey: AllQueryKeys.GetAllUsers(debouncedSearch, '', currentPage),
+      await fetchClient(`client/user/subscriptions`, { ...axios_config, params }),
+    queryKey: AllQueryKeys.GetAllRenewals(
+      debouncedNameSearch,
+      debouncedPhoneSearch,
+      selectedStatus,
+      subscriptionStatus,
+      currentPage
+    ),
   });
 
   const formattedData =
@@ -150,9 +251,10 @@ export const Renewals = () => {
 
   return (
     <>
-      <div className="p-4 flex items-center justify-between flex-wrap">
-        <div className="flex items-center gap-2">
-          <div className="relative md:min-w-80 w-48">
+      <div className="p-4 flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+          <div className="relative w-full md:w-48">
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <SearchNormal1
                 size="18"
@@ -162,14 +264,27 @@ export const Renewals = () => {
             </div>
             <input
               type="text"
-              placeholder="بحث..."
+              placeholder="بحث بالاسم..."
               className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={nameSearch}
+              onChange={(e) => setNameSearch(e.target.value)}
+            />
+          </div>
+          <div className="relative w-full md:w-48">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <SearchNormal1 size="18" className="text-gray-400" variant="Outline" />
+            </div>
+            <input
+              type="text"
+              placeholder="بحث برقم الهاتف..."
+              className="w-full py-2 h-11 ps-10 pe-4 text-sm text-right border border-stroke rounded-lg focus:outline-none focus:ring-1 focus:ring-stroke bg-light"
+              value={phoneSearch}
+              onChange={(e) => setPhoneSearch(e.target.value)}
             />
           </div>
 
-          <Dropdown classNames={{ content: "min-w-36" }} showArrow>
+        </div>
+        <Dropdown classNames={{ content: "min-w-36" }} showArrow>
             <DropdownTrigger>
               <Button
                 variant="flat"
@@ -188,6 +303,11 @@ export const Renewals = () => {
               <DropdownItem key="status">حالة التجديد</DropdownItem>
             </DropdownMenu>
           </Dropdown>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+          <StatusDropdown selectedStatus={selectedStatus} setSelectedStatus={setSelectedStatus} />
+          <SubscriptionDropdown subscriptionStatus={subscriptionStatus} setSubscriptionStatus={setSubscriptionStatus} />
         </div>
 
       </div>
