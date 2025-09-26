@@ -120,7 +120,7 @@ export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
   };
 
   return (
-    <div className="md:w-[200px] bg-main md:border-e md:border-stroke min-h-screen">
+    <div className="md:w-[200px] bg-main md:border-e md:border-stroke h-full">
       <Image
         src="/img/logo/logo.svg"
         alt="logo"

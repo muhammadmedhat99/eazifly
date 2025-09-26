@@ -200,7 +200,7 @@ export const ProgramReportQuestions = ({ data }: any) => {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex justify-between pt-4">
+      <div className="flex justify-between pt-4 flex-wrap gap-4">
         <div className="flex gap-2">
           <Button
             variant="flat"

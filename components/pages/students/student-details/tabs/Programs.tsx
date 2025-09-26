@@ -457,8 +457,8 @@ export const Programs = ({
               key={index}
               className="bg-main border border-stroke rounded-lg p-5"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-10">
-                <div className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-10">
+                <div className="flex items-center justify-between bg-background p-3 md:p-5 rounded-2xl border border-stroke">
                   <div className="flex flex-col gap-4">
                     <span className="text-primary text-sm font-bold">
                       إسم البرنامج
@@ -469,7 +469,7 @@ export const Programs = ({
                   </div>
                 </div>
 
-                <div className="flex items-end justify-between bg-background p-5 rounded-2xl border border-stroke">
+                <div className="flex items-end justify-between bg-background p-3 md:p-5 rounded-2xl border border-stroke">
                   <div className="flex flex-col gap-4">
                     <span className="text-primary text-sm font-bold">
                       سعر الإشتراك
@@ -485,9 +485,9 @@ export const Programs = ({
                   </Link>
                 </div>
 
-                <div className="flex items-center justify-between p-5 rounded-2xl border border-stroke bg-background">
+                <div className="flex items-center justify-between p-3 md:p-5 rounded-2xl border border-stroke bg-background">
                   <div className="flex flex-col gap-4 w-1/2">
-                    <span className="text-primary text-sm font-bold">
+                    <span className="text-primary text-sm font-bold whitespace-nowrap">
                       {data.data?.parent_name ? "الحساب الأساسي" : "عدد الطلاب المشتركين"}
                     </span>
 
@@ -505,7 +505,7 @@ export const Programs = ({
                   </div>
                 </div>
 
-                <div className="flex items-end justify-between bg-background p-5 rounded-2xl border border-stroke">
+                <div className="flex items-end justify-between bg-background p-3 md:p-5 rounded-2xl border border-stroke">
                   <div className="flex flex-col gap-4">
                     <span className="text-primary text-sm font-bold">
                       حالة الإشتراك
@@ -548,11 +548,11 @@ export const Programs = ({
                             label={`متبقي ${subscription.DaysToExpire} يوم علي تجديد الإشتراك`}
                             value={progressValue}
                             classNames={{
-                              label: "text-sm font-semibold text-black-text",
+                              label: "text-sm font-semibold text-black-text mb-3 sm:mb-0",
                               track: "bg-primary/30",
                             }}
                           />
-                          <div className="flex items-center justify-between mt-3 gap-2">
+                          <div className="flex items-center justify-between mt-5 md:mt-3 gap-2">
                             <div className="text-sm font-semibold text-title whitespace-nowrap">
                               تاريخ الإشتراك
                               <br />

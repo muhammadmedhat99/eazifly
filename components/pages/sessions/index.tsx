@@ -30,7 +30,44 @@ import { Loader } from "@/components/global/Loader";
 import { parseDate, today } from "@internationalized/date";
 import TableSkeleton from "@/components/global/TableSkeleton";
 
-import { formatDate } from "@/lib/helper";
+const statusOptions: any = {
+  all: "الكل",
+  pending: "قيد الانتظار",
+  started: "بدأت",
+  ended: "انتهت",
+  canceled: "تم الإلغاء",
+  missed: "فائتة",
+  finished: "مكتملة",
+};
+
+function StatusDropdown({ selectedStatus, setSelectedStatus } : any) {
+  return (
+    <Dropdown classNames={{ content: "min-w-36" }} showArrow>
+      <DropdownTrigger>
+        <Button
+          variant="flat"
+          color="primary"
+          className="text-primary font-semibold gap-1"
+          radius="sm"
+        >
+          <ArrowDown2 size={14} />
+           الحالة : {statusOptions[selectedStatus] || "اختر الحالة"}
+        </Button>
+      </DropdownTrigger>
+
+      <DropdownMenu
+        aria-label="تغيير الحالة"
+        selectedKeys={[selectedStatus]}
+        selectionMode="single"
+        onAction={(key) => setSelectedStatus(key)}
+      >
+        {Object.entries(statusOptions).map(([key, label]) => (
+          <DropdownItem key={key}>{label as string}</DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
+  );
+}
 
 const columns = [
   { name: "", uid: "avatar" },
@@ -101,13 +138,10 @@ export const AllSessions = () => {
     params.date = debouncedDateSearch.toString();
   }
 
-  if (
-    !selectedInstructorId &&
-    !debouncedNameSearch &&
-    !selectedProgramId
-  ) {
-    params.parent = "true";
+  if (selectedStatus !== "all") {
+    params.status = selectedStatus;
   }
+
 
   const { data: sessionsData, isLoading } = useQuery({
     queryFn: async () =>
@@ -119,8 +153,9 @@ export const AllSessions = () => {
       debouncedNameSearch,
       debouncedDateSearch.toString(),
       currentPage,
+      selectedStatus,
       selectedInstructorId,
-      selectedProgramId
+      selectedProgramId,
     ),
   });
 
@@ -145,18 +180,9 @@ export const AllSessions = () => {
       },
     })) || [];
 
-  const filteredData = useMemo(() => {
-    if (selectedStatus === "all") return formattedData;
-
-    return formattedData.filter((item: any) => {
-      const userStatusKey = item?.status?.key;
-
-      return userStatusKey === selectedStatus;
-    });
-  }, [formattedData, selectedStatus]);
 
   const sortedData = useMemo(() => {
-    let dataToSort = [...filteredData];
+    let dataToSort = [...formattedData];
 
     if (!sortKey) return dataToSort;
 
@@ -183,7 +209,7 @@ export const AllSessions = () => {
         .toString()
         .localeCompare((bVal || "").toString(), "ar");
     });
-  }, [filteredData, sortKey]);
+  }, [formattedData, sortKey]);
 
   const { data: teachersData, isLoading: isTeachersLoading } = useQuery({
     queryFn: async () =>
@@ -241,7 +267,7 @@ export const AllSessions = () => {
 
   return (
     <>
-      <div className="p-4 flex items-center justify-between flex-wrap gap-4">
+      <div className="p-4 flex items-center justify-between flex-wrap sm:flex-nowrap gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="relative md:min-w-48" ref={instructorDropdownRef}>
@@ -356,29 +382,7 @@ export const AllSessions = () => {
             </div>
 
           </div>
-          {/* <Dropdown classNames={{ content: "min-w-36" }} showArrow>
-            <DropdownTrigger>
-              <Button
-                variant="flat"
-                color="primary"
-                className="text-primary font-semibold gap-1"
-                radius="sm"
-              >
-                <ArrowDown2 size={14} />
-                ترتيب حسب
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Static Actions"
-              onAction={(key) => setSortKey(key as string)}
-            >
-              <DropdownItem key="name">الإسم</DropdownItem>
-              <DropdownItem key="phone">رقم الهاتف</DropdownItem>
-              <DropdownItem key="email">البريد الإلكتروني</DropdownItem>
-              <DropdownItem key="last_active">أخر ظهور</DropdownItem>
-              <DropdownItem key="status">الحالة</DropdownItem>
-            </DropdownMenu>
-          </Dropdown> */}
+         
         </div>
 
         <div className="flex items-center gap-2">
@@ -410,53 +414,7 @@ export const AllSessions = () => {
             <ArrowLeft2 size={14} color={"blue"} />
           </button>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            id="all"
-            variant="flat"
-            color={selectedStatus === "all" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
-          >
-            الكل
-          </Button>
-          <Button
-            id="finished"
-            variant="flat"
-            color={selectedStatus === "finished" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
-          >
-            حضور
-          </Button>
-          <Button
-            id="missed"
-            variant="flat"
-            color={selectedStatus === "missed" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
-          >
-            غياب
-          </Button>
-          <Button
-            id="canceled"
-            variant="flat"
-            color={selectedStatus === "canceled" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
-          >
-            ملغية
-          </Button>
-          <Button
-            id="ended"
-            variant="flat"
-            color={selectedStatus === "ended" ? "primary" : "default"}
-            className="font-semibold"
-            onPress={(e) => setSelectedStatus(e.target.id)}
-          >
-            انتهت
-          </Button>
-        </div>
+        <StatusDropdown selectedStatus={selectedStatus} setSelectedStatus={setSelectedStatus} />
       </div>
       {isLoading ? (
         <TableSkeleton columns={columns} rows={6} />
