@@ -327,7 +327,7 @@ export const InformationForm = ({
       </div>
 
       {/* Wrapper Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full col-span-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full md:col-span-4">
         {/* Program description */}
         <div className="col-span-1">
           <LocalizedTextArea

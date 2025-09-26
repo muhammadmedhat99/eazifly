@@ -26,14 +26,16 @@ export const AllQueryKeys = {
     nameSearch: string,
     selectedDate: string,
     currentPage: number,
+    selectedStatus: string,
     selectedInstructorId?: number | null,
-    selectedProgramId?: number | null
+    selectedProgramId?: number | null,
   ) => [
       "GetAllSessions",
       axios_config,
       nameSearch,
       selectedDate,
       currentPage,
+      selectedStatus,
       selectedInstructorId ?? null,
       selectedProgramId ?? null,
     ],

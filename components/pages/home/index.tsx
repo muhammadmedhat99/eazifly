@@ -64,7 +64,7 @@ const statCardsData = [
 const tabs = [
   { key: "summary", title: "ملخص سريع" },
   { key: "statistics", title: "الإحصائيات" },
-  { key: "daily-tasks", title: "المهام اليومية" },
+  // { key: "daily-tasks", title: "المهام اليومية" },
 ];
 
 const StatCard = ({
@@ -159,11 +159,25 @@ const Dashboard: React.FC = () => {
       <h1 className="text-2xl font-bold text-black">الرئيسية</h1>
       <Tabs
         classNames={{
-          base: "mt-10",
-          tabList: "bg-primary/10 h-[40px]",
-          tabContent:
-            "text-sm font-semibold px-7 group-data-[selected=true]:text-white",
-          cursor: "bg-primary text-white",
+          base: "mt-10 w-full",
+          tabList: `
+      bg-primary/10 
+      h-[40px] 
+      flex 
+      overflow-x-auto 
+      sm:overflow-visible 
+      sm:justify-start 
+      rounded-lg
+      scrollbar-hide
+    `,
+          tabContent: `
+      text-sm 
+      font-semibold 
+      px-4 sm:px-7 
+      whitespace-nowrap 
+      group-data-[selected=true]:text-white
+    `,
+          cursor: "bg-primary text-white rounded-md",
         }}
         aria-label="Options"
       >
