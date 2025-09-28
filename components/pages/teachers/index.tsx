@@ -57,7 +57,7 @@ export const AllTeachers = () => {
 const [phoneSearch, setPhoneSearch] = useState("");
 const debouncedNameSearch = useDebounce(nameSearch, 500);
 const debouncedPhoneSearch = useDebounce(phoneSearch, 500);
-const [selectedStatus, setSelectedStatus] = useState("all");
+const [selectedStatus, setSelectedStatus] = useState("active");
 const [currentPage, setCurrentPage] = useState(1);
 
 const params: Record<string, string | number> = {
