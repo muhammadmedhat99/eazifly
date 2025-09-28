@@ -257,7 +257,7 @@ const ActionsComponent = ({
     <>
       <Dropdown isDisabled={!isParent} classNames={{ base: "max-w-40", content: "min-w-36" }}>
         <DropdownTrigger>
-          <button>
+          <button className="px-4 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-100">
             <Options />
           </button>
         </DropdownTrigger>
@@ -543,15 +543,26 @@ export const Programs = ({
                     >
                       <div className="flex items-center justify-between gap-2 w-full overflow-x-auto">
                         <div className="flex-1">
-                          <Progress
-                            className="min-w-96 w-full"
-                            label={`متبقي ${subscription.DaysToExpire} يوم علي تجديد الإشتراك`}
-                            value={progressValue}
-                            classNames={{
-                              label: "text-sm font-semibold text-black-text mb-3 sm:mb-0",
-                              track: "bg-primary/30",
-                            }}
-                          />
+                          <div className="flex flex-col sm:flex-row justify-between gap-2 items-start sm:items-center">
+                            <Progress
+                              className="min-w-96 w-full"
+                              label={`متبقي ${subscription.DaysToExpire} يوم علي تجديد الإشتراك`}
+                              value={progressValue}
+                              classNames={{
+                                label: "text-sm font-semibold text-black-text mb-3 sm:mb-0",
+                                track: "bg-primary/30",
+                              }}
+                            />
+                            <ActionsComponent
+                              id={subscription.program_id}
+                              user_id={user_id}
+                              children_users={subscription.children_users}
+                              subscription_status={subscription.subscription_status.key}
+                              refetchSubscriptions={refetch}
+                              isParent={data.data.parent_id === null}
+                            />
+                          </div>
+
                           <div className="flex items-center justify-between mt-5 md:mt-3 gap-2">
                             <div className="text-sm font-semibold text-title whitespace-nowrap">
                               تاريخ الإشتراك
@@ -590,16 +601,6 @@ export const Programs = ({
                             </div>
                           </div>
                         </div>
-                        <ActionsComponent
-                          id={subscription.program_id}
-                          user_id={user_id}
-                          children_users={subscription.children_users}
-                          subscription_status={
-                            subscription.subscription_status.key
-                          }
-                          refetchSubscriptions={refetch}
-                          isParent={data.data.parent_id === null}
-                        />
                       </div>
                     </Tab>
                   )}
