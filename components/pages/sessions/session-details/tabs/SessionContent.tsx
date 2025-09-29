@@ -17,14 +17,15 @@ type ContentItem = {
   status: string;
   sort: string;
   created_at: string | null;
+  checked: boolean;
+  action_created_at: string | null;
 };
 
-// props بتاعة SessionContent: array
-type ContentDataProps = {
+type Props = {
   contentData: ContentItem[];
 };
 
-export const SessionContent = ({ contentData }: ContentDataProps) => {
+export const SessionContent = ({ contentData }: Props) => {
 
   return (
     <div className="p-5">

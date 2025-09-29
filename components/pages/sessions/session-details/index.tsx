@@ -33,7 +33,7 @@ export const SessionDetails = () => {
      
     const { data: contentData, isLoading } = useQuery({
         queryFn: async () =>
-          await fetchClient(`client/program/session/content/${Number(data?.data?.program_id)}`, axios_config),
+          await fetchClient(`client/program/instructor/session/content/${sessionId}`, axios_config),
         queryKey: ["GetSessionContent", data?.data?.program_id]
       });
   
