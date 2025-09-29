@@ -386,8 +386,9 @@ export const AllSessions = () => {
          
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <button
             onClick={() => setSelectedDate(today("UTC"))}
             className="font-semibold w-fit bg-blue-100 text-blue-700 px-4 py-2 rounded-lg shadow-md"
           >
@@ -396,7 +397,9 @@ export const AllSessions = () => {
           <div className="bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg shadow-md text-center w-28">
             {dayName(selectedDate)}
           </div>
-          <button
+          </div>
+          <div className="flex items-center gap-2">
+            <button
             onClick={() => {
               setSelectedDate(selectedDate.subtract({ days: 1 }));
             }}
@@ -405,9 +408,10 @@ export const AllSessions = () => {
             <ArrowRight2 size={14} color={"blue"} />
           </button>
           <DatePicker
-            className="max-w-[284px]"
+            className="max-w-[200px]"
             value={selectedDate}
             onChange={setSelectedDate}
+            granularity="day"
           />
           <button
             onClick={() => {
@@ -418,6 +422,7 @@ export const AllSessions = () => {
           >
             <ArrowLeft2 size={14} color={"blue"} />
           </button>
+          </div>
         </div>
         <StatusDropdown selectedStatus={selectedStatus} setSelectedStatus={setSelectedStatus} />
       </div>
