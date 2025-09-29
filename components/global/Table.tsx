@@ -12,12 +12,13 @@ import {
   User,
   Chip,
   Avatar,
+  addToast,
 } from "@heroui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Trash } from "iconsax-reactjs";
+import { Copy, Trash } from "iconsax-reactjs";
 
 export default function TableComponent({
   columns,
@@ -160,9 +161,24 @@ export default function TableComponent({
       case "contact_info":
         return (
           <div className="flex flex-col gap-1">
-            <span className="text-[#272727] text-sm font-bold">
-              {item.contact_info?.phone}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[#272727] text-sm font-bold">
+                {item.contact_info?.phone}
+              </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(item.contact_info?.phone);
+                  addToast({
+                    title: "تم نسخ الرقم",
+                    color: "success",
+                  });
+                }}
+                className="text-gray-500 hover:text-black"
+              >
+                <Copy size={16} />
+              </button>
+            </div>
             <span className="text-[#5E5E5E] text-sm font-semibold">
               {item.contact_info?.email}
             </span>
@@ -171,11 +187,13 @@ export default function TableComponent({
       
       case "last_contact_days":
         return (
-            <span className="text-sm font-semibold text-light">
-              قبل {item.last_contact_days} يوم
-            </span>
+          <span className="text-sm font-semibold text-light">
+            {item.last_contact_days && item.last_contact_days !== "-"
+              ? `قبل ${item.last_contact_days} يوم`
+              : "لا يوجد تواصل"}
+          </span>
         );
-      
+
       case "actions":
         return (
           <React.Fragment>
@@ -218,7 +236,7 @@ export default function TableComponent({
           onClick={() => typeof handleRowClick === "function" ? handleRowClick(item) : router.push(`${pathname}/${item?.id}`)} 
           className={"cursor-pointer"}>
             {(columnKey) => (
-              <TableCell className="text-sm font-semibold text-light">
+              <TableCell className="text-sm font-semibold text-light whitespace-nowrap">
                 {renderCell(item, columnKey)}
               </TableCell>
             )}

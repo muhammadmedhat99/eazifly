@@ -213,7 +213,7 @@ export const Renewals = () => {
       id: item.id,
       user_id: item.user_id,
       renewal_student_name: item.user_name,
-      subscripe_date: item.subscripe_date ? formatDate(item.subscripe_date) : null,
+      subscripe_date: item.subscripe_date || '',
       contact_info: {
       phone: item.user_phone,
       email: item.user_email,
@@ -223,7 +223,7 @@ export const Renewals = () => {
         : null,
       last_contact_days: item.last_contact_days,
       renewal_amount: item.subscriped_price,
-      renewal_date: item.expire_date ? formatDate(item.expire_date) : null,
+      renewal_date: item.expire_date || '',
       expire_date: item.expire_date,
       avg_renewal_days: item.average_renewal_days,
       subscription_status: {
