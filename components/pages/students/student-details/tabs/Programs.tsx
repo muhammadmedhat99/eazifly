@@ -545,7 +545,11 @@ export const Programs = ({
                         <div className="flex-1">
                           <div className="flex flex-col gap-2 items-start">
                             <div className="flex justify-between items-center w-full">
-                              <label className="text-sm font-semibold text-black-text">{`متبقي ${subscription.DaysToExpire} يوم علي تجديد الإشتراك`}</label>
+                              <label className="text-sm font-semibold text-black-text">
+                                {String(subscription.DaysToExpire) === "expired"
+                                  ? "expired"
+                                  : `متبقي ${subscription.DaysToExpire} يوم علي تجديد الإشتراك`}
+                              </label>
                               <ActionsComponent
                                 id={subscription.program_id}
                                 user_id={user_id}
