@@ -19,7 +19,7 @@ export const permissionsMap: Record<string, string> = {
   "/monitoring": "monitoring",
   "/monitoring/current-lectures": "current-lectures",
   "/monitoring/teacher-reports": "teacher-reports",
-  "/sessions": "sessions",
+  // "/sessions": "sessions",
   "/settings/general": "permission_read",
   "/settings/countries": "country_read",
   "/settings/specializations": "specialization_read",

@@ -92,35 +92,26 @@ export default function WeeklyWorkingHours() {
             key={day}
             className="flex items-center justify-between mb-4 border p-4 rounded-lg bg-gray-50 overflow-x-auto gap-8"
           >
-            <div className="flex flex-col sm:flex-row items-start md:items-center gap-2 mb-2">
-              <label className="text-[#272727] font-bold text-sm w-20">
+            <div className="flex items-start gap-2 mb-2">
+              <label className="text-[#272727] font-bold text-sm w-20 pt-4">
                 {day}
               </label>
 
-              <div className="flex flex-wrap gap-2 flex-1">
+              <div className="grid grid-cols-1 gap-2">
                 {workingHours[dayIndex].length === 0 ? (
                   <div className="px-6 py-3 bg-gray-100 rounded-lg inline-flex justify-center items-center gap-0.5 text-sm font-bold">
                     غير متاح
                   </div>
                 ) : (
                   workingHours[dayIndex].map((range, rangeIndex) => (
-                    <div key={rangeIndex} className="flex gap-2 w-full sm:w-[calc(50%-0.5rem)]">
-                      <input
-                        type="time"
-                        value={range.from}
-                        onChange={(e) =>
-                          handleTimeChange(dayIndex, rangeIndex, 'from', e.target.value)
-                        }
-                        className="w-1/2 px-2 md:px-4 py-3 bg-gray-100 rounded-lg text-sm font-semibold"
-                      />
-                      <input
-                        type="time"
-                        value={range.to}
-                        onChange={(e) =>
-                          handleTimeChange(dayIndex, rangeIndex, 'to', e.target.value)
-                        }
-                        className="w-1/2 px-2 md:px-4 py-3 bg-gray-100 rounded-lg text-sm font-semibold"
-                      />
+                    <div key={rangeIndex} className="flex gap-2 w-full">
+                      <div className="w-1/2 px-6 py-3 md:px-8 bg-gray-100 rounded-lg inline-flex justify-center items-center gap-0.5 text-sm font-bold">
+                        {range.from}
+                      </div>
+                    
+                      <div className="w-1/2 px-6 py-3 bg-gray-100 rounded-lg inline-flex justify-center items-center gap-0.5 text-sm font-bold">
+                        {range.to}
+                      </div>
                     </div>
                   ))
                 )}

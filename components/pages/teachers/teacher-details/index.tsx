@@ -10,6 +10,7 @@ import { TeacherReports } from "./tabs/TeacherReports";
 import { useState } from "react";
 import { Reports } from "../../students/student-details/tabs/ProgramTabs/reports";
 import { Hostinglinks } from "./tabs/Hostinglinks";
+import { WorkingHours } from "./tabs/WorkingHours";
 
 
 type TeacherDetailsProps = {
@@ -98,6 +99,9 @@ export const TeacherDetails = ({ data, reportsData }: TeacherDetailsProps) => {
           <Hostinglinks
             data={{ data: teacherData }}
           />
+        </Tab>
+        <Tab key="working_hours" title="مواعيد العمل">
+          <WorkingHours />
         </Tab>
       </Tabs>
     </div>
