@@ -21,6 +21,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,6 +31,8 @@ import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { formatDate } from "@/lib/helper";
 import { Trash } from "iconsax-reactjs";
+import { AllQueryKeys } from "@/keys";
+import { Controller, useForm } from "react-hook-form";
 
 type Field = {
   title: string;
@@ -89,7 +93,7 @@ const SortableCard = ({ session, onEdit, onToggleStatus }: { session: any; onEdi
       <div className="space-y-2 text-sm text-gray-700">
         <p>
           <span className="font-bold text-gray-600">المدة: </span>
-          {session.duration}
+          {session.duration} دقيقة
         </p>
         <p>
           <span className="font-bold text-gray-600">النوع: </span>
@@ -313,6 +317,15 @@ export const SessionContent = ({ data }: any) => {
     },
     onError: () => addToast({ title: "عذرا حدث خطأ ما", color: "danger" }),
   });
+
+  const { control } = useForm();
+
+  const { data: sessionPeriods, isLoading: sessionPeriodsLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/plan/session/time`, axios_config),
+    queryKey: AllQueryKeys.GetAllSessionTimes,
+  });
+
   // ===== Render =====
   return (
     <div className="p-4 space-y-4">
@@ -415,14 +428,38 @@ export const SessionContent = ({ data }: any) => {
                       variant="bordered"
                     />
 
-                    <Input
-                      label="المدة"
-                      type="number"
-                      value={field.duration}
-                      onChange={(e) => handleChange(index, "duration", e.target.value)}
-                      placeholder="أدخل المدة"
-                      variant="bordered"
-                      labelPlacement="outside"
+                    <Controller
+                      name={`fields.${index}.duration`}
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          selectedKeys={field.value ? new Set([String(field.value)]) : new Set()}
+                          onSelectionChange={(keys: any) => {
+                            const selectedVal = Array.from(keys)[0] as string | undefined;
+                            field.onChange(selectedVal); // يخزن في RHF
+                            handleChange(index, "duration", selectedVal || ""); // يخزن في fields
+                          }}
+                          label="المدة"
+                          labelPlacement="outside"
+                          placeholder="اختر المدة"
+                          classNames={{
+                            trigger:
+                              "bg-white border rounded-xl shadow-none data-[hover=true]:bg-white",
+                          }}
+                          radius="none"
+                          renderValue={(selectedItems) =>
+                            selectedItems.length ? selectedItems[0]?.props?.children : "اختر مدة المحاضرة"
+                          }
+                        >
+                          {sessionPeriods?.data.map(
+                            (item: { id: string; time: string; title: string }) => (
+                              <SelectItem key={item.time}>
+                                {item.time} دقيقة
+                              </SelectItem>
+                            )
+                          )}
+                        </Select>
+                      )}
                     />
 
                     <RadioGroup
@@ -467,15 +504,37 @@ export const SessionContent = ({ data }: any) => {
                     labelPlacement="outside"
                   />
 
-                  <Input
+                  <Select
+                    selectedKeys={
+                      editField?.duration ? new Set([String(editField.duration)]) : new Set()
+                    }
+                    onSelectionChange={(keys: any) => {
+                      const selectedVal = Array.from(keys)[0] as string | undefined;
+                      setEditField((prev) =>
+                        prev ? { ...prev, duration: selectedVal || "" } : prev
+                      );
+                    }}
                     label="المدة"
-                    type="number"
-                    value={editField.duration}
-                    onChange={(e) => setEditField({ ...editField, duration: e.target.value })}
-                    placeholder="أدخل المدة"
-                    variant="bordered"
                     labelPlacement="outside"
-                  />
+                    placeholder="اختر المدة"
+                    classNames={{
+                      trigger:
+                        "bg-white border rounded-xl shadow-none data-[hover=true]:bg-white",
+                    }}
+                    radius="none"
+                    renderValue={(selectedItems) =>
+                      selectedItems.length
+                        ? selectedItems[0]?.props?.children
+                        : "اختر مدة المحاضرة"
+                    }
+                  >
+                    {sessionPeriods?.data.map(
+                      (item: { id: string; time: string; title: string }) => (
+                        <SelectItem key={item.time}>{item.time} دقيقة</SelectItem>
+                      )
+                    )}
+                  </Select>
+
 
                   <RadioGroup
                     label="النوع"
