@@ -670,6 +670,7 @@ export const Programs = ({
                       data={data}
                       student_number={subscription.student_number}
                       refetchTeachers={teacherResult?.refetch}
+                      expire_date={subscription.expire_date}
                     />
                   </Tab>
                 </Tabs>

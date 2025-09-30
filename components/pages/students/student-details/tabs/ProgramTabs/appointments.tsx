@@ -1,5 +1,5 @@
 "use client";
-import { Edit2 } from "iconsax-reactjs";
+import { Edit2, Trash } from "iconsax-reactjs";
 import { Loader } from "@/components/global/Loader";
 import {
   Modal,
@@ -22,10 +22,14 @@ import { getCookie } from "cookies-next";
 import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { CustomPagination } from "@/components/global/Pagination";
+import { AllQueryKeys } from "@/keys";
 
 type appointmentsProps = {
   appointmentData?: any;
   isLoadingappointment: boolean;
+  expire_date: any;
+  currentStudent : any;
+  refetch: any;
 };
 
 const schema = yup
@@ -47,19 +51,25 @@ type ChangeAppointmentData = FormData & {
 export const Appointments = ({
   appointmentData,
   isLoadingappointment,
+  expire_date,
+  currentStudent,
+  refetch
 }: appointmentsProps) => {
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
+  const [selectedReasons, setSelectedReasons] = useState<number[]>([]);
 
   const { data: AilabilitiesSessions, isLoading } = useQuery({
     enabled: !!selectedAppointment,
     queryKey: ["GetavAilabilitiesSessions"],
     queryFn: async () =>
       await fetchClient(
-        `client/session/availabilities/time/${selectedAppointment.instructor_id}?duration=${selectedAppointment.duration}`,
+        `client/session/availabilities/time/${selectedAppointment.instructor_id}?duration=${selectedAppointment.duration}&expire_date=${expire_date}`,
         axios_config
       ),
   });
@@ -96,6 +106,12 @@ export const Appointments = ({
     }));
   }, [AilabilitiesSessions, selectedDay]);
 
+  const { data: cancelSessionsReasons } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/reason/cancel/session`, axios_config),
+    queryKey: AllQueryKeys.GetAllSpecializations
+  });
+
   const {
     handleSubmit,
     formState: { errors },
@@ -130,9 +146,7 @@ export const Appointments = ({
         });
         reset();
         setIsModalOpen(false);
-        queryClient.invalidateQueries({
-          queryKey: ["programappointments"],
-        });
+        refetch();
       } else if (data.status === 422) {
         const msg = data.message?.appointments?.[0];
         addToast({
@@ -191,6 +205,45 @@ export const Appointments = ({
     [reset]
   );
 
+  const CancelAppointment = useMutation({
+    mutationFn: async (payload: { meeting_session_id: number; reason_to_cancel_session_ids: number[] }) => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+      formdata.append("meeting_session_id", payload.meeting_session_id.toString());
+      payload.reason_to_cancel_session_ids.forEach((id) =>
+        formdata.append("reason_to_cancel_session_ids[]", id.toString())
+      );
+
+      return postData(`client/cancel/session`, formdata, myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.status === 201) {
+        addToast({
+          title: data?.message,
+          color: "success",
+        });
+        setIsCancelModalOpen(false);
+        setSelectedReasons([]);
+        refetch();
+      } else {
+        addToast({
+          title: "عذرا حدث خطأ ما",
+          color: "danger",
+        });
+      }
+    },
+    onError: () => {
+      addToast({
+        title: "عذرا حدث خطأ ما",
+        color: "danger",
+      });
+    },
+  });
+
   return (
     <div className="flex flex-col gap-2">
       {isLoadingappointment ? (
@@ -236,7 +289,7 @@ export const Appointments = ({
                   </span>
                 </div>
               </div>
-              <div>
+              <div className="flex gap-6 items-center">
                 <button
                   onClick={() => {
                     setSelectedAppointment(appointment);
@@ -248,6 +301,18 @@ export const Appointments = ({
                   <Edit2 size={18} />
                   تعديل
                 </button>
+                <button
+                  onClick={() => {
+                    setSelectedAppointment(appointment);
+                    setIsCancelModalOpen(true);
+                  }}
+                  type="button"
+                  className="flex items-center gap-1 text-sm font-bold text-danger"
+                >
+                  <Trash size={18} />
+                  إلغاء
+                </button>
+
               </div>
             </div>
           )
@@ -348,6 +413,107 @@ export const Appointments = ({
           )}
         </ModalContent>
       </Modal>
+      <Modal
+        isOpen={isCancelModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsCancelModalOpen(false);
+            setSelectedAppointment(null);
+          }
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className="text-lg font-bold text-[#272727] flex justify-center">
+            هل تريد إلغاء المحاضرة؟
+          </ModalHeader>
+          <ModalBody className="flex flex-col gap-4 items-center mb-3">
+            <div className="flex gap-4 items-center w-full">
+              <Button
+                color="primary"
+                variant="bordered"
+                className="w-full text-primary font-bold"
+                onPress={() => {
+                  setIsCancelModalOpen(false);
+                  setIsModalOpen(true);
+                }}
+              >
+                تحديد ميعاد آخر
+              </Button>
+
+              <Button
+                color="danger"
+                variant="bordered"
+                className="w-full text-danger font-bold"
+                onPress={() => {
+                  setIsCancelModalOpen(false);
+                  setIsReasonModalOpen(true);
+                }}
+              >
+                تأكيد الإلغاء
+              </Button>
+            </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={isReasonModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsReasonModalOpen(false);
+            setSelectedReasons([]);
+          }
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className="text-lg font-bold text-[#272727] flex justify-center">
+            اختر سبب/أسباب الإلغاء
+          </ModalHeader>
+          <ModalBody className="flex flex-col gap-6 mb-3">
+            <div className="flex flex-col gap-3">
+              {cancelSessionsReasons?.data?.map((reason: any) => (
+                <label key={reason.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    value={reason.id}
+                    checked={selectedReasons.includes(reason.id)}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      if (e.target.checked) {
+                        setSelectedReasons((prev) => [...prev, value]);
+                      } else {
+                        setSelectedReasons((prev) =>
+                          prev.filter((id) => id !== value)
+                        );
+                      }
+                    }}
+                  />
+                  <span>{reason.title_ar}</span>
+                </label>
+              ))}
+            </div>
+
+            <Button
+              color="danger"
+              variant="bordered"
+              className="w-full text-danger font-bold"
+              isLoading={CancelAppointment.isPending}
+              isDisabled={selectedReasons.length === 0}
+              onPress={() => {
+                if (selectedAppointment?.id) {
+                  CancelAppointment.mutate({
+                    meeting_session_id: selectedAppointment.id,
+                    reason_to_cancel_session_ids: selectedReasons,
+                  });
+                }
+              }}
+            >
+              تأكيد الإلغاء
+            </Button>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
       <div className="my-10 px-6">
         <CustomPagination
           currentPage={currentPage}
