@@ -257,7 +257,7 @@ const ActionsComponent = ({
     <>
       <Dropdown isDisabled={!isParent} classNames={{ base: "max-w-40", content: "min-w-36" }}>
         <DropdownTrigger>
-          <button>
+          <button className="px-4 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-100">
             <Options />
           </button>
         </DropdownTrigger>
@@ -543,16 +543,34 @@ export const Programs = ({
                     >
                       <div className="flex items-center justify-between gap-2 w-full overflow-x-auto">
                         <div className="flex-1">
-                          <Progress
-                            className="min-w-96 w-full"
-                            label={`متبقي ${subscription.DaysToExpire} يوم علي تجديد الإشتراك`}
-                            value={progressValue}
-                            classNames={{
-                              label: "text-sm font-semibold text-black-text mb-3 sm:mb-0",
-                              track: "bg-primary/30",
-                            }}
-                          />
-                          <div className="flex items-center justify-between mt-5 md:mt-3 gap-2">
+                          <div className="flex flex-col gap-2 items-start">
+                            <div className="flex justify-between items-center w-full">
+                              <label className="text-sm font-semibold text-black-text">
+                                {String(subscription.DaysToExpire) === "expired"
+                                  ? "expired"
+                                  : `متبقي ${subscription.DaysToExpire} يوم علي تجديد الإشتراك`}
+                              </label>
+                              <ActionsComponent
+                                id={subscription.program_id}
+                                user_id={user_id}
+                                children_users={subscription.children_users}
+                                subscription_status={subscription.subscription_status.key}
+                                refetchSubscriptions={refetch}
+                                isParent={data.data.parent_id === null}
+                              />
+                            </div>
+                            <Progress
+                              className="w-full"
+                              value={progressValue}
+                              classNames={{
+                                label: "text-sm font-semibold text-black-text mb-3 sm:mb-0",
+                                track: "bg-primary/30",
+                              }}
+                            />
+                            
+                          </div>
+
+                          <div className="hidden md:flex items-center justify-between mt-5 md:mt-3 gap-2">
                             <div className="text-sm font-semibold text-title whitespace-nowrap">
                               تاريخ الإشتراك
                               <br />
@@ -589,17 +607,45 @@ export const Programs = ({
                               {subscription.expire_date}
                             </div>
                           </div>
+
+                          <div className="grid grid-cols-2 gap-4 mt-5 md:hidden">
+                            <div className="text-sm font-semibold text-title whitespace-nowrap">
+                              تاريخ الإشتراك
+                              <br />
+                              {subscription.subscription_date}
+                            </div>
+
+
+                              <div className="text-sm font-semibold text-title whitespace-nowrap">
+                                عدد الحصص الفائتة
+                                <br />
+                                <span className="text-primary">
+                                  {subscription.missed_sessions}
+                                </span>
+                              </div>
+                              <div className="text-sm font-semibold text-title whitespace-nowrap">
+                                عدد الحصص المكتملة
+                                <br />
+                                <span className="text-primary">
+                                  {subscription.completed_sessions}
+                                </span>
+                              </div>
+                              <div className="text-sm font-semibold text-title whitespace-nowrap">
+                                عدد الطلاب
+                                <br />
+                                <span className="text-primary">
+                                  {subscription.student_number}
+                                </span>
+                              </div>
+
+
+                            <div className="text-sm font-semibold text-title whitespace-nowrap">
+                              تاريخ الإنتهاء
+                              <br />
+                              {subscription.expire_date}
+                            </div>
+                          </div>
                         </div>
-                        <ActionsComponent
-                          id={subscription.program_id}
-                          user_id={user_id}
-                          children_users={subscription.children_users}
-                          subscription_status={
-                            subscription.subscription_status.key
-                          }
-                          refetchSubscriptions={refetch}
-                          isParent={data.data.parent_id === null}
-                        />
                       </div>
                     </Tab>
                   )}

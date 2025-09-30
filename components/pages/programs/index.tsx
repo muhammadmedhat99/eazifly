@@ -22,7 +22,6 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 
 const columns = [
-  { name: "صورة البرنامج", uid: "image" },
   { name: "إسم البرنامج", uid: "program_name" },
   { name: "المعلمين المشتركين", uid: "related_teachers" },
   { name: "عدد الطلاب المشتركين", uid: "all_students" },
@@ -66,15 +65,6 @@ export const AllPrograms = () => {
 
   const tableData = allPrograms?.data?.map((item: any) => ({
     id: item?.id,
-    image: (
-      <Image
-        src={item?.image || "/img/static/program_image.png"}
-        alt="table image"
-        width={1440}
-        height={120}
-        className="h-10 w-full object-cover"
-      />
-    ),
     program_name: item?.title || "N/A",
     related_teachers: (
       <AvatarGroup isBordered max={3}>

@@ -145,6 +145,7 @@ export default function SubscriptionActionModal({
                         control={control}
                         selectedTab={selectedTab}
                         setSelectedTab={setSelectedTab}
+                        program_id={subscriptionId}
                     />
                 );
             default:

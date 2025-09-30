@@ -92,39 +92,36 @@ export default function WeeklyWorkingHours() {
             key={day}
             className="flex items-center justify-between mb-4 border p-4 rounded-lg bg-gray-50 overflow-x-auto gap-8"
           >
-            <div className="flex items-center justify-between gap-2">
-              <label className="text-[#272727] font-bold text-sm w-20">{day}</label>
-              {workingHours[dayIndex].length === 0 ? (
-                <div className="px-6 py-3 bg-gray-100 rounded-lg inline-flex justify-center items-center gap-0.5 text-sm font-bold">
-                  غير متاح
-                </div>
-              ) : (
-                workingHours[dayIndex].map((range, rangeIndex) => (
-                  <div key={rangeIndex} className="flex gap-2">
-                    <input
-                      type="time"
-                      value={range.to}
-                      onChange={(e) =>
-                        handleTimeChange(dayIndex, rangeIndex, 'to', e.target.value)
-                      }
-                      className="px-6 py-3 bg-gray-100 rounded-lg inline-flex justify-center items-center gap-0 text-sm font-semibold"
-                    />
-                    <input
-                      type="time"
-                      value={range.from}
-                      onChange={(e) =>
-                        handleTimeChange(dayIndex, rangeIndex, 'from', e.target.value)
-                      }
-                      className="px-6 py-3 bg-gray-100 rounded-lg inline-flex justify-center items-center gap-0 text-sm font-semibold"
-                    />
+            <div className="flex items-start gap-2 mb-2">
+              <label className="text-[#272727] font-bold text-sm w-20 pt-4">
+                {day}
+              </label>
+
+              <div className="grid grid-cols-1 gap-2">
+                {workingHours[dayIndex].length === 0 ? (
+                  <div className="px-6 py-3 bg-gray-100 rounded-lg inline-flex justify-center items-center gap-0.5 text-sm font-bold">
+                    غير متاح
                   </div>
-                ))
-              )}
+                ) : (
+                  workingHours[dayIndex].map((range, rangeIndex) => (
+                    <div key={rangeIndex} className="flex gap-2 w-full">
+                      <div className="w-1/2 px-6 py-3 md:px-8 bg-gray-100 rounded-lg inline-flex justify-center items-center gap-0.5 text-sm font-bold">
+                        {range.from}
+                      </div>
+                    
+                      <div className="w-1/2 px-6 py-3 bg-gray-100 rounded-lg inline-flex justify-center items-center gap-0.5 text-sm font-bold">
+                        {range.to}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-            <Link href="#" className="flex items-center gap-1">
+
+            <button disabled className="hidden md:flex items-center gap-1 opacity-50 ">
               <Edit2 size={18} />
               <span className="text-sm font-bold">تعديل</span>
-            </Link>
+            </button>
           </div>
         ))}
       </div>

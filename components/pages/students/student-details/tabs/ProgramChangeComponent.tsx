@@ -1,8 +1,11 @@
 import { DropzoneField } from "@/components/global/DropZoneField";
+import { postData } from "@/lib/utils";
 import { Tabs, Tab, Select, SelectItem, Input } from "@heroui/react";
 import { Checkbox } from "@heroui/react";
 import { User } from "@heroui/react";
-import { Controller } from "react-hook-form";
+import { getCookie } from "cookies-next";
+import { useEffect, useState } from "react";
+import { Controller, useWatch } from "react-hook-form";
 
 type ChildUser = {
   user_id: string;
@@ -24,6 +27,7 @@ type Props = {
   control: any;
   selectedTab: string;
   setSelectedTab: (value: string) => void;
+  program_id: any;
 };
 
 const ProgramChangeComponent = ({
@@ -32,7 +36,11 @@ const ProgramChangeComponent = ({
   control,
   selectedTab,
   setSelectedTab,
+  program_id,
 }: Props) => {
+  const [discountPrice, setDiscountPrice] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
   if (!data) return null;
 
   const {
@@ -46,6 +54,53 @@ const ProgramChangeComponent = ({
     title: month ?? "-",
     value: subscripe_days[index] || "",
   }));
+
+  const watchedValues = useWatch({
+    control,
+    name: ["subscripe_days", "number_of_session_per_week", "duration"],
+  });
+
+  const fetchPlanPrice = async (formValues: any) => {
+    try {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+      formdata.append("subscripe_days", formValues.subscripe_days);
+      formdata.append("program_id", program_id);
+      formdata.append("number_of_session_per_week", formValues.number_of_session_per_week);
+      formdata.append("duration", formValues.duration);
+
+      const res = await postData("client/program/plan", formdata, myHeaders);
+
+      if (res.data?.discount_price) {
+        setDiscountPrice(res.data.discount_price);
+        setErrorMsg("");
+      } else {
+        setDiscountPrice("");
+        setErrorMsg(res.message || "خطة الاشتراك غير متاحة");
+      }
+    } catch (err) {
+      console.error("Error fetching plan price", err);
+      setDiscountPrice("");
+      setErrorMsg("حدث خطأ أثناء جلب السعر");
+    }
+  };
+
+
+  useEffect(() => {
+    const [subscripe_days, number_of_session_per_week, duration] = watchedValues;
+
+    if (subscripe_days && program_id && number_of_session_per_week && duration) {
+      fetchPlanPrice({
+        subscripe_days,
+        number_of_session_per_week,
+        duration,
+      });
+    }
+  }, [watchedValues, program_id]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -209,6 +264,31 @@ const ProgramChangeComponent = ({
             />
           )}
         />
+        <Controller
+          name="amount_to_be_paid"
+          control={control}
+          render={({ field }) => (
+            <Input
+              {...field}
+              isDisabled
+              value={discountPrice || errorMsg}
+              label="المبلغ المستحق"
+              placeholder="0"
+              labelPlacement="outside"
+              endContent={
+                discountPrice && (
+                  <span className="text-black-text font-bold text-sm">ج.م</span>
+                )
+              }
+              classNames={{
+                label: "text-[#272727] font-bold text-sm",
+                inputWrapper: "shadow-none",
+                input: errorMsg ? "text-red-500 font-bold" : "text-black-text",
+              }}
+            />
+          )}
+        />
+
         <Controller
           name="paid"
           control={control}

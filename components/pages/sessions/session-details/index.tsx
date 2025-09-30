@@ -20,6 +20,7 @@ import { useParams } from "next/navigation";
 import { MainInformation } from "./tabs/MainInformation";
 import { Assignments } from "./tabs/Assignments";
 import { Reports } from "./tabs/Reports";
+import { SessionContent } from "./tabs/SessionContent";
 
 
 export const SessionDetails = () => {
@@ -29,6 +30,13 @@ export const SessionDetails = () => {
       queryKey: ["GetSessionDetails", sessionId],
       queryFn: async () => await fetchClient(`client/session/show/${sessionId}`, axios_config),
     });
+     
+    const { data: contentData, isLoading } = useQuery({
+        queryFn: async () =>
+          await fetchClient(`client/program/instructor/session/content/${sessionId}`, axios_config),
+        queryKey: ["GetSessionContent", data?.data?.program_id]
+      });
+  
   return (
     <div className="flex w-full flex-col">
       <Tabs
@@ -50,6 +58,9 @@ export const SessionDetails = () => {
         </Tab>
         <Tab key="subscriptions" title="التقارير">
           <Reports/>
+        </Tab>
+        <Tab key="SessionContent" title="محتوي الحصة">
+          <SessionContent contentData={contentData?.data}/>
         </Tab>
         <Tab key="session" title="تسجيل الحصة" isDisabled>
           

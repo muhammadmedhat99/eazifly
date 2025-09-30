@@ -3,7 +3,6 @@ import { Edit2 } from "iconsax-reactjs";
 import Link from "next/link";
 
 import { addToast, Avatar, Button, Input, Select, SelectItem } from "@heroui/react";
-import WeeklyWorkingHours from "./WeeklyWorkingHours";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { DropzoneField } from "@/components/global/DropZoneField";
@@ -591,13 +590,6 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
         >
           إرسال رسالة
         </Button>
-      </div>
-
-      <div className="md:col-span-2 flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
-        <div className="flex flex-col gap-4 w-full">
-          <span className="text-[#5E5E5E] text-sm font-bold text-primary">مواعيد العمل</span>
-          <WeeklyWorkingHours/>
-        </div>
       </div>
 
     </form>

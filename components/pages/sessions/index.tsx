@@ -74,8 +74,8 @@ const columns = [
   { name: "الطالب", uid: "name_link" },
   { name: "المعلم", uid: "instructor_link" },
   { name: "تاريخ الحصة", uid: "session_date" },
-  { name: "البرامج التابع للحصة", uid: "program" },
-  { name: "موعد تجديد الطالب", uid: "session_time" },
+  { name: "ميعاد الحصة", uid: "session_time" },
+  { name: "البرنامج التابع للحصة", uid: "program" },
   { name: "الحالة", uid: "status" },
   { name: <Options />, uid: "actions" },
 ];
@@ -169,6 +169,7 @@ export const AllSessions = () => {
       instructor_id: item.instructor_id || null,
       instructor_link: item.instructor || "N/A",
       session_date: item.session_date || "N/A",
+      session_time: item.session_time || "N/A",
       program: item.program_title || "N/A",
       status: {
         name: item.status?.label || "N/A",
@@ -385,14 +386,21 @@ export const AllSessions = () => {
          
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <button
+            onClick={() => setSelectedDate(today("UTC"))}
+            className="font-semibold w-fit bg-blue-100 text-blue-700 px-4 py-2 rounded-lg shadow-md"
+          >
+            اليوم
+          </button>
           <div className="bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg shadow-md text-center w-28">
             {dayName(selectedDate)}
           </div>
-          <button
+          </div>
+          <div className="flex items-center gap-2">
+            <button
             onClick={() => {
-              console.log("h", selectedDate.toString());
-
               setSelectedDate(selectedDate.subtract({ days: 1 }));
             }}
             className="font-semibold w-fit p-0 bg-primary/10 rounded p-3 rounded-lg"
@@ -400,9 +408,10 @@ export const AllSessions = () => {
             <ArrowRight2 size={14} color={"blue"} />
           </button>
           <DatePicker
-            className="max-w-[284px]"
+            className="max-w-[200px]"
             value={selectedDate}
             onChange={setSelectedDate}
+            granularity="day"
           />
           <button
             onClick={() => {
@@ -413,6 +422,7 @@ export const AllSessions = () => {
           >
             <ArrowLeft2 size={14} color={"blue"} />
           </button>
+          </div>
         </div>
         <StatusDropdown selectedStatus={selectedStatus} setSelectedStatus={setSelectedStatus} />
       </div>
