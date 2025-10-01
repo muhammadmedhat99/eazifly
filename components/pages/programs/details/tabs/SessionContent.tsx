@@ -38,6 +38,7 @@ type Field = {
   title: string;
   duration: string;
   type: string;
+  plan_session_time_id: string;
 };
 
 // ===== Sortable Card =====
@@ -121,7 +122,7 @@ export const SessionContent = ({ data }: any) => {
   const [isEnabled, setIsEnabled] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [fields, setFields] = useState<Field[]>([{ title: "", duration: "", type: "required" }]);
+  const [fields, setFields] = useState<Field[]>([{ title: "", duration: "", type: "required", plan_session_time_id: "" }]);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editField, setEditField] = useState<Field | null>(null);
@@ -181,6 +182,7 @@ export const SessionContent = ({ data }: any) => {
       program_id,
       title: fields.map((f) => f.title),
       duration: fields.map((f) => f.duration),
+      plan_session_time_id: fields.map((f) => f.plan_session_time_id),
       type: fields.map((f) => f.type),
     };
     AddContent.mutate(payload);
@@ -188,8 +190,9 @@ export const SessionContent = ({ data }: any) => {
 
   // ===== Edit Content =====
   const handleEdit = (session: any) => {
+    
     setEditId(session.id);
-    setEditField({ title: session.title, duration: session.duration, type: session.type });
+    setEditField({ title: session.title, duration: session.duration, type: session.type, plan_session_time_id: session.planSessionTime.id });
     setIsEditModalOpen(true);
   };
 
@@ -284,7 +287,7 @@ export const SessionContent = ({ data }: any) => {
   };
 
   const handleAddFields = () => {
-    setFields([...fields, { title: "", duration: "", type: "required" }]);
+    setFields([...fields, { title: "", duration: "", type: "required", plan_session_time_id: "" }]);
   };
 
   const handleRemoveField = (index: number) => {
@@ -324,7 +327,7 @@ export const SessionContent = ({ data }: any) => {
     queryFn: async () =>
       await fetchClient(`client/plan/session/time`, axios_config),
     queryKey: AllQueryKeys.GetAllSessionTimes,
-  });
+  })
 
   // ===== Render =====
   return (
@@ -428,8 +431,18 @@ export const SessionContent = ({ data }: any) => {
                       variant="bordered"
                     />
 
+                    <Input
+                      label="المدة"
+                      type="number"
+                      value={field.duration}
+                      onChange={(e) => handleChange(index, "duration", e.target.value)}
+                      placeholder="أدخل المدة"
+                      variant="bordered"
+                      labelPlacement="outside"
+                    />
+
                     <Controller
-                      name={`fields.${index}.duration`}
+                      name={`fields.${index}.plan_session_time_id`}
                       control={control}
                       render={({ field }) => (
                         <Select
@@ -437,11 +450,11 @@ export const SessionContent = ({ data }: any) => {
                           onSelectionChange={(keys: any) => {
                             const selectedVal = Array.from(keys)[0] as string | undefined;
                             field.onChange(selectedVal); // يخزن في RHF
-                            handleChange(index, "duration", selectedVal || ""); // يخزن في fields
+                            handleChange(index, "plan_session_time_id", selectedVal || ""); // يخزن في fields
                           }}
-                          label="المدة"
+                          label="الحصة"
                           labelPlacement="outside"
-                          placeholder="اختر المدة"
+                          placeholder="اختر الحصة"
                           classNames={{
                             trigger:
                               "bg-white border rounded-xl shadow-none data-[hover=true]:bg-white",
@@ -453,7 +466,7 @@ export const SessionContent = ({ data }: any) => {
                         >
                           {sessionPeriods?.data.map(
                             (item: { id: string; time: string; title: string }) => (
-                              <SelectItem key={item.time}>
+                              <SelectItem key={item.id}>
                                 {item.time} دقيقة
                               </SelectItem>
                             )
@@ -504,37 +517,15 @@ export const SessionContent = ({ data }: any) => {
                     labelPlacement="outside"
                   />
 
-                  <Select
-                    selectedKeys={
-                      editField?.duration ? new Set([String(editField.duration)]) : new Set()
-                    }
-                    onSelectionChange={(keys: any) => {
-                      const selectedVal = Array.from(keys)[0] as string | undefined;
-                      setEditField((prev) =>
-                        prev ? { ...prev, duration: selectedVal || "" } : prev
-                      );
-                    }}
+                  <Input
                     label="المدة"
+                    type="number"
+                    value={editField.duration}
+                    onChange={(e) => setEditField({ ...editField, duration: e.target.value })}
+                    placeholder="أدخل المدة"
+                    variant="bordered"
                     labelPlacement="outside"
-                    placeholder="اختر المدة"
-                    classNames={{
-                      trigger:
-                        "bg-white border rounded-xl shadow-none data-[hover=true]:bg-white",
-                    }}
-                    radius="none"
-                    renderValue={(selectedItems) =>
-                      selectedItems.length
-                        ? selectedItems[0]?.props?.children
-                        : "اختر مدة المحاضرة"
-                    }
-                  >
-                    {sessionPeriods?.data.map(
-                      (item: { id: string; time: string; title: string }) => (
-                        <SelectItem key={item.time}>{item.time} دقيقة</SelectItem>
-                      )
-                    )}
-                  </Select>
-
+                  />
 
                   <RadioGroup
                     label="النوع"
