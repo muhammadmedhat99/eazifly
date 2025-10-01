@@ -1,5 +1,5 @@
 "use client";
-import { Edit2, Trash } from "iconsax-reactjs";
+import { Add, Edit2, Trash } from "iconsax-reactjs";
 import { Loader } from "@/components/global/Loader";
 import {
   Modal,
@@ -12,8 +12,11 @@ import {
   Input,
   Select,
   SelectItem,
+  Tabs,
+  Tab,
+  Spinner,
 } from "@heroui/react";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -23,6 +26,17 @@ import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { CustomPagination } from "@/components/global/Pagination";
 import { AllQueryKeys } from "@/keys";
+import { useParams } from "next/navigation";
+
+const weekDays = [
+  { key: "sunday", label: "الأحد" },
+  { key: "monday", label: "الاثنين" },
+  { key: "tuesday", label: "الثلاثاء" },
+  { key: "wednesday", label: "الأربعاء" },
+  { key: "thursday", label: "الخميس" },
+  { key: "friday", label: "الجمعة" },
+  { key: "saturday", label: "السبت" },
+];
 
 type appointmentsProps = {
   appointmentData?: any;
@@ -30,6 +44,9 @@ type appointmentsProps = {
   expire_date: any;
   currentStudent : any;
   refetch: any;
+  program_id: any;
+  subscription: any;
+  teachersData: any;
 };
 
 const schema = yup
@@ -53,8 +70,13 @@ export const Appointments = ({
   isLoadingappointment,
   expire_date,
   currentStudent,
-  refetch
+  refetch,
+  program_id,
+  subscription,
+  teachersData
 }: appointmentsProps) => {
+  const params = useParams();
+  const user_id = params.id;
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
@@ -63,6 +85,16 @@ export const Appointments = ({
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
   const [selectedReasons, setSelectedReasons] = useState<number[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isCompensateModalOpen, setIsCompensateModalOpen] = useState(false);
+
+  const [sessionsDates, setSessionsDates] = useState<any[]>([]);
+
+  const [tabKey, setTabKey] = useState("fixed");
+
+  const instructorId = teachersData?.data?.find(
+    (t: any) => t.user.id === currentStudent.id
+  )?.instructor?.id;
 
   const { data: AilabilitiesSessions, isLoading } = useQuery({
     enabled: !!selectedAppointment,
@@ -120,6 +152,12 @@ export const Appointments = ({
   } = useForm<FormData>({
     resolver: yupResolver(schema),
   });
+
+  const {
+  control: controlCompensate,
+  handleSubmit: handleSubmitCompensate,
+  formState: { errors: errorsCompensate },
+} = useForm<any>();
 
   const ChangeAppointment = useMutation({
     mutationFn: (submitData: ChangeAppointmentData) => {
@@ -244,8 +282,149 @@ export const Appointments = ({
     },
   });
 
+  const { data: subscriptionDetails, isLoading: isSubscriptionDetailsLoading } = useQuery({
+    queryKey: ["Getsubscription"],
+    queryFn: async () =>
+      await fetchClient(`client/subscription/details`, {
+        ...axios_config,
+        params: {
+          program_id: program_id,
+          user_id,
+          selected_user_id: 10458,
+        },
+      }),
+    enabled: !!program_id && !!currentStudent?.id,
+  });
+
+  const ChangeAppointments = useMutation({
+    mutationFn: (payload: any) => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      myHeaders.append("Content-Type", "application/json");
+
+      return postData("change/sessions/with/new/dates", JSON.stringify(payload), myHeaders);
+    },
+    onSuccess: (data) => {
+      addToast({
+        title: data?.message || "تم تغيير المعلم بنجاح",
+        color: "success",
+      });
+      setModalOpen(false);
+    },
+    onError: (error) => {
+      console.error("Error changing instructor", error);
+      addToast({
+        title: "حدث خطأ أثناء تغيير المعلم",
+        color: "danger",
+      });
+    },
+  });
+
+  const [selectedCompensateDay, setSelectedCompensateDay] = useState<string | null>(null);
+  const [compensateTimeOptions, setCompensateTimeOptions] = useState<any[]>([]);
+
+  const handleCompensateDayChange = (keys: any, onChange: (val: any) => void) => {
+    const day = Array.from(keys)[0] as string;
+    setSelectedCompensateDay(day);
+    onChange(day);
+
+    if (CompensateAvailabilities?.data?.[day]) {
+      const slots = CompensateAvailabilities.data[day] as Slot[];
+      setCompensateTimeOptions(
+        slots.map((slot) => ({
+          label: `${slot.start_time} - ${slot.end_time}`,
+          value: slot.start_time,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          full_date: slot.full_date,
+        }))
+      );
+    } else {
+      setCompensateTimeOptions([]);
+    }
+  };
+
+  const { data: CompensateAvailabilities, isLoading: isLoadingCompensate } = useQuery({
+    enabled: !!instructorId,
+    queryKey: ["CompensateAvailabilities", instructorId],
+    queryFn: async () =>
+      await fetchClient(
+        `client/cancel/session/availabilities/time/${instructorId}?expire_date=${expire_date}&subscription_id=${subscription.main_subscription_id}`,
+        axios_config
+      ),
+  });
+
+  const compensateDayOptions = useMemo(() => {
+    if (!CompensateAvailabilities?.data) return [];
+    return Object.entries(CompensateAvailabilities.data).map(
+      ([day, slotsUnknown]) => {
+        const slotArr = slotsUnknown as Slot[];
+        return {
+          label: `${day} - ${slotArr[0]?.full_date ?? ""}`,
+          value: day,
+        };
+      }
+    );
+  }, [CompensateAvailabilities]);
+
+
+  const onCompensateSubmit = (data: any) => {
+    compensateMutation.mutate(data);
+  };
+
+  const compensateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const { compensate_date, compensate_time } = data;
+      const selectedSlot = compensateTimeOptions.find(
+        (t: any) => t.value === compensate_time
+      );
+
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      myHeaders.append("Content-Type", "application/json");
+
+      const payload = {
+        user_id: currentStudent?.id,
+        instructor_id: instructorId,
+        program_id: program_id,
+        start_time: selectedSlot?.start_time,
+        end_time: selectedSlot?.end_time,
+        full_date: selectedSlot?.full_date,
+      };
+
+      return await postData("client/compensation/cancel/session", JSON.stringify(payload), myHeaders);
+    },
+    onSuccess: (data) => {
+      if (data.status === 201) {
+        addToast({
+        title: "success",
+        color: "success",
+      });
+      refetch()
+      setIsCompensateModalOpen(false);
+      } else {
+        addToast({
+          title: data.message,
+          color: "danger",
+        });
+      }
+    },
+    onError: (error: any) => {
+      addToast({
+        title: "حدث خطأ",
+        color: "danger",
+        description: error?.message || "من فضلك حاول مرة أخرى",
+      });
+    },
+  });
+
   return (
     <div className="flex flex-col gap-2">
+      
       {isLoadingappointment ? (
         <Loader />
       ) : appointmentData.data && appointmentData.data.length > 0 ? (
@@ -514,6 +693,124 @@ export const Appointments = ({
         </ModalContent>
       </Modal>
 
+      <Modal
+        isOpen={isCompensateModalOpen}
+        scrollBehavior="inside"
+        size="4xl"
+        onOpenChange={setIsCompensateModalOpen}
+      >
+        <ModalContent>
+          {(closeModal) => (
+            <>
+              <ModalHeader className="text-lg font-bold text-[#272727] flex justify-center">
+                إضافة ميعاد
+              </ModalHeader>
+              <ModalBody>
+                <form
+                  onSubmit={handleSubmitCompensate(onCompensateSubmit)}
+                  className="grid grid-cols-1 gap-4 p-6"
+                >
+                  {/* اختيار اليوم */}
+                  <Controller
+                    control={controlCompensate}
+                    name="compensate_date"
+                    rules={{ required: "اختار يوم وتاريخ المحاضرة" }}
+                    render={({ field }) => (
+                      <Select
+                        label="تاريخ المحاضرة"
+                        placeholder="اختار"
+                        items={compensateDayOptions}
+                        value={field.value || ""}
+                        onSelectionChange={(keys) =>
+                          handleCompensateDayChange(keys, field.onChange)
+                        }
+                        isLoading={isLoadingCompensate}
+                        isInvalid={!!errorsCompensate.compensate_date?.message}
+                        labelPlacement="outside"
+                        classNames={{
+                          label: "text-[#272727] font-bold text-sm",
+                          trigger: "shadow-none",
+                          base: "mb-4",
+                        }}
+                      >
+                        {(item) => (
+                          <SelectItem key={item.value}>{item.label}</SelectItem>
+                        )}
+                      </Select>
+                    )}
+                  />
+
+                  {/* اختيار الوقت */}
+                  <Controller
+                    control={controlCompensate}
+                    name="compensate_time"
+                    rules={{ required: "وقت المحاضرة" }}
+                    render={({ field }) => (
+                      <Select
+                        label="اختار وقت المحاضرة"
+                        placeholder="اختار"
+                        items={compensateTimeOptions}
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        isDisabled={!selectedCompensateDay || compensateTimeOptions.length === 0}
+                        isInvalid={!!errorsCompensate.compensate_time?.message}
+                        labelPlacement="outside"
+                        classNames={{
+                          label: "text-[#272727] font-bold text-sm",
+                          trigger: "shadow-none",
+                          base: "mb-4",
+                        }}
+                      >
+                        {(item: any) => (
+                          <SelectItem key={item.value}>{item.label}</SelectItem>
+                        )}
+                      </Select>
+                    )}
+                  />
+
+                  <div className="flex items-center justify-end gap-4 mt-8">
+                    <Button
+                      type="submit"
+                      variant="solid"
+                      color="primary"
+                      className="text-white"
+                      isLoading={compensateMutation.isPending}
+                    >
+                      حفظ
+                    </Button>
+                  </div>
+                </form>
+
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+
+      <div className="flex gap-4 items-center justify-end">
+        {/* <button
+          className="flex justify-end items-center gap-1 pt-4"
+          onClick={() => setModalOpen(true)}
+        >
+          <Add size="24" variant="Outline" className="text-primary" />
+          <span className="text-center justify-start text-primary text-sm font-bold">
+            تغيير المواعيد
+          </span>
+        </button> */}
+        <button
+          className="flex justify-end items-center gap-1 pt-4"
+          onClick={() => {
+            setIsCompensateModalOpen(true);
+          }}
+        >
+          <Add size="24" variant="Outline" className="text-primary" />
+          <span className="text-center justify-start text-primary text-sm font-bold">
+            إضافة ميعاد
+          </span>
+        </button>
+
+      </div>
       <div className="my-10 px-6">
         <CustomPagination
           currentPage={currentPage}

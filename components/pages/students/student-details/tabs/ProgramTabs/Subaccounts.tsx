@@ -22,6 +22,8 @@ type appointmentsProps = {
   refetchTeachers?: () => void;
   student_number: number;
   expire_date: any;
+  subscription: any;
+  teachersData: any;
   data: {
     data: {
       id: number;
@@ -71,6 +73,8 @@ export const Subaccounts = ({
   data,
   student_number,
   expire_date,
+  subscription,
+  teachersData,
 }: appointmentsProps) => {
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -288,6 +292,9 @@ export const Subaccounts = ({
                 expire_date={expire_date}
                 currentStudent={currentStudent}
                 refetch={refetch}
+                program_id={program_id}
+                subscription={subscription}
+                teachersData={teachersData}
               />
             )}
             {selectedTab === "allAppointments" && (
@@ -297,6 +304,9 @@ export const Subaccounts = ({
                 expire_date={expire_date}
                 currentStudent={currentStudent}
                 refetch={refetch}
+                program_id={program_id}
+                subscription={subscription}
+                teachersData={teachersData}
               />
             )}
             {selectedTab === "assignments" && (
