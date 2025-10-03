@@ -15,6 +15,7 @@ import {
   Tabs,
   Tab,
   Spinner,
+  Chip,
 } from "@heroui/react";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -26,7 +27,7 @@ import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { CustomPagination } from "@/components/global/Pagination";
 import { AllQueryKeys } from "@/keys";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 const weekDays = [
   { key: "sunday", label: "الأحد" },
@@ -75,6 +76,7 @@ export const Appointments = ({
   subscription,
   teachersData
 }: appointmentsProps) => {
+  const router = useRouter();
   const params = useParams();
   const user_id = params.id;
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
@@ -431,8 +433,9 @@ export const Appointments = ({
         appointmentData.data.map(
           (appointment: any, appointmentIndex: number) => (
             <div
+            onClick={()=> router.push(`/sessions/${appointment.id}`)}
               key={appointmentIndex}
-              className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8"
+              className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8 cursor-pointer"
             >
               <div className="flex items-center gap-20 whitespace-nowrap">
                 <div className="flex flex-col gap-4 items-center">
@@ -468,8 +471,9 @@ export const Appointments = ({
                   </span>
                 </div>
               </div>
-              <div className="flex gap-6 items-center">
-                <button
+              <div className="flex items-end gap-5">
+                {appointment?.status?.key=== "pending" && <div className="flex gap-6 items-center">
+                  <button
                   onClick={() => {
                     setSelectedAppointment(appointment);
                     setIsModalOpen(true);
@@ -492,6 +496,19 @@ export const Appointments = ({
                   إلغاء
                 </button>
 
+              </div>}
+              <div>
+                  <Chip
+                    size="sm"
+                    className="capitalize px-4 min-w-24 text-center"
+                    color={appointment?.status?.color === "info" ? "warning" : appointment?.status?.color}
+                    variant="flat"
+                  >
+                    <span className={`text-${appointment?.status?.color === "info" ? "warning" : appointment?.status?.color} font-bold`}>
+                      {appointment?.status?.label}
+                    </span>
+                  </Chip>
+                </div>
               </div>
             </div>
           )
