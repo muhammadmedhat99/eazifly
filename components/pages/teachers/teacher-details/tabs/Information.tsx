@@ -7,12 +7,16 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { DropzoneField } from "@/components/global/DropZoneField";
 import * as yup from "yup";
-import { useMutation } from "@tanstack/react-query";
-import { postData } from "@/lib/utils";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchClient, postData } from "@/lib/utils";
 import { getCookie } from "cookies-next";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { useParams, useRouter } from "next/navigation";
+import { AllQueryKeys } from "@/keys";
+import { axios_config, customStyles } from "@/lib/const";
+import ReactSelect from "@/components/global/ClientOnlySelect";
+
 
 type TeacherDetailsProps = {
   data: {
@@ -64,6 +68,12 @@ const schema = yup
         (value) => value && value.length > 0
       )
       .required("الرجاء تحميل ملف"),
+    specializations: yup
+      .array()
+      .of(yup.number())
+      .min(1, "اختر تخصص واحد على الأقل")
+      .required("اختر التخصصات"),
+
   })
   .required();
 
@@ -76,6 +86,7 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
   const [editField, setEditField] = useState<string | null>(null);
   const { control, handleSubmit, watch } = useForm<FormData>({
       defaultValues: {
+      specializations: data?.data?.specializations?.map((s) => s.id) || [],
       name_ar: data?.data?.name_ar || "",
       name_en: data?.data?.name_en || "",
       phone: data?.data?.phone || "",
@@ -159,6 +170,39 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
       if (response?.data?.id) {
         router.push(`/messages/${response.data.id}?user=${instructor_id}`);
       }
+    },
+   });
+
+  const { data: Specializations, isLoading: isSpecializationsLoading } = useQuery({
+    queryKey: AllQueryKeys.GetAllCountries,
+    queryFn: async () => await fetchClient(`client/Specializations`, axios_config),
+  });
+
+  const UpdateSpecializations = useMutation({
+    mutationFn: (payload: { instructor_id: number; specialization_id: number[] }) => {
+      var myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      myHeaders.append("Content-Type", "application/json");
+
+      return postData(
+        `client/update/instructor/Specialization`,
+        JSON.stringify(payload),
+        myHeaders
+      );
+    },
+    onSuccess: (res) => {
+      if (res?.message === "success") {
+        addToast({ title: res?.message, color: "success" });
+        onUpdated?.(res.data);
+        setEditField(null);
+      } else {
+        addToast({ title: "error", color: "danger" });
+      }
+    },
+    onError: () => {
+      addToast({ title: "خطأ أثناء الحفظ", color: "danger" });
     },
   });
 
@@ -570,15 +614,77 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
       </div>
 
       <div className="flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
-        <div className="flex flex-col gap-4">
-            <span className="text-[#5E5E5E] text-sm font-bold text-primary">
+        <div className="flex flex-col gap-4 w-full">
+          <span className="text-[#5E5E5E] text-sm font-bold text-primary">
             التخصصات
-            </span>
+          </span>
+
+          {editField === "specializations" ? (
+            <Controller
+              name="specializations"
+              control={control}
+              render={({ field }) => (
+                <div className="flex flex-col gap-1">
+                  <ReactSelect
+                    {...field}
+                    id="specializations"
+                    placeholder="اختر التخصصات"
+                    options={Specializations.data.map((item: any) => ({
+                      value: item.id,
+                      label: item.title,
+                    }))}
+                    isMulti={true}
+                    styles={customStyles}
+                    isClearable
+                    value={Specializations.data
+                      .map((item: any) => ({ value: item.id, label: item.title }))
+                      .filter((opt: any) => field.value?.includes(opt.value))}
+                    onChange={(selected) =>
+                      field.onChange((selected as any[]).map((opt) => Number(opt.value)))
+                    }
+                  />
+                </div>
+              )}
+            />
+          ) : (
             <span className="text-black-text font-bold text-[15px]">
-            {data?.data?.specializations?.map((specialization) => specialization.title).join("، ") || "لا يوجد تخصصات"}
+              {data?.data?.specializations?.map((specialization) => specialization.title).join("، ") ||
+                "لا يوجد تخصصات"}
             </span>
+          )}
         </div>
+
+        {editField === "specializations" ? (
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            type="button"
+            onPress={() => {
+              const selected = (watch("specializations") ?? []).filter(
+                (id): id is number => typeof id === "number"
+              );
+              UpdateSpecializations.mutate({
+                instructor_id: data.data.id,
+                specialization_id: selected, // IDs جاهزة
+              });
+            }}
+          >
+            حفظ
+          </Button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditField("specializations")}
+            className="flex items-center gap-1 text-sm font-bold"
+          >
+            <Edit2 size={18} />
+            تعديل
+          </button>
+        )}
       </div>
+
 
       <div className="flex items-end justify-end md:col-span-2">
         <Button

@@ -39,6 +39,23 @@ export const AllQueryKeys = {
       selectedInstructorId ?? null,
       selectedProgramId ?? null,
     ],
+  GetStudentSessions: (
+    nameSearch: string,
+    currentPage: number,
+    selectedStatus: string,
+    selecteStudentId?: number | null,
+    selectedInstructorId?: number | null,
+    selectedProgramId?: number | null,
+  ) => [
+      "GetAllSessions",
+      axios_config,
+      nameSearch,
+      currentPage,
+      selectedStatus,
+      selecteStudentId,
+      selectedInstructorId ?? null,
+      selectedProgramId ?? null,
+    ],
   GetAllSalaries: (nameSearch: string, selectedDate: string, currentPage: number) => ['GetAllSalaries', axios_config, nameSearch, selectedDate, currentPage],
   GetAllRenewals: (nameSearch: string, phoneSearch: string, selectedStatus: string, subscriptionStatus: string, currentPage: number) => ['GetAllRenewals', axios_config, nameSearch, phoneSearch, selectedStatus, subscriptionStatus, currentPage],
 

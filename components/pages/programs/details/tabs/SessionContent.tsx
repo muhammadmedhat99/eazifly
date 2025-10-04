@@ -21,6 +21,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,11 +31,14 @@ import { fetchClient, postData } from "@/lib/utils";
 import { axios_config } from "@/lib/const";
 import { formatDate } from "@/lib/helper";
 import { Trash } from "iconsax-reactjs";
+import { AllQueryKeys } from "@/keys";
+import { Controller, useForm } from "react-hook-form";
 
 type Field = {
   title: string;
   duration: string;
   type: string;
+  plan_session_time_id: string;
 };
 
 // ===== Sortable Card =====
@@ -89,7 +94,7 @@ const SortableCard = ({ session, onEdit, onToggleStatus }: { session: any; onEdi
       <div className="space-y-2 text-sm text-gray-700">
         <p>
           <span className="font-bold text-gray-600">المدة: </span>
-          {session.duration}
+          {session.duration} دقيقة
         </p>
         <p>
           <span className="font-bold text-gray-600">النوع: </span>
@@ -117,7 +122,7 @@ export const SessionContent = ({ data }: any) => {
   const [isEnabled, setIsEnabled] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [fields, setFields] = useState<Field[]>([{ title: "", duration: "", type: "required" }]);
+  const [fields, setFields] = useState<Field[]>([{ title: "", duration: "", type: "required", plan_session_time_id: "" }]);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editField, setEditField] = useState<Field | null>(null);
@@ -177,6 +182,7 @@ export const SessionContent = ({ data }: any) => {
       program_id,
       title: fields.map((f) => f.title),
       duration: fields.map((f) => f.duration),
+      plan_session_time_id: fields.map((f) => f.plan_session_time_id),
       type: fields.map((f) => f.type),
     };
     AddContent.mutate(payload);
@@ -184,8 +190,9 @@ export const SessionContent = ({ data }: any) => {
 
   // ===== Edit Content =====
   const handleEdit = (session: any) => {
+    
     setEditId(session.id);
-    setEditField({ title: session.title, duration: session.duration, type: session.type });
+    setEditField({ title: session.title, duration: session.duration, type: session.type, plan_session_time_id: session.planSessionTime.id });
     setIsEditModalOpen(true);
   };
 
@@ -280,7 +287,7 @@ export const SessionContent = ({ data }: any) => {
   };
 
   const handleAddFields = () => {
-    setFields([...fields, { title: "", duration: "", type: "required" }]);
+    setFields([...fields, { title: "", duration: "", type: "required", plan_session_time_id: "" }]);
   };
 
   const handleRemoveField = (index: number) => {
@@ -313,6 +320,15 @@ export const SessionContent = ({ data }: any) => {
     },
     onError: () => addToast({ title: "عذرا حدث خطأ ما", color: "danger" }),
   });
+
+  const { control } = useForm();
+
+  const { data: sessionPeriods, isLoading: sessionPeriodsLoading } = useQuery({
+    queryFn: async () =>
+      await fetchClient(`client/plan/session/time`, axios_config),
+    queryKey: AllQueryKeys.GetAllSessionTimes,
+  })
+
   // ===== Render =====
   return (
     <div className="p-4 space-y-4">
@@ -423,6 +439,40 @@ export const SessionContent = ({ data }: any) => {
                       placeholder="أدخل المدة"
                       variant="bordered"
                       labelPlacement="outside"
+                    />
+
+                    <Controller
+                      name={`fields.${index}.plan_session_time_id`}
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          selectedKeys={field.value ? new Set([String(field.value)]) : new Set()}
+                          onSelectionChange={(keys: any) => {
+                            const selectedVal = Array.from(keys)[0] as string | undefined;
+                            field.onChange(selectedVal); // يخزن في RHF
+                            handleChange(index, "plan_session_time_id", selectedVal || ""); // يخزن في fields
+                          }}
+                          label="الحصة"
+                          labelPlacement="outside"
+                          placeholder="اختر الحصة"
+                          classNames={{
+                            trigger:
+                              "bg-white border rounded-xl shadow-none data-[hover=true]:bg-white",
+                          }}
+                          radius="none"
+                          renderValue={(selectedItems) =>
+                            selectedItems.length ? selectedItems[0]?.props?.children : "اختر مدة المحاضرة"
+                          }
+                        >
+                          {sessionPeriods?.data.map(
+                            (item: { id: string; time: string; title: string }) => (
+                              <SelectItem key={item.id}>
+                                {item.time} دقيقة
+                              </SelectItem>
+                            )
+                          )}
+                        </Select>
+                      )}
                     />
 
                     <RadioGroup

@@ -21,6 +21,9 @@ type appointmentsProps = {
   refetchSubaccounts?: () => void;
   refetchTeachers?: () => void;
   student_number: number;
+  expire_date: any;
+  subscription: any;
+  teachersData: any;
   data: {
     data: {
       id: number;
@@ -68,7 +71,10 @@ export const Subaccounts = ({
   refetchSubaccounts,
   refetchTeachers,
   data,
-  student_number
+  student_number,
+  expire_date,
+  subscription,
+  teachersData,
 }: appointmentsProps) => {
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -92,7 +98,7 @@ export const Subaccounts = ({
   const hasCurrentStudent = !!currentStudent?.id;
 
 
-  const { data: appointmentData, isLoading: isLoadingappointment } = useQuery({
+  const { data: appointmentData, isLoading: isLoadingappointment, refetch } = useQuery({
     queryKey: ["subaccountAppointments", currentStudent?.id, program_id],
     queryFn: async () =>
       await fetchClient(`client/user/upcoming/appointments/${currentStudent.id}`, {
@@ -283,12 +289,24 @@ export const Subaccounts = ({
               <Appointments
                 appointmentData={appointmentData}
                 isLoadingappointment={isLoadingappointment}
+                expire_date={expire_date}
+                currentStudent={currentStudent}
+                refetch={refetch}
+                program_id={program_id}
+                subscription={subscription}
+                teachersData={teachersData}
               />
             )}
             {selectedTab === "allAppointments" && (
               <Appointments
                 appointmentData={allAppointmentData}
                 isLoadingappointment={isLoadingAllAppointment}
+                expire_date={expire_date}
+                currentStudent={currentStudent}
+                refetch={refetch}
+                program_id={program_id}
+                subscription={subscription}
+                teachersData={teachersData}
               />
             )}
             {selectedTab === "assignments" && (

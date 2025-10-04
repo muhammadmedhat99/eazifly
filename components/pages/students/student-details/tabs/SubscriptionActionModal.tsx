@@ -292,7 +292,7 @@ export default function SubscriptionActionModal({
         onSuccess: (data) => {
             if (data.message !== "success") {
                 addToast({
-                    title: "error",
+                    title: data?.message,
                     color: "danger",
                 });
             } else {
@@ -342,7 +342,7 @@ export default function SubscriptionActionModal({
                     <Button color="primary" variant="solid" className="text-white" onPress={onClose}>
                         إلغاء
                     </Button>
-                    <Button color="primary" variant="solid" className="text-white" onPress={() => handleSubmit(onSubmit)()}>
+                    <Button isLoading={handleAction.isPending} color="primary" variant="solid" className="text-white" onPress={() => handleSubmit(onSubmit)()}>
                         حفظ
                     </Button>
                 </ModalFooter>

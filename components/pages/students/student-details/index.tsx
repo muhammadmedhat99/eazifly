@@ -7,6 +7,7 @@ import { TimelineDemo } from "./tabs/Timeline";
 import { Programs } from "./tabs/Programs";
 import { RelatedStudents } from "./tabs/RelatedStudents";
 import { useState } from "react";
+import { Sessions } from "./tabs/Sessions";
 
 type StudentDetailsProps = {
   data: {
@@ -129,6 +130,9 @@ const [studentData, setStudentData] = useState(data.data);
         </Tab>
         <Tab key="other" title="الطلاب التابعين" isDisabled={!!studentData?.parent_id} >
           <RelatedStudents data={data}/>
+        </Tab>
+        <Tab key="sessions" title="الحصص">
+          <Sessions data={data}/>
         </Tab>
       </Tabs>
     </div>
