@@ -1,9 +1,9 @@
 "use client";
-import { Edit2 } from "iconsax-reactjs";
+import { CloseCircle, Edit2 } from "iconsax-reactjs";
 import Link from "next/link";
 
-import { addToast, Avatar, Button, Input, Select, SelectItem } from "@heroui/react";
-import { useState } from "react";
+import { addToast, Avatar, Button, Input, Select, SelectItem, Spinner } from "@heroui/react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { DropzoneField } from "@/components/global/DropZoneField";
 import * as yup from "yup";
@@ -203,6 +203,123 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
     },
     onError: () => {
       addToast({ title: "خطأ أثناء الحفظ", color: "danger" });
+    },
+  });
+
+  const { data: genderData, isLoading: isGenderDataLoading, refetch} = useQuery({
+    queryKey: ["GetgenderData", instructor_id],
+    queryFn: async () => await fetchClient(`client/instructor/get/max/gender/age/${instructor_id}`, axios_config),
+  });
+
+  useEffect(() => {
+    if (genderData?.data) {
+      const females = genderData.data
+        .filter((i: any) => i.gender === "female")
+        .map(({ from, to }: any) => ({ from, to }));
+
+      const males = genderData.data
+        .filter((i: any) => i.gender === "male")
+        .map(({ from, to }: any) => ({ from, to }));
+
+      setFemalePeriods(females.length ? females : [{ from: "", to: "" }]);
+      setMalePeriods(males.length ? males : [{ from: "", to: "" }]);
+    }
+  }, [genderData]);
+
+  const [malePeriods, setMalePeriods] = useState<{ from: string; to: string }[]>(
+    genderData?.data
+      ?.filter((i: any) => i.gender === "male")
+      .map((i: any) => ({ from: i.from, to: i.to })) || [{ from: "", to: "" }]
+  );
+  const [femalePeriods, setFemalePeriods] = useState<
+    { from: string; to: string }[]
+  >(
+    genderData?.data
+      ?.filter((i: any) => i.gender === "female")
+      .map((i: any) => ({ from: i.from, to: i.to })) || [{ from: "", to: "" }]
+  );
+
+  const handleAddPeriod = (gender: "male" | "female") => {
+    gender === "male"
+      ? setMalePeriods([...malePeriods, { from: "", to: "" }])
+      : setFemalePeriods([...femalePeriods, { from: "", to: "" }]);
+  };
+
+  const handleRemovePeriod = (gender: "male" | "female", index: number) => {
+    if (gender === "male") {
+      if (malePeriods.length > 1)
+        setMalePeriods(malePeriods.filter((_, i) => i !== index));
+    } else {
+      if (femalePeriods.length > 1)
+        setFemalePeriods(femalePeriods.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleInputChange = (
+    gender: "male" | "female",
+    index: number,
+    field: "from" | "to",
+    value: string
+  ) => {
+    if (gender === "male") {
+      const updated = [...malePeriods];
+      updated[index][field] = value;
+      setMalePeriods(updated);
+    } else {
+      const updated = [...femalePeriods];
+      updated[index][field] = value;
+      setFemalePeriods(updated);
+    }
+  };
+
+  const UpdateAgeGroups = useMutation({
+    mutationFn: (payload: {
+      instructor_id: number;
+      female: { from: number; to: number }[];
+      male: { from: number; to: number }[];
+    }) => {
+
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+      myHeaders.append("Content-Type", "application/json");
+
+      return postData(
+        `client/instructor/get/max/gender/age`,
+        JSON.stringify(payload),
+        myHeaders
+      );
+    },
+    onSuccess: (res) => {
+      if (res?.message === "success") {
+        addToast({
+          title: res?.message,
+          color: "success",
+          timeout: 3000,
+        });
+        onUpdated?.(res.data);
+        setEditField(null);
+      } else {
+        if (typeof res?.message === "object") {
+          const errors = Object.entries(res.message)
+            .map(([key, value]) => `${key === "female" ? "إناث" : "ذكور"}: ${(value as string[]).join("، ")}`)
+            .join(" | ");
+
+          addToast({
+            title: "خطأ أثناء الحفظ",
+            description: errors,
+            color: "danger",
+            timeout: 5000,
+          });
+        } else {
+          addToast({
+            title: res?.message || "حدث خطأ أثناء الحفظ",
+            color: "danger",
+            timeout: 3000,
+          });
+        }
+      }
     },
   });
 
@@ -613,6 +730,188 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
         </div>
       </div>
 
+      {/* الفئات العمرية */}
+      <div className="flex flex-col bg-main p-5 rounded-2xl border border-stroke md:col-span-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[#5E5E5E] text-sm font-bold">الفئات العمرية</span>
+          {editField === "ageGroups" ? (
+            <Button
+              size="sm"
+              color="primary"
+              variant="solid"
+              className="text-white"
+              type="button"
+              onPress={() => {
+                const payload = {
+                  instructor_id: data.data.id,
+                  female: femalePeriods.map((p) => ({
+                    from: Number(p.from),
+                    to: Number(p.to),
+                  })),
+                  male: malePeriods.map((p) => ({
+                    from: Number(p.from),
+                    to: Number(p.to),
+                  })),
+                };
+
+                UpdateAgeGroups.mutate(payload);
+
+              }}
+            >
+              حفظ
+            </Button>
+          ) : (
+              <button
+                type="button"
+                onClick={() => setEditField("ageGroups")}
+                className="flex items-center gap-1 text-sm font-bold"
+              >
+                <Edit2 size={18} />
+                تعديل
+              </button>
+          )}
+        </div>
+
+        {editField === "ageGroups" ? (
+          <div className="border p-4 rounded-lg bg-gray-50 flex flex-col gap-4 mt-4">
+            {/* إناث */}
+            <div>
+              <label className="text-[#272727] font-bold text-sm">إناث</label>
+              {femalePeriods.map((period, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="number"
+                    value={period.from}
+                    placeholder="من"
+                    onChange={(e) =>
+                      handleInputChange("female", index, "from", e.target.value)
+                    }
+                    className="px-6 py-3 bg-gray-100 rounded-lg text-sm font-semibold"
+                  />
+                  <input
+                    type="number"
+                    value={period.to}
+                    placeholder="إلى"
+                    onChange={(e) =>
+                      handleInputChange("female", index, "to", e.target.value)
+                    }
+                    className="px-6 py-3 bg-gray-100 rounded-lg text-sm font-semibold"
+                  />
+                  <button
+                    className={`${femalePeriods.length === 1 ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    disabled={femalePeriods.length === 1}
+                    type="button"
+                    onClick={() => handleRemovePeriod("female", index)}
+                  >
+                    <CloseCircle size="24" color="#ff0000" />
+                  </button>
+                  {index === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddPeriod("female")}
+                      className="ml-2 text-blue-600 text-lg"
+                    >
+                      ＋
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* ذكور */}
+            <div>
+              <label className="text-[#272727] font-bold text-sm">ذكور</label>
+              {malePeriods.map((period, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="number"
+                    value={period.from}
+                    placeholder="من"
+                    onChange={(e) =>
+                      handleInputChange("male", index, "from", e.target.value)
+                    }
+                    className="px-6 py-3 bg-gray-100 rounded-lg text-sm font-semibold"
+                  />
+                  <input
+                    type="number"
+                    value={period.to}
+                    placeholder="إلى"
+                    onChange={(e) =>
+                      handleInputChange("male", index, "to", e.target.value)
+                    }
+                    className="px-6 py-3 bg-gray-100 rounded-lg text-sm font-semibold"
+                  />
+                  <button
+                    className={`${malePeriods.length === 1 ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    disabled={malePeriods.length === 1}
+                    type="button"
+                    onClick={() => handleRemovePeriod("male", index)}
+                  >
+                    <CloseCircle size="24" color="#ff0000" />
+                  </button>
+                  {index === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddPeriod("male")}
+                      className="ml-2 text-blue-600 text-lg"
+                    >
+                      ＋
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+            <div className="flex flex-col gap-4 mt-4">
+              {/* قسم الإناث */}
+              <div className="bg-gray-50 border border-stroke rounded-lg p-4">
+                <p className="text-[#272727] font-bold text-sm mb-2">إناث</p>
+                {genderData?.data?.filter((i: any) => i.gender === "female")?.length ? (
+                  <ul className="flex flex-wrap gap-2">
+                    {genderData.data
+                      .filter((i: any) => i.gender === "female")
+                      .map((i: any, index: number) => (
+                        <li
+                          key={index}
+                          className="bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-1 font-semibold text-[#333]"
+                        >
+                          من {i.from} إلى {i.to}
+                        </li>
+                      ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 text-sm font-medium">لا يوجد</p>
+                )}
+              </div>
+
+              {/* قسم الذكور */}
+              <div className="bg-gray-50 border border-stroke rounded-lg p-4">
+                <p className="text-[#272727] font-bold text-sm mb-2">ذكور</p>
+                {genderData?.data?.filter((i: any) => i.gender === "male")?.length ? (
+                  <ul className="flex flex-wrap gap-2">
+                    {genderData.data
+                      .filter((i: any) => i.gender === "male")
+                      .map((i: any, index: number) => (
+                        <li
+                          key={index}
+                          className="bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-1 font-semibold text-[#333]"
+                        >
+                          من {i.from} إلى {i.to}
+                        </li>
+                      ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 text-sm font-medium">لا يوجد</p>
+                )}
+              </div>
+            </div>
+
+        )}
+      </div>
+
       <div className="flex items-center justify-between bg-main p-5 rounded-xl border border-stroke">
         <div className="flex flex-col gap-4 w-full">
           <span className="text-[#5E5E5E] text-sm font-bold text-primary">
@@ -684,7 +983,6 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
           </button>
         )}
       </div>
-
 
       <div className="flex items-end justify-end md:col-span-2">
         <Button
