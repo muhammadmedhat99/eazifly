@@ -128,9 +128,10 @@ export const RoleDetails = ({ data }: RoleDetailsProps) => {
                     </Button>
                 ) : (
                     <button
+                        disabled
                         type="button"
                         onClick={() => setEditField("name")}
-                        className="flex items-center gap-1 text-sm font-bold"
+                        className="flex items-center gap-1 text-sm font-bold opacity-50"
                     >
                         <Edit2 size={18} />
                         تعديل

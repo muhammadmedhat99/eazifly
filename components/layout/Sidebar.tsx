@@ -21,6 +21,8 @@ import { permissionsMap } from "@/lib/permissionsMap";
 export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
   const [confirmAction, setConfirmAction] = useState(false);
   const token = getCookie("token");
+  const role = getCookie("role");
+
 
   const { data: perms = [], isLoading: loadingPerms } = useQuery({
     queryKey: ["permissions", token],
@@ -44,17 +46,19 @@ export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
   }
 
   const allowedRoutes =
-    routes
-      .map((route) => {
-        if (!route.sub_routes) {
-          return checkPermission(route, perms) ? route : null;
-        }
-        const subs = route.sub_routes.filter((sub) =>
-          checkPermission({ route: route.route + sub.route }, perms)
-        );
-        return subs.length > 0 ? { ...route, sub_routes: subs } : null;
-      })
-      .filter(Boolean) || [];
+    role === "super_admin"
+      ? routes
+      : routes
+        .map((route) => {
+          if (!route.sub_routes) {
+            return checkPermission(route, perms) ? route : null;
+          }
+          const subs = route.sub_routes.filter((sub) =>
+            checkPermission({ route: route.route + sub.route }, perms)
+          );
+          return subs.length > 0 ? { ...route, sub_routes: subs } : null;
+        })
+        .filter(Boolean) || [];
 
   const logout = useMutation({
     mutationFn: () => {
