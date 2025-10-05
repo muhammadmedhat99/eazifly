@@ -16,6 +16,10 @@ import {
   Tab,
   Spinner,
   Chip,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -28,6 +32,24 @@ import { axios_config } from "@/lib/const";
 import { CustomPagination } from "@/components/global/Pagination";
 import { AllQueryKeys } from "@/keys";
 import { useParams, useRouter } from "next/navigation";
+import { Options } from "@/components/global/Icons";
+
+const OptionsComponent = ({ id }: { id: number }) => {
+  return (
+    <Dropdown classNames={{ base: "max-w-40", content: "min-w-36" }}>
+      <DropdownTrigger>
+        <button className="px-4 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-100">
+          <Options />
+        </button>
+      </DropdownTrigger>
+      <DropdownMenu aria-label="Static Actions">
+        <DropdownItem href={`/sessions/${id}`} key="show">
+          عرض البيانات
+        </DropdownItem>
+      </DropdownMenu>
+    </Dropdown>
+  );
+};
 
 const weekDays = [
   { key: "sunday", label: "الأحد" },
@@ -433,19 +455,17 @@ export const Appointments = ({
         appointmentData.data.map(
           (appointment: any, appointmentIndex: number) => (
             <div
-            onClick={()=> router.push(`/sessions/${appointment.id}`)}
               key={appointmentIndex}
-              className="flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8 cursor-pointer"
+              className="relative flex items-center justify-between bg-background p-5 rounded-2xl border border-stroke overflow-x-auto gap-8"
             >
               <div className="flex items-center gap-20 whitespace-nowrap">
                 <div className="flex flex-col gap-4 items-center">
-                  <span className="text-[#5E5E5E] text-sm font-bold">
-                    تاريخ المحاضرة
-                  </span>
+                  <span className="text-[#5E5E5E] text-sm font-bold">تاريخ المحاضرة</span>
                   <span className="text-black-text font-bold text-[15px]">
                     {appointment.session_date}
                   </span>
                 </div>
+
                 <div className="flex flex-col gap-4 items-center">
                   <span className="text-[#5E5E5E] text-sm font-bold">اليوم</span>
                   <span className="text-black-text font-bold text-[15px]">
@@ -454,60 +474,73 @@ export const Appointments = ({
                     })}
                   </span>
                 </div>
+
                 <div className="flex flex-col gap-4 items-center">
-                  <span className="text-[#5E5E5E] text-sm font-bold">
-                    وقت المحاضرة
-                  </span>
+                  <span className="text-[#5E5E5E] text-sm font-bold">وقت المحاضرة</span>
                   <span className="text-black-text font-bold text-[15px]">
                     {appointment.session_time}
                   </span>
                 </div>
+
                 <div className="flex flex-col gap-4 items-center">
-                  <span className="text-[#5E5E5E] text-sm font-bold">
-                    مدة المحاضرة
-                  </span>
+                  <span className="text-[#5E5E5E] text-sm font-bold">مدة المحاضرة</span>
                   <span className="text-black-text font-bold text-[15px]">
                     {appointment.duration} دقيقة
                   </span>
                 </div>
               </div>
-              <div className="flex items-end gap-5">
-                {appointment?.status?.key=== "pending" && <div className="flex gap-6 items-center">
-                  <button
-                  onClick={() => {
-                    setSelectedAppointment(appointment);
-                    setIsModalOpen(true);
-                  }}
-                  type="button"
-                  className="flex items-center gap-1 text-sm font-bold text-[#5E5E5E]"
-                >
-                  <Edit2 size={18} />
-                  تعديل
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedAppointment(appointment);
-                    setIsCancelModalOpen(true);
-                  }}
-                  type="button"
-                  className="flex items-center gap-1 text-sm font-bold text-danger"
-                >
-                  <Trash size={18} />
-                  إلغاء
-                </button>
 
-              </div>}
-              <div>
+              <div className="flex items-end gap-5">
+                {appointment?.status?.key === "pending" && (
+                  <div className="flex gap-6 items-center">
+                    <button
+                      onClick={() => {
+                        setSelectedAppointment(appointment);
+                        setIsModalOpen(true);
+                      }}
+                      type="button"
+                      className="flex items-center gap-1 text-sm font-bold text-[#5E5E5E]"
+                    >
+                      <Edit2 size={18} />
+                      تعديل
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setSelectedAppointment(appointment);
+                        setIsCancelModalOpen(true);
+                      }}
+                      type="button"
+                      className="flex items-center gap-1 text-sm font-bold text-danger"
+                    >
+                      <Trash size={18} />
+                      إلغاء
+                    </button>
+                  </div>
+                )}
+
+                <div>
                   <Chip
                     size="sm"
                     className="capitalize px-4 min-w-24 text-center"
                     color={appointment?.status?.color === "info" ? "warning" : appointment?.status?.color}
                     variant="flat"
                   >
-                    <span className={`text-${appointment?.status?.color === "info" ? "warning" : appointment?.status?.color} font-bold`}>
+                    <span
+                      className={`text-${appointment?.status?.color === "info" ? "warning" : appointment?.status?.color
+                        } font-bold`}
+                    >
                       {appointment?.status?.label}
                     </span>
                   </Chip>
+                </div>
+
+                <div className="hidden md:block">
+                  <OptionsComponent id={appointment.id} />
+                </div>
+
+                <div className="block md:hidden absolute top-3 left-3">
+                  <OptionsComponent id={appointment.id} />
                 </div>
               </div>
             </div>
