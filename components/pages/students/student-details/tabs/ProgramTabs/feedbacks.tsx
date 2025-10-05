@@ -23,13 +23,15 @@ type feedbacksProps = {
   isLoadingfeedback: boolean;
   client_id: number;
   refetchFeedbacks?: () => void;
+  currentStudent : any;
 };
 
 export const Feedbacks = ({
   feedbackData,
   isLoadingfeedback,
   client_id,
-  refetchFeedbacks
+  refetchFeedbacks,
+  currentStudent
 }: feedbacksProps) => {
   const params = useParams();
   const user_id = params.id;
@@ -43,9 +45,8 @@ export const Feedbacks = ({
       myHeaders.append("Accept", "application/json");
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
       var formdata = new FormData();
-      if (typeof user_id === "string") {
-        formdata.append("user_id", user_id);
-      }
+  
+      formdata.append("user_id", currentStudent?.id);
       formdata.append("client_id", client_id.toString());
       formdata.append("feedback", submitData.feedback);
 

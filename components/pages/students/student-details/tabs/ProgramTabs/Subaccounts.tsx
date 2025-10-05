@@ -149,7 +149,7 @@ export const Subaccounts = ({
     enabled: selectedTab === "appointments" && hasCurrentStudent,
   });
 
-  const { data: feedbackData, isLoading: isLoadingfeedback } = useQuery({
+  const { data: feedbackData, isLoading: isLoadingfeedback, refetch: refetchFeedbacks } = useQuery({
     queryKey: ["subaccountfeedbacks", currentStudent?.id, program_id],
     queryFn: async () =>
       await fetchClient(`client/user/feedback/${currentStudent.id}`, {
@@ -326,6 +326,8 @@ export const Subaccounts = ({
                 feedbackData={feedbackData}
                 isLoadingfeedback={isLoadingfeedback}
                 client_id={+ClientId}
+                refetchFeedbacks={refetchFeedbacks}
+                currentStudent={currentStudent}
               />
             )}
           </div>
