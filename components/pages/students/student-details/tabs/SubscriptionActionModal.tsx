@@ -15,7 +15,8 @@ interface SubscriptionActionModalProps {
     onClose: () => void;
     onActionSuccess?: () => void;
     action: string | null;
-    subscriptionId: number | null;
+    subscription_id: any;
+    programId: number | null;
     user_id: string;
     children_users: {
         user_id: string;
@@ -29,10 +30,11 @@ export default function SubscriptionActionModal({
     isOpen,
     onClose,
     action,
-    subscriptionId,
+    programId,
     user_id,
     children_users,
-    onActionSuccess
+    onActionSuccess,
+    subscription_id
 }: SubscriptionActionModalProps) {
     const { handleSubmit, control, reset } = useForm({
         defaultValues: {
@@ -44,7 +46,7 @@ export default function SubscriptionActionModal({
 
     const { data, isLoading } = useQuery({
         queryKey: ["GetProgramData"],
-        queryFn: async () => await fetchClient(`client/plans/${subscriptionId}`, axios_config),
+        queryFn: async () => await fetchClient(`client/plans/${programId}`, axios_config),
     });
     
     const [selectedTab, setSelectedTab] = useState<string>(
@@ -145,7 +147,7 @@ export default function SubscriptionActionModal({
                         control={control}
                         selectedTab={selectedTab}
                         setSelectedTab={setSelectedTab}
-                        program_id={subscriptionId}
+                        program_id={programId}
                     />
                 );
             default:
@@ -157,54 +159,58 @@ export default function SubscriptionActionModal({
         string,
         {
             endpoint: string;
-            buildFormData: (data: any, subscriptionId: number, userId: string) => FormData;
+            buildFormData: (data: any, programId: number, userId: string) => FormData;
         }
     > = {
         renew: {
             endpoint: "client/order/renew",
-            buildFormData: (data, subscriptionId, userId) => {
+            buildFormData: (data, programId, userId) => {
                 const formdata = new FormData();
                 formdata.append("paid", data.paid);
                 if (data.image?.[0]) {
                     formdata.append("image", data.image[0]);
                 }
-                formdata.append("program_id", subscriptionId.toString());
+                formdata.append("program_id", programId.toString());
                 formdata.append("user_id", userId);
+                formdata.append("subscription_id", subscription_id);
                 return formdata;
             },
         },
 
         Pause: {
             endpoint: "client/subscription/freeze",
-            buildFormData: (data, subscriptionId, userId) => {
+            buildFormData: (data, programId, userId) => {
                 const formdata = new FormData();
                 formdata.append("days", data.days);
-                formdata.append("program_id", subscriptionId.toString());
+                formdata.append("program_id", programId.toString());
                 formdata.append("user_id", userId);
+                formdata.append("subscription_id", subscription_id);
                 return formdata;
             },
         },
 
         extend: {
             endpoint: "client/subscription/extension",
-            buildFormData: (data, subscriptionId, userId) => {
+            buildFormData: (data, programId, userId) => {
                 const formdata = new FormData();
                 formdata.append("days", data.days);
-                formdata.append("program_id", subscriptionId.toString());
+                formdata.append("program_id", programId.toString());
                 formdata.append("user_id", userId);
+                formdata.append("subscription_id", subscription_id);
                 return formdata;
             },
         },
 
         change: {
             endpoint: "client/subscription/change",
-            buildFormData: (data, subscriptionId, userId) => {
+            buildFormData: (data, programId, userId) => {
                 const formdata = new FormData();
 
-                formdata.append("program_id", subscriptionId?.toString() || "");
+                formdata.append("program_id", programId?.toString() || "");
                 formdata.append("user_id", userId);
                 formdata.append("paid", data.paid || "");
                 formdata.append("student_number", data.student_number || "");
+                formdata.append("subscription_id", subscription_id);
 
                 if (data.image?.[0]) {
                     formdata.append("image", data.image[0]);
@@ -270,7 +276,7 @@ export default function SubscriptionActionModal({
     
     const handleAction = useMutation({
         mutationFn: (submitData: any) => {
-            if (!action || !subscriptionId) return Promise.reject("Missing data");
+            if (!action || !programId) return Promise.reject("Missing data");
 
             const config = actionsMap[action];
 
@@ -283,7 +289,7 @@ export default function SubscriptionActionModal({
 
             const formdata = config.buildFormData(
                 submitData,
-                subscriptionId,
+                programId,
                 user_id
             );
 
@@ -319,7 +325,7 @@ export default function SubscriptionActionModal({
         if (action === "change") {
             createPlanMutation.mutate({
                 subscripe_days: data.subscripe_days,
-                program_id: subscriptionId,
+                program_id: programId,
                 number_of_session_per_week: data.number_of_session_per_week,
                 duration: data.duration,
                 originalData: data,
