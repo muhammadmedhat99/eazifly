@@ -295,14 +295,14 @@ const ActionsComponent = ({
               >
                 تغيير الاشتراك
               </DropdownItem>
-              {subscription_status !== "freeze" && (
-                <DropdownItem
-                  key="Pause"
-                  onClick={() => handleActionClick("Pause")}
-                >
-                  إيقاف مؤقت
-                </DropdownItem>
-              )}
+                {subscription_status !== "freeze" && subscription_status !== "expired" && (
+                  <DropdownItem
+                    key="Pause"
+                    onClick={() => handleActionClick("Pause")}
+                  >
+                    إيقاف مؤقت
+                  </DropdownItem>
+                )}
               {subscription_status === "freeze" && (
                 <DropdownItem
                   key="resume"
