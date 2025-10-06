@@ -88,6 +88,14 @@ type ChangeAppointmentData = FormData & {
   day: string;
 };
 
+type FixedSession = { weekday: string; time: string };
+type FlexibleSession = { date: string; time: string };
+
+interface AppointmentForm {
+  fixed_sessions: FixedSession[];
+  flexible_sessions: FlexibleSession[];
+}
+
 export const Appointments = ({
   appointmentData,
   isLoadingappointment,
@@ -182,6 +190,18 @@ export const Appointments = ({
   handleSubmit: handleSubmitCompensate,
   formState: { errors: errorsCompensate },
 } = useForm<any>();
+
+  const {
+    control: controlAppointments,
+    handleSubmit: handleSubmitAppointments,
+    watch: watchAppointments,
+    reset: resetAppointments,
+  } = useForm<AppointmentForm>({
+    defaultValues: {
+      fixed_sessions: [],
+      flexible_sessions: [],
+    },
+  });
 
   const ChangeAppointment = useMutation({
     mutationFn: (submitData: ChangeAppointmentData) => {
@@ -321,26 +341,39 @@ export const Appointments = ({
   });
 
   const ChangeAppointments = useMutation({
-    mutationFn: (payload: any) => {
+    mutationFn: async (payload: any) => {
       const myHeaders = new Headers();
       myHeaders.append("local", "ar");
       myHeaders.append("Accept", "application/json");
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
       myHeaders.append("Content-Type", "application/json");
 
-      return postData("change/sessions/with/new/dates", JSON.stringify(payload), myHeaders);
+      const endpoint =
+        tabKey === "fixed"
+          ? "client/edit/program/sessions/with/weekly/appointments"
+          : "client/edit/program/sessions/with/manual/appointments";
+
+      return postData(endpoint, JSON.stringify(payload), myHeaders);
     },
     onSuccess: (data) => {
-      addToast({
-        title: data?.message || "تم تغيير المعلم بنجاح",
+      if (data.status !== 200 && data.status !== 201) {
+        addToast({
+          title: data.message.appointments[0],
+          color: "danger",
+        });
+      } else {
+        addToast({
+        title: data?.message || "تم تعديل المواعيد بنجاح",
         color: "success",
       });
       setModalOpen(false);
+      refetch();
+      }
     },
     onError: (error) => {
-      console.error("Error changing instructor", error);
+      console.error("Error changing appointments", error);
       addToast({
-        title: "حدث خطأ أثناء تغيير المعلم",
+        title: "حدث خطأ أثناء تعديل المواعيد",
         color: "danger",
       });
     },
@@ -837,9 +870,222 @@ export const Appointments = ({
         </ModalContent>
       </Modal>
 
+      {/* تغيير المواعيد */}
+      <Modal
+        scrollBehavior="inside"
+        isOpen={modalOpen}
+        onOpenChange={(open) => !open && setModalOpen(false)}
+        size="3xl"
+      >
+        <ModalContent>
+          <>
+            <ModalHeader className="text-lg font-bold text-[#272727] flex justify-center">
+              اختر المواعيد المناسبة
+            </ModalHeader>
+
+            <ModalBody className="min-h-[300px]">
+              <Tabs
+                selectedKey={tabKey}
+                onSelectionChange={(key) => setTabKey(key as string)}
+                aria-label="sub-tabs"
+                classNames={{
+                  cursor: "bg-primary",
+                  tabContent:
+                    "text-black-text text-sm font-bold group-data-[selected=true]:text-white",
+                  tabList: "bg-[#EAF0FD] w-full",
+                }}
+              >
+                {/* ---------------- مواعيد ثابتة ---------------- */}
+                <Tab key="fixed" title="مواعيد ثابتة" className="w-full p-5">
+                  <Input
+                    label="تاريخ البدء"
+                    placeholder="نص الكتابه"
+                    type="date"
+                    labelPlacement="outside"
+                    classNames={{
+                      label: "text-[#272727] font-bold text-sm",
+                      inputWrapper: "shadow-none",
+                      base: "mb-4",
+                    }}
+                    defaultValue={subscriptionDetails?.data?.start_date?.split("T")[0]}
+                  />
+
+                  {(subscriptionDetails?.data?.number_of_session_per_week
+                    ? Array.from({
+                      length: Number(subscriptionDetails.data.number_of_session_per_week),
+                    })
+                    : []
+                  ).map((_, index) => (
+                    <div key={index} className="flex gap-4 mt-4">
+                      {/* اليوم */}
+                      <Controller
+                        name={`fixed_sessions.${index}.weekday`}
+                        control={controlAppointments}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            selectedKeys={field.value ? [field.value] : []}
+                            onSelectionChange={(keys) =>
+                              field.onChange(Array.from(keys)[0])
+                            }
+                            label="اليوم"
+                            labelPlacement="outside"
+                            placeholder="اختر اليوم"
+                            classNames={{
+                              label: "text-[#272727] font-bold text-sm",
+                              base: "mb-4",
+                              value: "text-[#87878C] text-sm",
+                            }}
+                          >
+                            {weekDays.map((day: any) => (
+                              <SelectItem key={day.key}>{day.label}</SelectItem>
+                            ))}
+                          </Select>
+                        )}
+                      />
+
+                      {/* الوقت */}
+                      <Controller
+                        name={`fixed_sessions.${index}.time`}
+                        control={controlAppointments}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            label="الوقت"
+                            type="time"
+                            labelPlacement="outside"
+                            classNames={{
+                              label: "text-[#272727] font-bold text-sm",
+                              inputWrapper: "shadow-none",
+                              base: "mb-4",
+                            }}
+                          />
+                        )}
+                      />
+                    </div>
+                  ))}
+                </Tab>
+
+                {/* ---------------- مواعيد مرنة ---------------- */}
+                <Tab key="flexible" title="مواعيد مرنة" className="w-full p-5">
+                  {(subscriptionDetails?.data?.number_of_sessions
+                    ? Array.from({
+                      length: Number(subscriptionDetails.data.number_of_sessions),
+                    })
+                    : []
+                  ).map((_, index) => (
+                    <div key={index} className="flex gap-4 mt-4">
+                      {/* التاريخ */}
+                      <Controller
+                        name={`flexible_sessions.${index}.date`}
+                        control={controlAppointments}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            label="الموعد"
+                            type="date"
+                            labelPlacement="outside"
+                            classNames={{
+                              label: "text-[#272727] font-bold text-sm",
+                              inputWrapper: "shadow-none",
+                              base: "mb-4",
+                            }}
+                          />
+                        )}
+                      />
+
+                      {/* الوقت */}
+                      <Controller
+                        name={`flexible_sessions.${index}.time`}
+                        control={controlAppointments}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            label="الوقت"
+                            type="time"
+                            labelPlacement="outside"
+                            classNames={{
+                              label: "text-[#272727] font-bold text-sm",
+                              inputWrapper: "shadow-none",
+                              base: "mb-4",
+                            }}
+                          />
+                        )}
+                      />
+                    </div>
+                  ))}
+                </Tab>
+              </Tabs>
+            </ModalBody>
+
+            <ModalFooter className="flex justify-center gap-4">
+              <Button
+                type="button"
+                onPress={() => setModalOpen(false)}
+                variant="solid"
+                color="primary"
+                className="text-white"
+              >
+                إلغاء
+              </Button>
+
+              <Button
+                type="button"
+                variant="solid"
+                color="primary"
+                className="text-white"
+                isLoading={ChangeAppointments?.isPending}
+                isDisabled={ChangeAppointments?.isPending}
+                onPress={() => {
+                  handleSubmitAppointments(() => {
+                    const fixedSessions = watchAppointments("fixed_sessions");
+                    const flexibleSessions = watchAppointments("flexible_sessions");
+
+                    if (tabKey === "fixed") {
+                      const weeklyAppointments: Record<string, string> = {};
+                      fixedSessions?.forEach((session) => {
+                        if (session?.weekday && session?.time) {
+                          weeklyAppointments[session.weekday] = session.time;
+                        }
+                      });
+
+                      ChangeAppointments.mutate({
+                        user_id: currentStudent.id,
+                        duration: Number(subscriptionDetails?.data?.duration),
+                        program_id,
+                        appointments: weeklyAppointments,
+                        instructor_id: instructorId,
+                      });
+                    } else {
+                      const manualAppointments =
+                        flexibleSessions
+                          ?.filter((s) => s.date && s.time)
+                          .map((s) => ({
+                            date: s.date,
+                            time: s.time,
+                          })) || [];
+
+                      ChangeAppointments.mutate({
+                        user_id: currentStudent.id,
+                        duration: Number(subscriptionDetails?.data?.duration),
+                        program_id,
+                        appointments: manualAppointments,
+                        instructor_id: instructorId,
+                        expire_date: expire_date,
+                      });
+                    }
+                  })();
+                }}
+              >
+                تأكيد
+              </Button>
+            </ModalFooter>
+          </>
+        </ModalContent>
+      </Modal>
 
       <div className="flex gap-4 items-center justify-end">
-        {/* <button
+        <button
           className="flex justify-end items-center gap-1 pt-4"
           onClick={() => setModalOpen(true)}
         >
@@ -847,7 +1093,7 @@ export const Appointments = ({
           <span className="text-center justify-start text-primary text-sm font-bold">
             تغيير المواعيد
           </span>
-        </button> */}
+        </button>
         <button
           className="flex justify-end items-center gap-1 pt-4"
           onClick={() => {
