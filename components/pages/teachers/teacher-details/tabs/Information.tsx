@@ -37,6 +37,11 @@ type TeacherDetailsProps = {
         label: string;
         color: string;
       };
+      status: {
+        label: string;
+        color: string;
+        key: string;
+      };
       specializations: {
         id: number;
         title: string;
@@ -73,18 +78,22 @@ const schema = yup
       .of(yup.number())
       .min(1, "اختر تخصص واحد على الأقل")
       .required("اختر التخصصات"),
-
+    status: yup
+      .string()
+      .required("اختر الحالة"),
   })
   .required();
 
 type FormData = yup.InferType<typeof schema>;
 
 export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
+  console.log(data);
+  
   const router = useRouter();
   const params = useParams();
   const instructor_id = params.id;
   const [editField, setEditField] = useState<string | null>(null);
-  const { control, handleSubmit, watch } = useForm<FormData>({
+  const { control, handleSubmit, watch, getValues } = useForm<FormData>({
       defaultValues: {
       specializations: data?.data?.specializations?.map((s) => s.id) || [],
       name_ar: data?.data?.name_ar || "",
@@ -94,7 +103,8 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
       address: data?.data?.address || "",
       age: data?.data?.age || "",
       gender: data?.data?.gender || "",
-      image: []
+      image: [],
+      status: data?.data?.status.key,
       },
     });
 
@@ -322,6 +332,33 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
       }
     },
   });
+
+  const updateStatus = useMutation({
+    mutationFn: async () => {
+      const myHeaders = new Headers();
+      myHeaders.append("local", "ar");
+      myHeaders.append("Accept", "application/json");
+      myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
+
+      const formdata = new FormData();
+      const selectedStatus = getValues("status");
+      formdata.append("status", selectedStatus);
+
+      return postData(`client/instructor/update/status/${instructor_id}`, formdata, myHeaders);
+    },
+    onSuccess: (res) => {
+      if (res?.message === "success") {
+        addToast({ title: res?.message, color: "success" });
+        onUpdated?.(res.data);
+        setEditField(null);
+      } else {
+        addToast({ title: "error", color: "danger" });
+      }
+    },
+    onError: () => {
+      addToast({ title: "خطأ أثناء الحفظ", color: "danger" });
+    },
+   });
 
   return (
     <form
@@ -711,23 +748,81 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
         )}
       </div>
 
-      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
-        <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke mt-4">
+        <div className="flex flex-col gap-4 w-1/2">
           <span className="text-[#5E5E5E] text-sm font-bold">الحالة</span>
-          <div
-            className={`
-                text-${data?.data?.status_label?.color === "info" 
-                ? "warning" 
-                : data?.data?.status_label?.color || "primary"} 
-                bg-${data?.data?.status_label?.color === "info" 
-                ? "warning" 
-                : data?.data?.status_label?.color || "primary"} bg-opacity-10
-                px-5 py-1 rounded-3xl font-bold text-[15px]
-            `}
+          {editField === "status" ? (
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  selectedKeys={field.value ? [field.value] : [""]}
+                  labelPlacement="outside"
+                  placeholder="اختر الحالة"
+                  classNames={{
+                    label: "text-[#272727] font-bold text-sm",
+                    base: "mb-4",
+                    value: "text-[#87878C] text-sm",
+                  }}
+                >
+                  {[
+                    { key: "active", label: "نشط" },
+                    { key: "fired", label: "مطرود" },
+                    { key: "hold", label: "معلق" },
+                    { key: "in_review", label: "تحت المراجعة" },
+                  ].map((item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  ))}
+                </Select>
+              )}
+            />
+          ) : (
+            <div
+              className={`
+          text-${data?.data?.status?.color === "info"
+                  ? "warning"
+                  : data?.data?.status?.color || "primary"
+                } 
+          bg-${data?.data?.status?.color === "info"
+                  ? "warning"
+                  : data?.data?.status?.color || "primary"
+                } bg-opacity-10
+          px-5 py-1 rounded-3xl font-bold text-[15px] w-fit
+        `}
             >
-            {data?.data?.status_label?.label || "نشط"}
-          </div>
+                {{
+                  active: "نشط",
+                  fired: "مطرود",
+                  hold: "معلق",
+                  in_review: "تحت المراجعة",
+                }[data?.data?.status?.key] || "نشط"}
+
+            </div>
+          )}
         </div>
+
+        {editField === "status" ? (
+          <Button
+            size="sm"
+            color="primary"
+            variant="solid"
+            className="text-white"
+            onPress={()=> updateStatus.mutate()}
+          >
+            حفظ
+          </Button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditField("status")}
+            className="flex items-center gap-1 text-sm font-bold"
+          >
+            <Edit2 size={18} />
+            تعديل
+          </button>
+        )}
       </div>
 
       {/* الفئات العمرية */}
