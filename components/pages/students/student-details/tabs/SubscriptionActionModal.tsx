@@ -36,7 +36,7 @@ export default function SubscriptionActionModal({
     onActionSuccess,
     subscription_id
 }: SubscriptionActionModalProps) {
-    const { handleSubmit, control, reset } = useForm({
+    const { handleSubmit, control, reset, setValue, formState: { errors } } = useForm({
         defaultValues: {
             paid: "",
             image: [],
@@ -145,6 +145,7 @@ export default function SubscriptionActionModal({
                         children_users={children_users}
                         data={data?.data}
                         control={control}
+                        setValue={setValue}
                         selectedTab={selectedTab}
                         setSelectedTab={setSelectedTab}
                         program_id={programId}
@@ -348,9 +349,17 @@ export default function SubscriptionActionModal({
                     <Button color="primary" variant="solid" className="text-white" onPress={onClose}>
                         إلغاء
                     </Button>
-                    <Button isLoading={handleAction.isPending} color="primary" variant="solid" className="text-white" onPress={() => handleSubmit(onSubmit)()}>
+                    <Button
+                        isLoading={handleAction.isPending}
+                        color="primary"
+                        variant="solid"
+                        className="text-white"
+                        isDisabled={Object.keys(errors).length > 0}
+                        onPress={() => handleSubmit(onSubmit)()}
+                    >
                         حفظ
                     </Button>
+
                 </ModalFooter>
             </ModalContent>
         </Modal>

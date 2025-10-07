@@ -28,10 +28,6 @@ export default async function page({
     },
     {
       id: 3,
-      name: "بيانات المعلم",
-    },
-    {
-      id: 4,
       name:
         `${data?.data?.name_ar}` || "بيانات المعلم",
     },

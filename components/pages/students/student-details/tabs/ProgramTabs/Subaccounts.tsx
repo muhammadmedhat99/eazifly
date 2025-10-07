@@ -263,15 +263,16 @@ export const Subaccounts = ({
 
               {/* Tabs */}
               <div className="flex items-center justify-between w-full md:w-fit flex-wrap gap-2 bg-[#EAF0FD] border border-primary border-opacity-50 p-2 rounded-lg">
-                <div className="flex gap-2">
+                <div className="flex md:gap-2">
                   {[
                     { key: "appointments", title: "المواعيد" },
                     { key: "allAppointments", title: "المحاضرات" },
+                    { key: "assignments", title: "التسليمات" },
                   ].map((tab) => (
                     <button
                       key={tab.key}
                       onClick={() => setSelectedTab(tab.key)}
-                      className={`text-sm font-bold px-3 py-2 rounded-md transition-colors ${selectedTab === tab.key
+                      className={`text-xs md:text-sm font-bold px-3 py-2 rounded-md transition-colors ${selectedTab === tab.key
                           ? "bg-primary text-white"
                           : "text-black-text"
                         }`}
@@ -293,7 +294,7 @@ export const Subaccounts = ({
                       selectedKeys={[selectedTab]}
                     >
                       {[
-                        { key: "assignments", title: "التسليمات" },
+                        
                         { key: "reports", title: "التقارير" },
                         { key: "feedbacks", title: "الملاحظات" },
                       ].map((tab) => (
@@ -305,7 +306,6 @@ export const Subaccounts = ({
 
                 <div className="hidden md:flex gap-2">
                   {[
-                    { key: "assignments", title: "التسليمات" },
                     { key: "reports", title: "التقارير" },
                     { key: "feedbacks", title: "الملاحظات" },
                   ].map((tab) => (

@@ -30,10 +30,6 @@ export default async function page({
     },
     {
       id: 3,
-      name: "بيانات الطلاب",
-    },
-    {
-      id: 4,
       name:
         `${data?.data?.first_name} ${data?.data?.last_name}` || "بيانات الطلاب",
     },

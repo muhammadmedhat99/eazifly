@@ -25,6 +25,7 @@ type Props = {
   children_users: ChildUser[];
   data: ProgramData | undefined;
   control: any;
+  setValue: any;
   selectedTab: string;
   setSelectedTab: (value: string) => void;
   program_id: any;
@@ -34,12 +35,16 @@ const ProgramChangeComponent = ({
   children_users,
   data,
   control,
+  setValue,
   selectedTab,
   setSelectedTab,
   program_id,
 }: Props) => {
   const [discountPrice, setDiscountPrice] = useState<string>("");
+  const [totalPrice, setTotalPrice] = useState<string>("");
+
   const [errorMsg, setErrorMsg] = useState<string>("");
+
 
   if (!data) return null;
 
@@ -59,6 +64,29 @@ const ProgramChangeComponent = ({
     control,
     name: ["subscripe_days", "number_of_session_per_week", "duration"],
   });
+
+  const watchedUsersIds = useWatch({ control, name: "users_ids" });
+  const watchedStudentNumber = useWatch({ control, name: "student_number" });
+
+  useEffect(() => {
+    const studentCount =
+      watchedUsersIds?.length > 0
+        ? watchedUsersIds.length
+        : Number(watchedStudentNumber) || 0;
+
+    if (discountPrice && !isNaN(Number(discountPrice)) && studentCount > 0) {
+      const total = Number(discountPrice) * studentCount;
+      setTotalPrice(total.toString());
+    } else {
+      setTotalPrice("");
+    }
+  }, [discountPrice, watchedUsersIds, watchedStudentNumber]);
+
+  useEffect(() => {
+    if (children_users?.length) {
+      setValue("student_number", children_users.length);
+    }
+  }, [children_users, setValue]);
 
   const fetchPlanPrice = async (formValues: any) => {
     try {
@@ -138,11 +166,13 @@ const ProgramChangeComponent = ({
       <Controller
         name="users_ids"
         control={control}
-        defaultValue={children_users.map((child) => child.user_id)}
+        defaultValue={children_users.map((child) => child.user_id)} // كويس تفضل
         render={({ field }) => (
           <div className="flex flex-col gap-3">
             {children_users.map((child) => {
-              const isChecked = field.value?.includes(child.user_id);
+              const selectedIds = field.value || []; // ✅ fallback مهم جداً
+              const isChecked = selectedIds.includes(child.user_id);
+
               return (
                 <div
                   key={child.user_id}
@@ -151,18 +181,21 @@ const ProgramChangeComponent = ({
                   <div className="flex items-center gap-3">
                     <Checkbox
                       isSelected={isChecked}
-                      onChange={(checked) => {
+                      onChange={(e) => {
+                        const checked = e.target.checked; // ✅ نجيب الحالة الصح كده
+                        const selectedIds = field.value || [];
+                        let updated = [];
+
                         if (checked) {
-                          field.onChange([...field.value, child.user_id]);
+                          updated = [...selectedIds, child.user_id];
                         } else {
-                          field.onChange(
-                            field.value.filter(
-                              (id: string) => id !== child.user_id
-                            )
-                          );
+                          updated = selectedIds.filter((id: string) => id !== child.user_id);
                         }
+
+                        field.onChange(updated);
                       }}
                     />
+
                     <User
                       avatarProps={{
                         radius: "full",
@@ -187,6 +220,7 @@ const ProgramChangeComponent = ({
           </div>
         )}
       />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Controller
           name="number_of_session_per_week"
@@ -211,12 +245,19 @@ const ProgramChangeComponent = ({
         <Controller
           name="student_number"
           control={control}
+          rules={{
+            min: {
+              value: watchedUsersIds?.length || 0,
+              message: `القيمة لازم تكون أكبر من أو تساوي ${watchedUsersIds?.length || 0}`,
+            },
+            required: "هذا الحقل مطلوب",
+          }}
           defaultValue={children_users.length}
           render={({ field }) => (
             <Input
               {...field}
               type="number"
-              min={children_users.length}
+              min={watchedUsersIds?.length || 0}
               label="عدد الطلاب"
               placeholder="عدد الطلاب"
               labelPlacement="outside"
@@ -271,7 +312,7 @@ const ProgramChangeComponent = ({
             <Input
               {...field}
               isDisabled
-              value={discountPrice || errorMsg}
+              value={totalPrice || errorMsg}
               label="المبلغ المستحق"
               placeholder="0"
               labelPlacement="outside"

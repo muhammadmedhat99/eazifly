@@ -772,9 +772,14 @@ export const Information = ({ data, onUpdated  }: TeacherDetailsProps) => {
                     { key: "fired", label: "مطرود" },
                     { key: "hold", label: "معلق" },
                     { key: "in_review", label: "تحت المراجعة" },
-                  ].map((item) => (
-                    <SelectItem key={item.key}>{item.label}</SelectItem>
-                  ))}
+                  ]
+                    .filter((item) =>
+                      data?.data?.status?.key === "active" ? item.key !== "in_review" : true
+                    )
+                    .map((item) => (
+                      <SelectItem key={item.key}>{item.label}</SelectItem>
+                    ))}
+
                 </Select>
               )}
             />
