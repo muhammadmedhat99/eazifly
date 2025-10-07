@@ -32,6 +32,11 @@ type TeacherDetailsProps = {
         label: string;
         color: string;
       };
+      status: {
+        label: string;
+        color: string;
+        key: string;
+      };
       specializations: {
         id: number;
         title: string;

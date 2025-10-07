@@ -146,6 +146,7 @@ const ActionsComponent = ({
   subscription_status,
   refetchSubscriptions,
   isParent,
+  subscription_id
 }: {
   id: number;
   user_id: any;
@@ -153,6 +154,7 @@ const ActionsComponent = ({
   subscription_status: string;
   refetchSubscriptions: () => void;
   isParent: boolean;
+  subscription_id: any;
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
@@ -182,6 +184,7 @@ const ActionsComponent = ({
       var formdata = new FormData();
       formdata.append("program_id", id.toString());
       formdata.append("user_id", user_id);
+      formdata.append("subscription_id", subscription_id);
 
       return postData("client/order/cancel", formdata, myHeaders);
     },
@@ -218,6 +221,7 @@ const ActionsComponent = ({
       var formdata = new FormData();
       formdata.append("program_id", id.toString());
       formdata.append("user_id", user_id);
+      formdata.append("subscription_id", subscription_id);
 
       return postData("client/subscription/resume", formdata, myHeaders);
     },
@@ -291,14 +295,14 @@ const ActionsComponent = ({
               >
                 تغيير الاشتراك
               </DropdownItem>
-              {subscription_status !== "freeze" && (
-                <DropdownItem
-                  key="Pause"
-                  onClick={() => handleActionClick("Pause")}
-                >
-                  إيقاف مؤقت
-                </DropdownItem>
-              )}
+                {subscription_status !== "freeze" && subscription_status !== "expired" && (
+                  <DropdownItem
+                    key="Pause"
+                    onClick={() => handleActionClick("Pause")}
+                  >
+                    إيقاف مؤقت
+                  </DropdownItem>
+                )}
               {subscription_status === "freeze" && (
                 <DropdownItem
                   key="resume"
@@ -328,13 +332,14 @@ const ActionsComponent = ({
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         action={selectedAction}
-        subscriptionId={id}
+        programId={id}
         user_id={user_id}
         children_users={children_users}
         onActionSuccess={() => {
           refetchSubscriptions();
           setModalOpen(false);
         }}
+        subscription_id={subscription_id}
       />
 
       <ConfirmModal
@@ -557,6 +562,7 @@ export const Programs = ({
                                 subscription_status={subscription.subscription_status.key}
                                 refetchSubscriptions={refetch}
                                 isParent={data.data.parent_id === null}
+                                subscription_id={subscription.main_subscription_id}
                               />
                             </div>
                             <Progress
@@ -572,7 +578,7 @@ export const Programs = ({
 
                           <div className="hidden md:flex items-center justify-between mt-5 md:mt-3 gap-2">
                             <div className="text-sm font-semibold text-title whitespace-nowrap">
-                              تاريخ الإشتراك
+                              تاريخ آخر تجديد
                               <br />
                               {subscription.subscription_date}
                             </div>

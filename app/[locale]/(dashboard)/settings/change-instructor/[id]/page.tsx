@@ -1,5 +1,5 @@
 import { BreadCrumb } from "@/components/global/BreadCrumb";
-import { TeacherDetails } from "@/components/pages/teachers/teacher-details";
+import { ReasonDetails } from "@/components/pages/settings/change-instructor/reason-details";
 import { fetchData } from "@/lib/utils";
 import { cookies } from "next/headers";
 import React from "react";
@@ -10,10 +10,10 @@ export default async function page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const cookieStore = await cookies();  
+  const cookieStore = await cookies();
   const token = cookieStore.get("token");
-  const data = await fetchData(`client/instructor/show/${id}`, token?.value);
-  const reportsData = await fetchData(`client/instructor/reports/${id}`, token?.value);
+
+  const reasonData = (await fetchData(`client/reason/change/instructor/show/${id}`, token?.value)) as any;
 
   const BreadCrumbItems = [
     {
@@ -23,20 +23,25 @@ export default async function page({
     },
     {
       id: 2,
-      name: "المعلمين",
-      link: "/teachers",
+      name: "أسباب تغيير المعلم",
+      link: "/settings/change-instructor",
     },
     {
       id: 3,
+      name: "بيانات السبب",
+    },
+    {
+      id: 4,
       name:
-        `${data?.data?.name_ar}` || "بيانات المعلم",
+        `${reasonData?.data?.title_ar}`,
     },
   ];
   return (
+    
     <>
       <BreadCrumb items={BreadCrumbItems} />
 
-      <TeacherDetails data={data} reportsData={reportsData} />
+      <ReasonDetails data={reasonData} />
     </>
   );
 }

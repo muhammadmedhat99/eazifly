@@ -18,9 +18,9 @@ export async function middleware(request: NextRequest) {
   }
 
   const token = request.cookies.get('token')?.value;
+  const role = request.cookies.get('role')?.value; // 👈 هنا بنجيب الـ role من الكوكيز
   const { pathname } = request.nextUrl;
 
-  // Strip the locale prefix to compare with auth paths
   const pathWithoutLocale = pathname.replace(/^\/(ar|en)/, '');
   const isAuthPage = authPaths.includes(pathWithoutLocale);
 
@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  if (token) {
+  if (token && role !== 'super_admin') {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}client/get/client/permission`, {
         headers: {

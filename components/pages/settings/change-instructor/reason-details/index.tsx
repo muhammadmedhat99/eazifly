@@ -1,7 +1,7 @@
 "use client";
 import { Edit2 } from "iconsax-reactjs";
 
-import { Avatar, Input, Button, image, addToast } from "@heroui/react";
+import { Avatar, Input, Button, image, addToast, Select, SelectItem } from "@heroui/react";
 import { formatDate } from "@/lib/helper";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -14,57 +14,67 @@ import { useParams } from "next/navigation";
 import { axios_config } from "@/lib/const";
 import { Loader } from "@/components/global/Loader";
 
-type RoleDetailsProps = {
+
+type ReasonDetailsProps = {
     data: {
         data: {
             id: number;
-            name: string,
-            created_at: string
+            title: string,
+            title_ar: string;
+            title_en: string;
+            created_at: string;
         };
     };
 };
 
 const schema = yup
     .object({
-        name: yup
+        title_en: yup
             .string()
-            .required("ادخل الاسم")
-            .min(3, "الاسم لا يجب أن يقل عن ٣ أحرف"),
+            .required("ادخل العنوان بالعربية")
+            .min(3, "العنوان لا يجب أن يقل عن ٣ أحرف"),
+
+        title_ar: yup
+            .string()
+            .required("ادخل العنوان بالإنجليزية")
+            .min(3, "العنوان لا يجب أن يقل عن ٣ أحرف"),
     })
     .required();
 
 
 type FormData = yup.InferType<typeof schema>;
 
-export const RoleDetails = ({ data }: RoleDetailsProps) => {
+export const ReasonDetails = ({ data }: ReasonDetailsProps) => {
     const params = useParams();
     const id = params.id;
     const queryClient = useQueryClient();
     const [editField, setEditField] = useState<string | null>(null);
-    const { control, handleSubmit, watch } = useForm<FormData>({
+    const { control, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
         defaultValues: {
-            name: data?.data?.name || "",
+            title_ar: data?.data?.title_ar || "",
+            title_en: data?.data?.title_en || "",
         },
     });
 
-    const { data: roleData, isLoading } = useQuery({
-        queryKey: ['role', id],
-        queryFn: async () => await fetchClient(`client/show/role/${id}`, axios_config),
+    const { data: changeInstructorReasons, isLoading } = useQuery({
+        queryKey: ['changeInstructorReasons', id],
+        queryFn: async () => await fetchClient(`client/reason/change/instructor/show/${id}`, axios_config),
     });
 
-    const onSubmit = (data: FormData) => UpdateRole.mutate(data);
+    const onSubmit = (data: FormData) => UpdateReason.mutate(data);
 
-    const UpdateRole = useMutation({
+    const UpdateReason = useMutation({
         mutationFn: (submitData: FormData) => {
             var myHeaders = new Headers();
             myHeaders.append("local", "ar");
             myHeaders.append("Accept", "application/json");
             myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
             var formdata = new FormData();
-            formdata.append("name", submitData.name);
+            formdata.append("ar[title]", submitData.title_ar);
+            formdata.append("en[title]", submitData.title_en);
 
             return postData(
-                `client/update/role/${data.data.id}`,
+                `client/reason/change/instructor/update/${data.data.id}`,
                 formdata,
                 myHeaders
             );
@@ -80,7 +90,7 @@ export const RoleDetails = ({ data }: RoleDetailsProps) => {
                     title: data?.message,
                     color: "success",
                 });
-                queryClient.invalidateQueries({ queryKey: ['role', id] });
+                queryClient.invalidateQueries({ queryKey: ['changeInstructorReasons', id] });
             }
             setEditField(null);
         },
@@ -102,22 +112,29 @@ export const RoleDetails = ({ data }: RoleDetailsProps) => {
         >
             <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
                 <div className="flex flex-col gap-4">
-                    <span className="text-[#5E5E5E] text-sm font-bold">الاسم</span>
+                    <span className="text-[#5E5E5E] text-sm font-bold">العنوان</span>
                     {editField === "name" ? (
                         <div className="flex flex-col md:flex-row gap-4 w-full">
                             <div className="flex flex-col gap-2 w-full">
                                 <Controller
-                                    name="name"
+                                    name="title_ar"
                                     control={control}
                                     render={({ field }) => (
-                                        <Input {...field} placeholder="الاسم بالعربية" size="sm" />
+                                        <Input {...field} placeholder="العنوان بالعربية" size="sm" />
+                                    )}
+                                />
+                                <Controller
+                                    name="title_en"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input {...field} placeholder="العنوان بالإنجليزية" size="sm" />
                                     )}
                                 />
                             </div>
                         </div>
                     ) : (
                         <span className="text-black-text font-bold text-[15px]">
-                            {roleData?.data?.name}
+                            {`${changeInstructorReasons?.data?.title_ar} / ${changeInstructorReasons?.data?.title_en}`}
                         </span>
                     )}
                 </div>
@@ -128,10 +145,9 @@ export const RoleDetails = ({ data }: RoleDetailsProps) => {
                     </Button>
                 ) : (
                     <button
-                        disabled
                         type="button"
                         onClick={() => setEditField("name")}
-                        className="flex items-center gap-1 text-sm font-bold opacity-50"
+                        className="flex items-center gap-1 text-sm font-bold"
                     >
                         <Edit2 size={18} />
                         تعديل
@@ -139,11 +155,12 @@ export const RoleDetails = ({ data }: RoleDetailsProps) => {
                 )}
             </div>
 
+
             <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
                 <div className="flex flex-col gap-4">
                     <span className="text-[#5E5E5E] text-sm font-bold">تاريخ الإنشاء</span>
                     <span className="text-black-text font-bold text-[15px]">
-                        {formatDate(roleData?.data?.created_at)}
+                        {formatDate(changeInstructorReasons?.data?.created_at)}
                     </span>
                 </div>
             </div>

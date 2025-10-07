@@ -1,7 +1,7 @@
 "use client";
 import { Add, ArrowLeft2, ArrowRight2, Trash } from "iconsax-reactjs";
 import { Loader } from "@/components/global/Loader";
-import { addToast, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs, toast } from "@heroui/react";
+import { addToast, Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs, toast } from "@heroui/react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchClient, postData } from "@/lib/utils";
@@ -13,6 +13,7 @@ import { Reports } from "./reports";
 import { getCookie } from "cookies-next";
 import ConfirmModal from "@/components/global/ConfirmModal";
 import AddSubaccountModal from "./AddSubaccountModal";
+import { MenuIcon } from "@/components/global/Icons";
 
 type appointmentsProps = {
   subaccountData?: any;
@@ -149,7 +150,7 @@ export const Subaccounts = ({
     enabled: selectedTab === "appointments" && hasCurrentStudent,
   });
 
-  const { data: feedbackData, isLoading: isLoadingfeedback } = useQuery({
+  const { data: feedbackData, isLoading: isLoadingfeedback, refetch: refetchFeedbacks } = useQuery({
     queryKey: ["subaccountfeedbacks", currentStudent?.id, program_id],
     queryFn: async () =>
       await fetchClient(`client/user/feedback/${currentStudent.id}`, {
@@ -260,27 +261,68 @@ export const Subaccounts = ({
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="overflow-x-auto">
-              <Tabs
-                selectedKey={selectedTab}
-                onSelectionChange={(key) => setSelectedTab(key.toString())}
-                aria-label="sub-tabss"
-                classNames={{
-                  cursor: "bg-primary",
-                  tabContent:
-                    "text-black-text text-sm font-bold group-data-[selected=true]:text-white",
-                  tabList:
-                    "bg-[#EAF0FD] p-1.5 border border-primary border-opacity-50",
-                }}
-              >
-                <Tab key="appointments" title="المواعيد" />
-                <Tab key="allAppointments" title="المحاضرات" />
-                <Tab key="assignments" title="التسليمات" />
-                <Tab key="reports" title="التقارير" />
-                <Tab key="feedbacks" title="الملاحظات" />
-              </Tabs>
-            </div>
+              {/* Tabs */}
+              <div className="flex items-center justify-between w-full md:w-fit flex-wrap gap-2 bg-[#EAF0FD] border border-primary border-opacity-50 p-2 rounded-lg">
+                <div className="flex md:gap-2">
+                  {[
+                    { key: "appointments", title: "المواعيد" },
+                    { key: "allAppointments", title: "المحاضرات" },
+                    { key: "assignments", title: "التسليمات" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setSelectedTab(tab.key)}
+                      className={`text-xs md:text-sm font-bold px-3 py-2 rounded-md transition-colors ${selectedTab === tab.key
+                          ? "bg-primary text-white"
+                          : "text-black-text"
+                        }`}
+                    >
+                      {tab.title}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="block md:hidden">
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <button className="px-3 py-2 text-sm font-semibold hover:bg-gray-100">
+                        <MenuIcon />
+                      </button>
+                    </DropdownTrigger>
+                    <DropdownMenu
+                      onAction={(key) => setSelectedTab(key.toString())}
+                      selectedKeys={[selectedTab]}
+                    >
+                      {[
+                        
+                        { key: "reports", title: "التقارير" },
+                        { key: "feedbacks", title: "الملاحظات" },
+                      ].map((tab) => (
+                        <DropdownItem key={tab.key}>{tab.title}</DropdownItem>
+                      ))}
+                    </DropdownMenu>
+                  </Dropdown>
+                </div>
+
+                <div className="hidden md:flex gap-2">
+                  {[
+                    { key: "reports", title: "التقارير" },
+                    { key: "feedbacks", title: "الملاحظات" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setSelectedTab(tab.key)}
+                      className={`text-sm font-bold px-3 py-2 rounded-md transition-colors ${selectedTab === tab.key
+                          ? "bg-primary text-white"
+                          : "text-black-text"
+                        }`}
+                    >
+                      {tab.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
           </div>
 
           {/* Tab Content */}
@@ -326,6 +368,8 @@ export const Subaccounts = ({
                 feedbackData={feedbackData}
                 isLoadingfeedback={isLoadingfeedback}
                 client_id={+ClientId}
+                refetchFeedbacks={refetchFeedbacks}
+                currentStudent={currentStudent}
               />
             )}
           </div>

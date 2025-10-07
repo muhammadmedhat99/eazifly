@@ -8,6 +8,7 @@ import { ibmPlexSansArabic } from "./fonts";
 import {NextIntlClientProvider, hasLocale} from 'next-intl';
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
+import NextTopLoader from "@kfarwell/nextjs-toploader";
 
 export const metadata: Metadata = {
   title: {
@@ -45,6 +46,11 @@ export default async function RootLayout({
           ibmPlexSansArabic.className
         )}
       >
+        <NextTopLoader
+          color="#3B82F6"
+          height={3}
+          showSpinner={false}
+        />
         <NextIntlClientProvider>
           <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
             {children}
