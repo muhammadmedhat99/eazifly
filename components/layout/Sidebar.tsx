@@ -148,11 +148,24 @@ export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
                   <AccordionItem
                     aria-label={`Accordion ${item.id}`}
                     title={
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 relative">
                         <Icon size={18} />
                         <span className="text-[13px] font-bold">
                           {item.name}
                         </span>
+                          {item.sub_routes.some((sub: any) => {
+                            if (sub.route === "/subscriptions" && counts?.new_orders) return true;
+                            if (sub.route === "/renewals" && counts?.subscriptions) return true;
+                            if (
+                              sub.route === "/requests/info" &&
+                              (counts?.request_to_cancel_sessions ||
+                                counts?.instructor_requests_to_change_data)
+                            )
+                              return true;
+                            return false;
+                          }) && (
+                              <span className="w-2.5 h-2.5 bg-red-500 rounded-full absolute -top-1.5 -right-2"></span>
+                            )}
                       </div>
                     }
                     classNames={{
@@ -178,6 +191,20 @@ export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
                             counts?.new_orders ? (
                               <span className="ml-2 flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[11px] font-bold">
                                 {counts.new_orders}
+                              </span>
+                            ) : null}
+                            {subItem.route === "/renewals" &&
+                            counts?.subscriptions ? (
+                              <span className="ml-2 flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[11px] font-bold">
+                                {counts.subscriptions}
+                              </span>
+                            ) : null}
+                            {subItem.route === "/requests/info" &&
+                              (counts?.request_to_cancel_sessions ||
+                                counts?.instructor_requests_to_change_data) ? (
+                              <span className="ml-2 flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[11px] font-bold">
+                                {(counts?.request_to_cancel_sessions || 0) +
+                                  (counts?.instructor_requests_to_change_data || 0)}
                               </span>
                             ) : null}
                           </span>
