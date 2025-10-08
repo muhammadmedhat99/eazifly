@@ -5,6 +5,11 @@ import { Avatar, Button } from "@heroui/react";
 import { Add } from "iconsax-reactjs";
 import React, { useState } from "react";
 import AddStudentModal from "../AddStudentModal";
+import { useQuery } from "@tanstack/react-query";
+import { fetchClient } from "@/lib/utils";
+import { axios_config } from "@/lib/const";
+import { useParams } from "next/navigation";
+import { Loader } from "@/components/global/Loader";
 
 type StudentDetailsProps = {
   data: {
@@ -44,20 +49,30 @@ type StudentDetailsProps = {
   };
 };
 
-export const RelatedStudents = ({ data }: StudentDetailsProps) => {
+export const RelatedStudents = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [studentDetails, setStudentDetails] = useState<any>(null)
+
+  const params = useParams();
+  const user_id = params.id;
 
   const handleRowClick = (student: any) => {
     setModalOpen(true);
   }
 
+  const { data: userData, isLoading, refetch } = useQuery({
+    queryKey: ["client", user_id],
+    queryFn: async () => await fetchClient(`client/user/show/${user_id}`, axios_config),
+  });
+
   return (
-    <div className="bg-main p-5 border border-stroke rounded-lg">
+    isLoading ? <Loader /> : (
+      <div className="bg-main p-5 border border-stroke rounded-lg">
       <AddStudentModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         student={studentDetails}
+        refetch= {refetch}
       />
       <div className="flex justify-end mb-5">
         <Button onPress={handleRowClick} variant="flat" className="text-primary font-bold bg-white">
@@ -66,7 +81,7 @@ export const RelatedStudents = ({ data }: StudentDetailsProps) => {
         </Button>
       </div>
       <div className="flex flex-col gap-4">
-        {data.data?.childrens?.map((child, index) =>
+        {userData?.data?.childrens?.map((child: any, index: number) =>
         (
           <div key={index} className="bg-background rounded-lg flex items-center justify-between p-4">
             <div className="flex flex-col gap-2 w-1/2">
@@ -93,5 +108,6 @@ export const RelatedStudents = ({ data }: StudentDetailsProps) => {
         ))}
       </div>
     </div>
+    )
   );
 };

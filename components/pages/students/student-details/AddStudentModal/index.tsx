@@ -34,6 +34,7 @@ interface StudentModalProps {
   isOpen: boolean;
   onClose: () => void;
   student: any;
+  refetch: any;
 }
 
 const schema = yup
@@ -82,6 +83,7 @@ export default function AddStudentModal({
   isOpen,
   onClose,
   student,
+  refetch,
 }: StudentModalProps) {
   const params = useParams();
   const user_id = params.id;
@@ -144,6 +146,7 @@ export default function AddStudentModal({
         });
         reset();
         onClose();
+        refetch();
       }
     },
     onError: (error) => {
