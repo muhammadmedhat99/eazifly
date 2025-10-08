@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { DropzoneField } from "@/components/global/DropZoneField";
 import {
   Button,
@@ -31,7 +31,7 @@ const locales = ["ar", "en"] as const;
 
 interface InformationFormProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-  onProgramCreated: (id: string, specId: string) => void;
+  onProgramCreated: (id: string, specIds: string[]) => void; 
   initialData?: any;
   mode?: string;
 }
@@ -49,6 +49,7 @@ interface host {
 const defaultValues: Partial<InformationFormData> = {
   slug: "",
   limit_users: 0,
+  specialization_id: [], // مهم جداً
   localizedFields: locales.reduce(
     (acc, locale) => ({
       ...acc,
@@ -56,6 +57,10 @@ const defaultValues: Partial<InformationFormData> = {
     }),
     {} as InformationFormData["localizedFields"]
   ),
+  image: [],
+  cover: [],
+  meeting_host_id: "",
+  special_for: "adult",
 };
 
 export const InformationForm = ({
@@ -84,9 +89,12 @@ export const InformationForm = ({
       },
       slug: data.data.slug || "",
       limit_users: Number(data.data.limit_users || 0),
-      specialization_id: data.data.specialization_id
-        ? String(data.data.specialization_id)
-        : "",
+      specialization_id: Array.isArray(data.data.specialization_id)
+        ? data.data.specialization_id.map(String)
+        : data.data.specialization_id
+          ? [String(data.data.specialization_id)]
+          : [], // لو مفيش بيانات خليها array فاضية
+
       meeting_host_id: data.data.host.id ? String(data.data.host.id) : "",
       special_for: data.data.special_for || "",
       image: data.data.image
@@ -120,7 +128,7 @@ export const InformationForm = ({
     reset,
     getValues,
   } = useForm<InformationFormData>({
-    resolver: yupResolver(informationFormSchema),
+    resolver: yupResolver(informationFormSchema) as any,
     defaultValues: mappedDefaults,
   });
 
@@ -159,7 +167,13 @@ export const InformationForm = ({
 
     // Add other fields
     formdata.append("special_for", submitData.special_for);
-    formdata.append("specialization_id", submitData.specialization_id);
+    if (submitData.specialization_id && Array.isArray(submitData.specialization_id)) {
+      submitData.specialization_id
+        .filter((id): id is string => Boolean(id))
+        .forEach((id) => {
+          formdata.append("specialization_id[]", id);
+        });
+    }
     formdata.append("meeting_host_id", submitData.meeting_host_id);
     formdata.append("slug", submitData.slug);
     formdata.append("limit_users", submitData.limit_users.toString());
@@ -201,8 +215,10 @@ export const InformationForm = ({
           title: `Error creating program: ${data.message}`,
           color: "danger",
         });
-      } else {
-        onProgramCreated(data.data.id, getValues("specialization_id"));
+      } else {     
+        const specIds = (getValues("specialization_id") || []).filter(Boolean) as string[];
+        onProgramCreated(data.data.id, specIds);
+
         setActiveStep(1);
         addToast({
           title: data?.message,
@@ -243,7 +259,9 @@ export const InformationForm = ({
           color: "danger",
         });
       } else {
-        onProgramCreated(data.data.id, getValues("specialization_id"));
+        const specIds = (getValues("specialization_id") || []).filter(Boolean) as string[];
+        onProgramCreated(data.data.id, specIds);
+
         setActiveStep(1);
         addToast({
           title: data?.message,
@@ -261,7 +279,7 @@ export const InformationForm = ({
     },
   });
 
-  const onSubmit = (data: InformationFormData) => {
+  const onSubmit: SubmitHandler<InformationFormData> = (data) => {
     if (mode === "edit") {
       updateProgramMutation.mutate(data);
     } else {
@@ -363,15 +381,12 @@ export const InformationForm = ({
           control={control}
           render={({ field }) => (
             <Select
-              {...field}
-              selectedKeys={field.value ? [field.value] : []}
-              onSelectionChange={(keys) => {
-                const selectedKey = Array.from(keys)[0] as string;
-                field.onChange(selectedKey);
-              }}
-              label="التخصص"
+              selectionMode="multiple"
+              selectedKeys={Array.isArray(field.value) ? field.value.filter(Boolean) as string[] : []}
+              onSelectionChange={(keys) => field.onChange(Array.from(keys))}
+              label="التخصصات"
               labelPlacement="outside"
-              placeholder="اختر التخصص"
+              placeholder="اختر التخصصات"
               isInvalid={!!errors.specialization_id?.message}
               errorMessage={errors.specialization_id?.message}
               isLoading={loadingSpecializations}

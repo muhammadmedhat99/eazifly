@@ -27,6 +27,7 @@ type MainInformationProps = {
     title: string;
     label: string;
     specialization: string;
+    specialization_id: string[];
     category: string;
     content: string;
     description: string;
@@ -53,6 +54,8 @@ type MainInformationProps = {
 };
 
 export const MainInformation = ({ data, refetch }: MainInformationProps) => {
+  console.log('data', data);
+  
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [specializationmodalOpen, setSpecializationModalOpen] = useState(false);
@@ -125,6 +128,7 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
             isOpen={hostmodalOpen}
             onClose={() => setHostModalOpen(false)}
             initialData={data}
+            specialization_id={data?.specialization_id}
           />
           {/* Main Card  */}
           <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex flex-col gap-2">
@@ -193,11 +197,18 @@ export const MainInformation = ({ data, refetch }: MainInformationProps) => {
           {/* Main Card  */}
           <div className="bg-white border border-stroke rounded-xl px-5 py-6 flex items-center justify-between">
             <div className="flex flex-col gap-2">
-              <div className="text-primary font-bold">التخصص</div>
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm">
-                  {data?.specialization}
-                </div>
+              <div className="text-primary font-bold">التخصصات</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {(Array.isArray(data?.specialization) ? data.specialization : [data?.specialization])
+                  .filter(Boolean)
+                  .map((spec: string, index: number) => (
+                    <div
+                      key={index}
+                      className="bg-primary/10 py-2 px-4 rounded-xl text-primary font-bold text-sm"
+                    >
+                      {spec}
+                    </div>
+                  ))}
               </div>
             </div>
             <Button

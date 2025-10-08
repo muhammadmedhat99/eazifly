@@ -67,7 +67,7 @@ export const AllTransfers = () => {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllSpecializations
+    queryKey: AllQueryKeys.GetAllTransfersData
   });
 
   const formattedData =

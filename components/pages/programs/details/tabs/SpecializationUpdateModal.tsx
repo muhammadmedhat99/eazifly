@@ -47,8 +47,9 @@ type SpecializationMethodsFormData = Record<string, boolean>;
 
 const schema = yup.object().shape({
   specialization_id: yup
-    .string()
-    .required("يجب اختيار التخصص"),
+    .array()
+    .of(yup.string().required())
+    .min(1, "يجب اختيار تخصص واحد على الأقل"),
 });
 
 export default function SpecializationUpdateModal({
@@ -62,13 +63,15 @@ export default function SpecializationUpdateModal({
 
   const [scrollBehavior, setScrollBehavior] = useState<"inside" | "normal" | "outside">("inside");
 
-  function mapInitialDataToDefaultValues(data: any) {
-    return {
-      specialization_id: data.specialization_id
-        ? String(data.specialization_id)
-        : "",
-    };
-  }
+    function mapInitialDataToDefaultValues(data: any) {
+        return {
+            specialization_id: data.specialization_id
+                ? Array.isArray(data.specialization_id)
+                    ? data.specialization_id.map(String)
+                    : [String(data.specialization_id)]
+                : [],
+        };
+    }
 
   const mappedDefaults = initialData
     ? mapInitialDataToDefaultValues(initialData)
@@ -94,6 +97,7 @@ export default function SpecializationUpdateModal({
         updateProgramMutation.mutate(data);
     };
 
+
     const updateProgramMutation = useMutation({
         mutationFn: (submitData: any) => {
             console.log('submitData', submitData);
@@ -103,7 +107,9 @@ export default function SpecializationUpdateModal({
             myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
 
             const formdata = new FormData();
-            formdata.append("specialization_id", submitData.specialization_id);
+            submitData.specialization_id.forEach((id: string) => {
+                formdata.append("specialization_id[]", id);
+            });
 
             return postData(
                 `client/program/normal/update/${programId}`,
@@ -149,7 +155,7 @@ export default function SpecializationUpdateModal({
                 {(closeModal) => (
                     <>
                         <ModalHeader className="text-lg font-bold text-[#272727] flex justify-center">
-                            التخصص
+                            التخصصات
                         </ModalHeader>
 
                         <ModalBody>
@@ -165,13 +171,12 @@ export default function SpecializationUpdateModal({
                                         control={control}
                                         render={({ field }) => (
                                             <Select
-                                                {...field}
-                                                isLoading={loadingSpecializations}
-                                                selectedKeys={field.value ? [field.value] : []}
-
-                                                label="التخصص"
+                                                label="التخصصات"
                                                 labelPlacement="outside"
-                                                placeholder="التخصص المحدد"
+                                                placeholder="اختر التخصصات"
+                                                selectionMode="multiple"
+                                                selectedKeys={field.value}
+                                                onSelectionChange={(keys) => field.onChange(Array.from(keys))}
                                                 isInvalid={!!errors.specialization_id?.message}
                                                 errorMessage={errors.specialization_id?.message as string}
                                                 classNames={{
@@ -188,6 +193,7 @@ export default function SpecializationUpdateModal({
                                             </Select>
                                         )}
                                     />
+
                                 )}
 
                                 <div className="flex items-center justify-end gap-4 mt-8">

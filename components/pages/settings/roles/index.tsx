@@ -67,7 +67,7 @@ export const AllRoles = () => {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllSpecializations
+    queryKey: AllQueryKeys.GetAllRoles
   });
 
   const formattedData =

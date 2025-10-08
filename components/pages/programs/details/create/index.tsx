@@ -172,7 +172,7 @@ export const CreateQuestions = () => {
           title: data?.message,
           color: "success",
         });
-        queryClient.invalidateQueries({ queryKey: AllQueryKeys.GetAllSpecializations });
+        queryClient.invalidateQueries({ queryKey: AllQueryKeys.GetAllQuestionsData });
         router.push(`/programs/${program_id}`);
       }
     },

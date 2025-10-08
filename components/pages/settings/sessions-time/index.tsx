@@ -68,7 +68,7 @@ export const AllSessionsTime = () => {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllSpecializations
+    queryKey: AllQueryKeys.GetAllSessionTimes
   });
 
   const formattedData =

@@ -59,14 +59,14 @@ export const informationFormSchema = yup.object({
     .string()
     .oneOf(["adult", "child"])
     .required("اختر الفئة المناسبة"),
-  specialization_id: yup.string().required("اختر التخصص"),
+  specialization_id: yup.array().of(yup.string()).min(1, "يجب اختيار التخصص"),
   meeting_host_id: yup.string().required("اختر الاستضافة"),
   slug: yup.string().required("ادخل slug الخاص ب البرنامج"),
   limit_users: yup.number().required("ادخل عدد المستخدمين"),
 });
 
 export const teacherAndContentSchema = yup.object({
-  specialization_id: yup.string().required("اختر التخصص"),
+  specialization_id: yup.array().of(yup.string()).min(1, "يجب اختيار التخصص"),
   teachers: yup
     .array()
     .of(

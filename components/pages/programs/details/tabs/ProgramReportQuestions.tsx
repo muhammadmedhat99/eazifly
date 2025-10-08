@@ -177,7 +177,7 @@ export const ProgramReportQuestions = ({ data }: any) => {
           color: "success",
         });
         queryClient.invalidateQueries({
-          queryKey: AllQueryKeys.GetAllSpecializations,
+          queryKey: AllQueryKeys.GetAllQuestionsData,
         });
       }
     },
