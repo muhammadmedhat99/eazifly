@@ -95,7 +95,10 @@ export default function AddSubaccountModal({
 
   const { data: childerns, isLoading: loadingchilderns } = useQuery({
     queryFn: async () =>
-      await fetchClient(`client/user/show/${user_id}?program_id=${program_id}`, axios_config),
+      await fetchClient(
+        `client/user/show/${user_id}?program_id=${program_id}`,
+        axios_config
+      ),
     queryKey: ["GetChilderns"],
   });
 
@@ -297,6 +300,7 @@ export default function AddSubaccountModal({
                       isOpen={modalOpen}
                       onClose={() => setModalOpen(false)}
                       student={studentDetails}
+                      refetch={refetchSubaccounts}
                     />
 
                     <div className="flex justify-end mb-5">
@@ -311,43 +315,47 @@ export default function AddSubaccountModal({
                     </div>
 
                     <div className="flex flex-col gap-4">
-                       {childerns.data.show=== "true" && <div
-                            className="bg-background rounded-lg flex items-center justify-between p-4"
-                          >
-                            {/* Radio Button */}
-                            <div className="flex items-center gap-3 w-1/12">
-                              <input
-                                type="radio"
-                                name="selectedChild"
-                                checked={selectedChildId === childerns.data.id}
-                                onChange={() => handleRadioChange(childerns.data.id)}
-                                className="w-4 h-4 accent-primary"
-                              />
-                            </div>
+                      {childerns.data.show === "true" && (
+                        <div className="bg-background rounded-lg flex items-center justify-between p-4">
+                          {/* Radio Button */}
+                          <div className="flex items-center gap-3 w-1/12">
+                            <input
+                              type="radio"
+                              name="selectedChild"
+                              checked={selectedChildId === childerns.data.id}
+                              onChange={() =>
+                                handleRadioChange(childerns.data.id)
+                              }
+                              className="w-4 h-4 accent-primary"
+                            />
+                          </div>
 
-                            {/* Name */}
-                            <div className="flex flex-col gap-2 w-5/12">
-                              <span className="text-sm font-bold text-title">
-                                الإسم
+                          {/* Name */}
+                          <div className="flex flex-col gap-2 w-5/12">
+                            <span className="text-sm font-bold text-title">
+                              الإسم
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <Avatar size="sm" src={childerns.data.image} />
+                              <span className="text-black-text font-bold text-[15px]">
+                                {childerns.data.first_name +
+                                  " " +
+                                  childerns.data.last_name}
                               </span>
-                              <div className="flex items-center gap-2">
-                                <Avatar size="sm" src={childerns.data.image} />
-                                <span className="text-black-text font-bold text-[15px]">
-                                  {childerns.data.first_name + " " + childerns.data.last_name}
-                                </span>
-                              </div>
                             </div>
+                          </div>
 
-                            {/* Age */}
-                            <div className="flex flex-col gap-2 w-5/12">
-                              <span className="text-sm font-bold text-title">
-                                السن
-                              </span>
-                              <span className="font-bold text-black-text">
-                                {childerns.data.age} عام
-                              </span>
-                            </div>
-                          </div>}
+                          {/* Age */}
+                          <div className="flex flex-col gap-2 w-5/12">
+                            <span className="text-sm font-bold text-title">
+                              السن
+                            </span>
+                            <span className="font-bold text-black-text">
+                              {childerns.data.age} عام
+                            </span>
+                          </div>
+                        </div>
+                      )}
                       {childerns.data?.childrens?.map(
                         (child: any, index: number) => (
                           <div
@@ -447,10 +455,8 @@ export default function AddSubaccountModal({
                           base: "mb-4",
                         }}
                         {...register("start_date")}
-                        defaultValue={
-                          new Date().toISOString().split("T")[0]
-                        }
-                         min={new Date().toISOString().split("T")[0]}
+                        defaultValue={new Date().toISOString().split("T")[0]}
+                        min={new Date().toISOString().split("T")[0]}
                       />
 
                       {(subscriptionDetails?.data?.number_of_session_per_week
@@ -623,12 +629,15 @@ export default function AddSubaccountModal({
                             id={String(instructor.id)}
                             variant="flat"
                             color={
-                              selectedInstructor === String(instructor.id) ? "primary" : undefined
+                              selectedInstructor === String(instructor.id)
+                                ? "primary"
+                                : undefined
                             }
-                            className={`h-[170px] font-semibold border flex flex-col justify-center items-center ${selectedInstructor === String(instructor.id)
+                            className={`h-[170px] font-semibold border flex flex-col justify-center items-center ${
+                              selectedInstructor === String(instructor.id)
                                 ? "border-primary"
                                 : "border-gray-300"
-                              }`}
+                            }`}
                             onPress={(e) => setSelectedInstructor(e.target.id)}
                           >
                             <Avatar
@@ -637,13 +646,16 @@ export default function AddSubaccountModal({
                               radius="md"
                               alt={instructor.name_ar}
                             />
-                            <span className="text-start font-bold">{instructor.name_ar}</span>
+                            <span className="text-start font-bold">
+                              {instructor.name_ar}
+                            </span>
                           </Button>
                         ))
                       ) : (
-                        <span className="text-gray-500">لا يوجد معلمين متاحين</span>
+                        <span className="text-gray-500">
+                          لا يوجد معلمين متاحين
+                        </span>
                       )}
-
                     </div>
                   </div>
 
