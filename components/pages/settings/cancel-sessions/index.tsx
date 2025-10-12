@@ -68,7 +68,7 @@ export const AllCancelSessionsReasons = () => {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllSpecializations
+    queryKey: AllQueryKeys.GetAllCancelSessionsReasons
   });
 
   const formattedData =

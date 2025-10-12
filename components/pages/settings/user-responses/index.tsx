@@ -67,7 +67,7 @@ export const AllUserResponses = () => {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllSpecializations
+    queryKey: AllQueryKeys.GetAlluserResponses
   });
 
   const formattedData =

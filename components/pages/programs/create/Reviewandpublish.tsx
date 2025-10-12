@@ -219,14 +219,16 @@ export const Reviewandpublish = ({
               </div>
           </div>
           <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke">
-              <div className="flex flex-col gap-4">
-                  <span className="text-primary text-sm font-bold">
-                        التخصص
-                  </span>
-                  <span className="text-black-text font-bold text-[15px]">
-                      {data.data.specialization}
-                  </span>
-              </div>
+            <div className="flex flex-col gap-4">
+              <span className="text-primary text-sm font-bold">
+                التخصصات
+              </span>
+              <span className="text-black-text font-bold text-[15px]">
+                {Array.isArray(data.data.specializations)
+                  ? data.data.specializations.join("، ")
+                  : data.data.specializations}
+              </span>
+            </div>
           </div>
           <div className="flex items-center justify-between bg-main p-5 rounded-2xl border border-stroke col-span-3">
               <div className="flex flex-col gap-4 w-full">

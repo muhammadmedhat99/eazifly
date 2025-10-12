@@ -36,6 +36,7 @@ interface HostModalProps {
     isOpen: boolean;
     onClose: () => void;
     initialData?: any;
+    specialization_id: any;
 }
 interface host {
   id: string;
@@ -54,7 +55,8 @@ const schema = yup.object().shape({
 export default function HostUpdateModal({
   isOpen,
   onClose,
-  initialData
+  initialData,
+  specialization_id
 }: HostModalProps) {
   const params = useParams();
   const programId = params.id;
@@ -102,7 +104,11 @@ export default function HostUpdateModal({
 
             const formdata = new FormData();
             formdata.append("meeting_host_id", submitData.meeting_host_id);
-
+            if (specialization_id && specialization_id.length > 0) {
+              specialization_id.forEach((id: string | number) => {
+                formdata.append("specialization_id[]", id.toString());
+              });
+            }
             return postData(
                 `client/program/normal/update/${programId}`,
                 formdata,

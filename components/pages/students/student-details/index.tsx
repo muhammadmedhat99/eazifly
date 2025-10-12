@@ -114,7 +114,7 @@ export const StudentDetails = ({ data, subscriptionsData, actionsData , client_i
     { key: "info", title: "البيانات الشخصية", content: <Information data={{ data: studentData }} onUpdated={setStudentData} /> },
     { key: "programs", title: "البرامج و اللإشتراكات", content: <Programs subscriptionsData={subscriptionsData} client_id={client_id} data={data} /> },
     { key: "actions", title: "الإجراءات السابقة", content: <TimelineDemo actionsData={actionsData} /> },
-    { key: "other", title: "الطلاب التابعين", content: <RelatedStudents data={data} />, disabled: !!studentData?.parent_id },
+    { key: "other", title: "الطلاب التابعين", content: <RelatedStudents />, disabled: !!studentData?.parent_id },
     { key: "sessions", title: "الحصص", content: <Sessions data={data} /> },
   ];
 

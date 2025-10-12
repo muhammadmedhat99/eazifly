@@ -173,7 +173,7 @@ export const Appointments = ({
   const { data: cancelSessionsReasons } = useQuery({
     queryFn: async () =>
       await fetchClient(`client/reason/cancel/session`, axios_config),
-    queryKey: AllQueryKeys.GetAllSpecializations
+    queryKey: AllQueryKeys.GetAllCancelSessionsReasons
   });
 
   const {

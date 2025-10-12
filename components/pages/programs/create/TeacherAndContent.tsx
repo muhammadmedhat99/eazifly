@@ -15,7 +15,7 @@ import { useParams, useRouter } from "next/navigation";
 interface TeacherAndContentProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   programId: string;
-  specializationId: string;
+  specializationId: string[];
   specializationName?: string;
   initialData?: any;
   mode?: string;
@@ -63,7 +63,7 @@ export const TeacherAndContent = ({
     control,
     reset,
   } = useForm<TeacherAndContentFormData>({
-    resolver: yupResolver(teacherAndContentSchema),
+    resolver: yupResolver(teacherAndContentSchema) as any,
     defaultValues,
   });
 
@@ -161,13 +161,13 @@ export const TeacherAndContent = ({
           control={control}
           render={({ field }) => (
             <Select
-              {...field}
-              isLoading={loadingSpecializations}
-              isDisabled={true}
-              selectedKeys={[specializationId]}
-              label="التخصص"
+              selectionMode="multiple"
+              selectedKeys={Array.isArray(field.value) ? field.value.filter(Boolean) as string[] : []}
+              onSelectionChange={(keys) => field.onChange(Array.from(keys))}
+              label="التخصصات"
               labelPlacement="outside"
-              placeholder="التخصص المحدد"
+              isDisabled={true}
+              isLoading={loadingSpecializations}
               classNames={{
                 label: "text-[#272727] font-bold text-sm",
                 base: "mb-4",

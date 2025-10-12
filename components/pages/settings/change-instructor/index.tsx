@@ -63,7 +63,7 @@ export const AllChangeInstructorReasons = () => {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllSpecializations
+    queryKey: AllQueryKeys.GetChangeInstructorReasons
   });
 
   const formattedData =

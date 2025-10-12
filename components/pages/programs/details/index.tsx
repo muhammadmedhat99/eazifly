@@ -110,7 +110,7 @@ export const ProgramDetails = () => {
             ...axios_config,
             params,
           }),
-        queryKey: AllQueryKeys.GetAllSpecializations
+        queryKey: AllQueryKeys.GetAllQuestionsData
       });
   const [search, setSearch] = useState("");
   return (

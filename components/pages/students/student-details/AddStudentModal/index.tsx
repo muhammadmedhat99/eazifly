@@ -12,7 +12,8 @@ import {
   Select,
   SelectItem,
   Avatar,
-  Spinner
+  Spinner,
+  Switch
 } from "@heroui/react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -33,6 +34,7 @@ interface StudentModalProps {
   isOpen: boolean;
   onClose: () => void;
   student: any;
+  refetch: any;
 }
 
 const schema = yup
@@ -63,6 +65,7 @@ const schema = yup
     gender: yup.string().required("برجاء اختيار الجنس"),
     age: yup.string().required("ادخل العمر"),
     country: yup.string().required("إختر الدولة"),
+    sub_account: yup.boolean().required("اختر إن كان الطالب تابع أم لا"),
     image: yup
       .mixed<FileList>()
       .test(
@@ -80,6 +83,7 @@ export default function AddStudentModal({
   isOpen,
   onClose,
   student,
+  refetch,
 }: StudentModalProps) {
   const params = useParams();
   const user_id = params.id;
@@ -125,6 +129,7 @@ export default function AddStudentModal({
       {
         submitData.image && formdata.append("image", submitData.image[0]);
       }
+      formdata.append("sub_account", submitData.sub_account ? "true" : "false");
 
       return postData("client/user/store", formdata, myHeaders);
     },
@@ -141,6 +146,7 @@ export default function AddStudentModal({
         });
         reset();
         onClose();
+        refetch();
       }
     },
     onError: (error) => {
@@ -393,7 +399,7 @@ export default function AddStudentModal({
                       errorMessage={errors.country?.message}
                       classNames={{
                         label: "text-[#272727] font-bold text-sm",
-                        base: "mb-4 md:col-span-2",
+                        base: "mb-4",
                         value: "text-[#87878C] text-sm",
                       }}
                     >
@@ -404,6 +410,21 @@ export default function AddStudentModal({
                         <SelectItem key={item.key}>{item.label}</SelectItem>
                       ))}
                     </Select>
+                  )}
+                />
+
+                <Controller
+                  name="sub_account"
+                  control={control}
+                  defaultValue={false}
+                  render={({ field }) => (
+                    <div className="flex items-center gap-2 mb-4">
+                      <Switch
+                        checked={field.value}
+                        onChange={(val) => field.onChange(val)}
+                      />
+                      <span className="text-sm font-semibold text-[#272727]">طالب تابع</span>
+                    </div>
                   )}
                 />
 

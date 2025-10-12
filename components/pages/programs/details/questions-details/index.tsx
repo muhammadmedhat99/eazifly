@@ -171,7 +171,7 @@ export const QuestionsDetails = ({ data }: QuestionDetailsProps) => {
                     color: "success",
                 });
                 queryClient.invalidateQueries({ queryKey: ['report_question', id] });
-                queryClient.invalidateQueries({ queryKey: AllQueryKeys.GetAllSpecializations });
+                queryClient.invalidateQueries({ queryKey: AllQueryKeys.GetAllQuestionsData });
             }
         },
         onError: () => {

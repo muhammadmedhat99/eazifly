@@ -72,7 +72,7 @@ export const AllCoupons = () => {
         ...axios_config,
         params,
       }),
-    queryKey: AllQueryKeys.GetAllSpecializations
+    queryKey: AllQueryKeys.GetAllCoupons
   });
 
   const formattedData =

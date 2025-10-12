@@ -35,7 +35,7 @@ export const CreateProgram = ({
 }: CreateProgramProps) => {
   const [activeStep, setActiveStep] = useState(0);
   const [programId, setProgramId] = useState<string>("");
-  const [specializationId, setSpecializationId] = useState<string>("");
+  const [specializationIds, setSpecializationIds] = useState<string[]>([]);
 
   const params = useParams();
   const program_id = params.id;
@@ -51,9 +51,9 @@ export const CreateProgram = ({
     defaultValues: initialData || {},
   });
 
-  const handleProgramCreated = (id: string, specId: string) => {
+  const handleProgramCreated = (id: string, specIds: string[]) => {
     setProgramId(id);
-    setSpecializationId(specId);
+    setSpecializationIds(specIds);
     setActiveStep(1);
   };
   
@@ -148,7 +148,7 @@ export const CreateProgram = ({
                 <TeacherAndContent
                   setActiveStep={setActiveStep}
                   programId={programId}
-                  specializationId={specializationId}
+                  specializationId={specializationIds}
                   initialData={initialData}
                   mode={mode}
                 />

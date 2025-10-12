@@ -58,5 +58,10 @@ export const AllQueryKeys = {
     ],
   GetAllSalaries: (nameSearch: string, selectedDate: string, currentPage: number) => ['GetAllSalaries', axios_config, nameSearch, selectedDate, currentPage],
   GetAllRenewals: (nameSearch: string, phoneSearch: string, selectedStatus: string, subscriptionStatus: string, currentPage: number) => ['GetAllRenewals', axios_config, nameSearch, phoneSearch, selectedStatus, subscriptionStatus, currentPage],
-
+  GetAllQuestionsData: ["GetAllQuestionsData", axios_config],
+  GetAllCancelSessionsReasons: ["GetAllCancelSessionsReasons", axios_config],
+  GetChangeInstructorReasons: ["GetChangeInstructorReasons", axios_config],
+  GetAllCoupons: ["GetAllCoupons", axios_config],
+  GetAllTransfersData: ["GetAllTransfersData", axios_config],
+  GetAlluserResponses: ["GetAlluserResponses", axios_config],
 };
