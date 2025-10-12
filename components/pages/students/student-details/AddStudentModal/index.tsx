@@ -53,14 +53,12 @@ const schema = yup
       .min(3, "اسم المستخدم لا يجب ان يقل عن ٣ احرف"),
     email: yup
       .string()
-      .email("ادخل بريد إلكتروني صحيح")
-      .required("ادخل بريد إلكتروني"),
-    phone: yup.string().required("ادخل رقم الهاتف"),
-    whats_app: yup.string().required("ادخل رقم الواتس آب"),
-    password: yup.string().required("ادخل كلمة المرور"),
+      .email("ادخل بريد إلكتروني صحيح"),
+    phone: yup.string(),
+    whats_app: yup.string(),
+    password: yup.string(),
     password_confirmation: yup
       .string()
-      .required("ادخل تأكيد كلمة المرور")
       .oneOf([yup.ref("password")], "كلمة المرور غير متطابقة"),
     gender: yup.string().required("برجاء اختيار الجنس"),
     age: yup.string().required("ادخل العمر"),
@@ -96,11 +94,25 @@ export default function AddStudentModal({
     formState: { errors },
     reset,
     control,
+    watch,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data: FormData) => CreateStudent.mutate(data);
+  const subAccount = watch("sub_account");
+
+  const onSubmit = (data: FormData) => {
+    if (subAccount) {
+      const generatedPassword = Math.random().toString(36).slice(-8);
+      data.email = `${Math.random().toString(36).slice(-8)}@example.com`;
+      data.phone = "0000000000";
+      data.whats_app = "0000000000";
+      data.password = generatedPassword;
+      data.password_confirmation = generatedPassword;
+    }
+    CreateStudent.mutate(data);
+  };
+
 
   const CreateStudent = useMutation({
     mutationFn: (submitData: FormData) => {
@@ -237,6 +249,7 @@ export default function AddStudentModal({
                     base: "mb-4",
                   }}
                 />
+                {!subAccount && (<>
                 <Input
                   label="البريد الإلكتروني"
                   placeholder="نص الكتابه"
@@ -355,6 +368,7 @@ export default function AddStudentModal({
                     base: "mb-4",
                   }}
                 />
+                </>)}
                 <Input
                   label="العمر"
                   placeholder="نص الكتابه"
@@ -416,7 +430,7 @@ export default function AddStudentModal({
                       errorMessage={errors.country?.message}
                       classNames={{
                         label: "text-[#272727] font-bold text-sm",
-                        base: "mb-4 col-span-2",
+                        base: "mb-4",
                         value: "text-[#87878C] text-sm",
                       }}
                     >

@@ -182,27 +182,27 @@ export const Sidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
                           key={subItem.id}
                           href={`${item.route}${subItem.route}`}
                           onClick={onLinkClick}
-                          className="flex items-center gap-1 duration-300 hover:px-1"
+                          className="flex items-center gap-1 duration-300 hover:px-1 whitespace-nowrap"
                         >
                           <ArrowLeft2 size={12} />
                           <span className="text-[12px] font-semibold flex items-center gap-2">
                             {subItem.name}
                             {subItem.route === "/subscriptions" &&
                             counts?.new_orders ? (
-                              <span className="ml-2 flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[11px] font-bold">
+                              <span className="ml-2 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold">
                                 {counts.new_orders}
                               </span>
                             ) : null}
                             {subItem.route === "/renewals" &&
                             counts?.subscriptions ? (
-                              <span className="ml-2 flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[11px] font-bold">
+                              <span className="ml-2 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold">
                                 {counts.subscriptions}
                               </span>
                             ) : null}
                             {subItem.route === "/requests/info" &&
                               (counts?.request_to_cancel_sessions ||
                                 counts?.instructor_requests_to_change_data) ? (
-                              <span className="ml-2 flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[11px] font-bold">
+                              <span className="ml-2 flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold">
                                 {(counts?.request_to_cancel_sessions || 0) +
                                   (counts?.instructor_requests_to_change_data || 0)}
                               </span>
