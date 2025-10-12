@@ -1,5 +1,5 @@
 import { formatDate } from "@/lib/helper";
-import { User } from "@heroui/react";
+import { Chip, User } from "@heroui/react";
 import Link from "next/link";
 import React from "react";
 
@@ -83,7 +83,7 @@ export const PreviousActions = ({studentInfo} : StudentDetailsProps) => {
           {/* Row 2: Reminder Info */}
           <div className="flex flex-col gap-6">
             {/* Reminder Info */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+           {action.reminder === "true" && (<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                 <span className="text-xs text-gray-500 font-medium">التذكير</span>
                 <p className="text-sm font-semibold text-gray-800 mt-1">
@@ -103,7 +103,27 @@ export const PreviousActions = ({studentInfo} : StudentDetailsProps) => {
                   {action.reminder_date ? formatDate(action.reminder_date) : "-"}
                 </p>
               </div>
-            </div>
+            </div>)}
+
+            {/* Student Responses */}
+            {action.user_response && action.user_response.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-xs text-gray-500 font-medium">ردود الطالب</span>
+                <div className="flex flex-wrap gap-2">
+                  {action.user_response.map((resp) => (
+                    <Chip
+                      key={resp.id}
+                      className="capitalize px-4 min-w-24 text-center"
+                      color="success"
+                      variant="flat"
+                    >
+                      <span className="text-green-600 font-bold">{resp.title}</span>
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+            )}
+
 
             {/* Note */}
             {action.note && (
@@ -115,6 +135,7 @@ export const PreviousActions = ({studentInfo} : StudentDetailsProps) => {
                 />
               </div>
             )}
+
           </div>
         </div>
       ))}

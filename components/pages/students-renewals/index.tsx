@@ -190,7 +190,7 @@ export const Renewals = () => {
   }
 }, [selectedStudent, modalOpen]);
 
-  const { data: renewalsData, isLoading } = useQuery({
+  const { data: renewalsData, isLoading, refetch } = useQuery({
     queryFn: async () =>
       await fetchClient(`client/user/subscriptions`, { ...axios_config, params }),
     queryKey: AllQueryKeys.GetAllRenewals(
@@ -325,6 +325,7 @@ export const Renewals = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         student={studentDetails}
+        refetch={refetch}
       />
 
       <div className="my-10 px-6">
