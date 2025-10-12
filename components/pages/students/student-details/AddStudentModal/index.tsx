@@ -135,9 +135,12 @@ export default function AddStudentModal({
     },
     onSuccess: (data) => {
       if (data.message !== "success") {
-        addToast({
-          title: "error",
-          color: "danger",
+        const messages = data.message;
+        Object.keys(messages).forEach((key) => {
+          addToast({
+            title: messages[key][0],
+            color: "danger",
+          });
         });
       } else {
         addToast({
@@ -176,8 +179,22 @@ export default function AddStudentModal({
             <ModalBody>
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="grid grid-cols-1 gap-4 md:grid-cols-2 py-14 px-8"
+                className="grid grid-cols-1 gap-4 md:grid-cols-2 py-6 px-8"
               >
+                <Controller
+                  name="sub_account"
+                  control={control}
+                  defaultValue={false}
+                  render={({ field }) => (
+                    <div className="flex items-center gap-2 mb-6 col-span-2 justify-center">
+                      <Switch
+                        checked={field.value}
+                        onChange={(val) => field.onChange(val)}
+                      />
+                      <span className="text-lg font-semibold text-[#272727]">طالب تابع</span>
+                    </div>
+                  )}
+                />
                 <Input
                   label="الاسم الأول"
                   placeholder="نص الكتابه"
@@ -399,7 +416,7 @@ export default function AddStudentModal({
                       errorMessage={errors.country?.message}
                       classNames={{
                         label: "text-[#272727] font-bold text-sm",
-                        base: "mb-4",
+                        base: "mb-4 col-span-2",
                         value: "text-[#87878C] text-sm",
                       }}
                     >
@@ -410,21 +427,6 @@ export default function AddStudentModal({
                         <SelectItem key={item.key}>{item.label}</SelectItem>
                       ))}
                     </Select>
-                  )}
-                />
-
-                <Controller
-                  name="sub_account"
-                  control={control}
-                  defaultValue={false}
-                  render={({ field }) => (
-                    <div className="flex items-center gap-2 mb-4">
-                      <Switch
-                        checked={field.value}
-                        onChange={(val) => field.onChange(val)}
-                      />
-                      <span className="text-sm font-semibold text-[#272727]">طالب تابع</span>
-                    </div>
                   )}
                 />
 
