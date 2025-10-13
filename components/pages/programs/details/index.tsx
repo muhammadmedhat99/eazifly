@@ -27,6 +27,7 @@ import { ProgramReportQuestions } from "./tabs/ProgramReportQuestions";
 import { AllQueryKeys } from "@/keys";
 import { Settings } from "./tabs/Settings";
 import { SessionContent } from "./tabs/SessionContent";
+import { WordWall } from "./tabs/WordWall";
 
 type ProgramDetailsProps = {
   data: {
@@ -146,6 +147,9 @@ export const ProgramDetails = () => {
         </Tab>
         <Tab key="session-content" title="محتوي الحصة">
           <SessionContent />
+        </Tab>
+        <Tab key="session-Wordwall" title="ألعاب">
+          <WordWall />
         </Tab>
         <Tab key="statistics" title="الإحصائيات">
           <ProgramStatistics />
