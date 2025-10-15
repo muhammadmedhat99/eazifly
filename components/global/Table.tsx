@@ -186,11 +186,20 @@ export default function TableComponent({
         );
       
       case "last_contact_days":
+        const isRecent =
+          item.last_contact_days === 0 ||
+          (item.last_contact_days && item.last_contact_days !== "-" && Number(item.last_contact_days) > 0);
+
         return (
-          <span className="text-sm font-semibold text-light">
-            {item.last_contact_days && item.last_contact_days !== "-"
-              ? `قبل ${item.last_contact_days} يوم`
-              : "لا يوجد تواصل"}
+          <span
+            className={`text-sm font-semibold ${isRecent ? "text-green-600" : "text-light"
+              }`}
+          >
+            {item.last_contact_days === 0
+              ? "تم التواصل اليوم"
+              : item.last_contact_days && item.last_contact_days !== "-" && Number(item.last_contact_days) > 0
+                ? `قبل ${item.last_contact_days} يوم`
+                : "لا يوجد تواصل"}
           </span>
         );
 

@@ -53,14 +53,12 @@ const schema = yup
       .min(3, "اسم المستخدم لا يجب ان يقل عن ٣ احرف"),
     email: yup
       .string()
-      .email("ادخل بريد إلكتروني صحيح")
-      .required("ادخل بريد إلكتروني"),
-    phone: yup.string().required("ادخل رقم الهاتف"),
-    whats_app: yup.string().required("ادخل رقم الواتس آب"),
-    password: yup.string().required("ادخل كلمة المرور"),
+      .email("ادخل بريد إلكتروني صحيح"),
+    phone: yup.string(),
+    whats_app: yup.string(),
+    password: yup.string(),
     password_confirmation: yup
       .string()
-      .required("ادخل تأكيد كلمة المرور")
       .oneOf([yup.ref("password")], "كلمة المرور غير متطابقة"),
     gender: yup.string().required("برجاء اختيار الجنس"),
     age: yup.string().required("ادخل العمر"),
@@ -96,11 +94,25 @@ export default function AddStudentModal({
     formState: { errors },
     reset,
     control,
+    watch,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data: FormData) => CreateStudent.mutate(data);
+  const subAccount = watch("sub_account");
+
+  const onSubmit = (data: FormData) => {
+    if (subAccount) {
+      const generatedPassword = Math.random().toString(36).slice(-8);
+      data.email = `${Math.random().toString(36).slice(-8)}@example.com`;
+      data.phone = "0000000000";
+      data.whats_app = "0000000000";
+      data.password = generatedPassword;
+      data.password_confirmation = generatedPassword;
+    }
+    CreateStudent.mutate(data);
+  };
+
 
   const CreateStudent = useMutation({
     mutationFn: (submitData: FormData) => {
@@ -135,9 +147,12 @@ export default function AddStudentModal({
     },
     onSuccess: (data) => {
       if (data.message !== "success") {
-        addToast({
-          title: "error",
-          color: "danger",
+        const messages = data.message;
+        Object.keys(messages).forEach((key) => {
+          addToast({
+            title: messages[key][0],
+            color: "danger",
+          });
         });
       } else {
         addToast({
@@ -176,8 +191,22 @@ export default function AddStudentModal({
             <ModalBody>
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="grid grid-cols-1 gap-4 md:grid-cols-2 py-14 px-8"
+                className="grid grid-cols-1 gap-4 md:grid-cols-2 py-6 px-8"
               >
+                <Controller
+                  name="sub_account"
+                  control={control}
+                  defaultValue={false}
+                  render={({ field }) => (
+                    <div className="flex items-center gap-2 mb-6 col-span-2 justify-center">
+                      <Switch
+                        checked={field.value}
+                        onChange={(val) => field.onChange(val)}
+                      />
+                      <span className="text-lg font-semibold text-[#272727]">طالب تابع</span>
+                    </div>
+                  )}
+                />
                 <Input
                   label="الاسم الأول"
                   placeholder="نص الكتابه"
@@ -220,6 +249,7 @@ export default function AddStudentModal({
                     base: "mb-4",
                   }}
                 />
+                {!subAccount && (<>
                 <Input
                   label="البريد الإلكتروني"
                   placeholder="نص الكتابه"
@@ -338,6 +368,7 @@ export default function AddStudentModal({
                     base: "mb-4",
                   }}
                 />
+                </>)}
                 <Input
                   label="العمر"
                   placeholder="نص الكتابه"
@@ -410,21 +441,6 @@ export default function AddStudentModal({
                         <SelectItem key={item.key}>{item.label}</SelectItem>
                       ))}
                     </Select>
-                  )}
-                />
-
-                <Controller
-                  name="sub_account"
-                  control={control}
-                  defaultValue={false}
-                  render={({ field }) => (
-                    <div className="flex items-center gap-2 mb-4">
-                      <Switch
-                        checked={field.value}
-                        onChange={(val) => field.onChange(val)}
-                      />
-                      <span className="text-sm font-semibold text-[#272727]">طالب تابع</span>
-                    </div>
                   )}
                 />
 

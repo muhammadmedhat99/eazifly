@@ -86,9 +86,10 @@ type StudentDetailsProps = {
     };
   };
   onClose: () => void;
+  refetch: () => void;
 };
 
-export function Action({ studentInfo, onClose }: StudentDetailsProps) {
+export function Action({ studentInfo, onClose, refetch }: StudentDetailsProps) {
   const {
     register,
     handleSubmit,
@@ -148,9 +149,7 @@ export function Action({ studentInfo, onClose }: StudentDetailsProps) {
       });
       onClose();
       reset();
-      queryClient.invalidateQueries({
-        queryKey: AllQueryKeys.GetAllUsers(debouncedSearch, "", 1),
-      });
+      refetch();
     },
     onError: (error) => {
       console.log(" error ===>>", error);
@@ -184,9 +183,18 @@ export function Action({ studentInfo, onClose }: StudentDetailsProps) {
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={(e) => {
+        e.preventDefault(); 
+        handleSubmit(onSubmit)(e);
+      }}
       className="grid grid-cols-1 gap-5 md:grid-cols-2"
     >
+      {storeCommunication.isPending && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50">
+          <Spinner size="lg" color="white" />
+        </div>
+      )}
+
       <Controller
         name="communication_type"
         control={control}
@@ -312,7 +320,7 @@ export function Action({ studentInfo, onClose }: StudentDetailsProps) {
         )}
       />
 
-      <div className="col-span-2 flex justify-center">
+      <div className="md:col-span-2 flex justify-center">
         <Controller
           name="reminder"
           control={control}
@@ -387,7 +395,7 @@ export function Action({ studentInfo, onClose }: StudentDetailsProps) {
         )}
       />
 
-      <div className="col-span-2">
+      <div className="md:col-span-2">
         <Controller
           name="note"
           control={control}
@@ -402,7 +410,7 @@ export function Action({ studentInfo, onClose }: StudentDetailsProps) {
         />
       </div>
 
-      <div className="flex items-center justify-center gap-5 px-6 py-4 col-span-2">
+      <div className="flex items-center justify-center gap-5 px-6 py-4 md:col-span-2">
         <Button
           type="button"
           //   onPress={closeModal}
@@ -417,6 +425,7 @@ export function Action({ studentInfo, onClose }: StudentDetailsProps) {
           variant="solid"
           color="primary"
           className="text-white w-36"
+          isLoading={storeCommunication.isPending}
         >
           حفظ
         </Button>

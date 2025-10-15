@@ -15,6 +15,7 @@ export const AllQueryKeys = {
   GetAllPaymentMethods: ["GetAllPaymentMethods", axios_config],
   GetAllSubscriptionPeriods: ["GetAllSubscriptionsPeriods", axios_config],
   GetAllSessionTimes: ["GetAllSessionTimes", axios_config],
+  GetAllGames: ["GetAllGames", axios_config],
   GetAllSettings: ["GetAllSettings", axios_config],
   GetAllRoles: ["GetAllRoles", axios_config],
   GetAllPermissions: ["GetAllPermissions", axios_config],

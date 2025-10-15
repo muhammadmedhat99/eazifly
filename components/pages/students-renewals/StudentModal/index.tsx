@@ -19,12 +19,14 @@ interface StudentModalProps {
   isOpen: boolean;
   onClose: () => void;
   student: any;
+  refetch: () => void;
 }
 
 export default function StudentModal({
   isOpen,
   onClose,
   student,
+  refetch
 }: StudentModalProps) {
   const [selectedTab, setSelectedTab] = useState("info");
   const [scrollBehavior, setScrollBehavior] = useState<"inside" | "normal" | "outside">("inside");
@@ -51,7 +53,7 @@ export default function StudentModal({
                     }}
                 >
                     <Tab key="action" title="إنشاء إجراء">
-                    <Action studentInfo={student} onClose={onClose}/>
+                    <Action studentInfo={student} onClose={onClose} refetch={refetch} />
                     </Tab>
                     <Tab key="personal" title="البيانات الشخصية">
                     <PersonalInfo studentInfo={student} />
