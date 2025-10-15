@@ -13,7 +13,7 @@ import {
   SelectItem,
   Avatar,
   Spinner,
-  Switch
+  Switch,
 } from "@heroui/react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -25,10 +25,9 @@ import { fetchClient, postData } from "@/lib/utils";
 import { AllQueryKeys } from "@/keys";
 import { axios_config, phoneCodeCustomStyles } from "@/lib/const";
 import { DropzoneField } from "@/components/global/DropZoneField";
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-
 
 interface StudentModalProps {
   isOpen: boolean;
@@ -37,43 +36,76 @@ interface StudentModalProps {
   refetch: any;
 }
 
-const schema = yup
-  .object({
-    first_name: yup
-      .string()
-      .required("ادخل الاسم الأول")
-      .min(3, "الاسم الأول لا يجب ان يقل عن ٣ احرف"),
-    last_name: yup
-      .string()
-      .required("ادخل الاسم الأخير")
-      .min(3, "الاسم الأخير لا يجب ان يقل عن ٣ احرف"),
-    user_name: yup
-      .string()
-      .required("ادخل اسم المستخدم")
-      .min(3, "اسم المستخدم لا يجب ان يقل عن ٣ احرف"),
-    email: yup
-      .string()
-      .email("ادخل بريد إلكتروني صحيح"),
-    phone: yup.string(),
-    whats_app: yup.string(),
-    password: yup.string(),
-    password_confirmation: yup
-      .string()
-      .oneOf([yup.ref("password")], "كلمة المرور غير متطابقة"),
-    gender: yup.string().required("برجاء اختيار الجنس"),
-    age: yup.string().required("ادخل العمر"),
-    country: yup.string().required("إختر الدولة"),
-    sub_account: yup.boolean().required("اختر إن كان الطالب تابع أم لا"),
-    image: yup
-      .mixed<FileList>()
-      .test(
-        "fileType",
-        "الرجاء تحميل ملف صحيح",
-        (value) => value && value.length > 0
-      )
-      .required("الرجاء تحميل ملف"),
-  })
-  .required();
+const schema = yup.object({
+  first_name: yup
+    .string()
+    .required("ادخل الاسم الأول")
+    .min(3, "الاسم الأول لا يجب ان يقل عن ٣ احرف"),
+  last_name: yup
+    .string()
+    .required("ادخل الاسم الأخير")
+    .min(3, "الاسم الأخير لا يجب ان يقل عن ٣ احرف"),
+  user_name: yup
+    .string()
+    .required("ادخل اسم المستخدم")
+    .min(3, "اسم المستخدم لا يجب ان يقل عن ٣ احرف"),
+  email: yup
+    .string()
+    .email("ادخل بريد إلكتروني صحيح")
+    .when("sub_account", {
+      is: false,
+      then: (schema) => schema.required("البريد الإلكتروني مطلوب"),
+      otherwise: (schema) => schema.optional(),
+    })
+    .optional(),
+  phone: yup
+    .string()
+    .when("sub_account", {
+      is: false,
+      then: (schema) => schema.required("رقم الهاتف مطلوب"),
+      otherwise: (schema) => schema.optional(),
+    })
+    .optional(),
+  whats_app: yup
+    .string()
+    .when("sub_account", {
+      is: false,
+      then: (schema) => schema.required("رقم الواتس آب مطلوب"),
+      otherwise: (schema) => schema.optional(),
+    })
+    .optional(),
+  password: yup
+    .string()
+    .when("sub_account", {
+      is: false,
+      then: (schema) => schema.required("كلمة المرور مطلوبة"),
+      otherwise: (schema) => schema.optional(),
+    })
+    .optional(),
+  password_confirmation: yup
+    .string()
+    .when("sub_account", {
+      is: false,
+      then: (schema) =>
+        schema
+          .required("تأكيد كلمة المرور مطلوب")
+          .oneOf([yup.ref("password")], "كلمة المرور غير متطابقة"),
+      otherwise: (schema) => schema.optional(),
+    })
+    .optional(),
+  gender: yup.string().required("برجاء اختيار الجنس"),
+  age: yup.string().required("ادخل العمر"),
+  country: yup.string().required("إختر الدولة"),
+  sub_account: yup.boolean().required("اختر إن كان الطالب تابع أم لا"),
+  image: yup
+    .mixed<FileList>()
+    .test(
+      "fileType",
+      "الرجاء تحميل ملف صحيح",
+      (value) => value && value.length > 0
+    )
+    .required("الرجاء تحميل ملف"),
+});
 
 type FormData = yup.InferType<typeof schema>;
 
@@ -86,7 +118,9 @@ export default function AddStudentModal({
   const params = useParams();
   const user_id = params.id;
 
-  const [scrollBehavior, setScrollBehavior] = useState<"inside" | "normal" | "outside">("inside");
+  const [scrollBehavior, setScrollBehavior] = useState<
+    "inside" | "normal" | "outside"
+  >("inside");
 
   const {
     register,
@@ -96,7 +130,7 @@ export default function AddStudentModal({
     control,
     watch,
   } = useForm<FormData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as any,
   });
 
   const subAccount = watch("sub_account");
@@ -113,7 +147,6 @@ export default function AddStudentModal({
     CreateStudent.mutate(data);
   };
 
-
   const CreateStudent = useMutation({
     mutationFn: (submitData: FormData) => {
       var myHeaders = new Headers();
@@ -121,20 +154,30 @@ export default function AddStudentModal({
       myHeaders.append("Accept", "application/json");
       myHeaders.append("Authorization", `Bearer ${getCookie("token")}`);
       var formdata = new FormData();
-      if (typeof user_id === 'string') {
+      if (typeof user_id === "string") {
         formdata.append("parent_id", user_id);
       }
       formdata.append("first_name", submitData.first_name);
       formdata.append("last_name", submitData.last_name);
       formdata.append("user_name", submitData.user_name);
-      formdata.append("email", submitData.email);
-      formdata.append("phone", submitData.phone);
-      formdata.append("whats_app", submitData.whats_app);
-      formdata.append("password", submitData.password);
-      formdata.append(
-        "password_confirmation",
-        submitData.password_confirmation
-      );
+      if (submitData.email) {
+        formdata.append("email", submitData.email);
+      }
+      if (submitData.phone) {
+        formdata.append("phone", submitData.phone);
+      }
+      if (submitData.whats_app) {
+        formdata.append("whats_app", submitData.whats_app);
+      }
+      if (submitData.password) {
+        formdata.append("password", submitData.password);
+      }
+      if (submitData.password_confirmation) {
+        formdata.append(
+          "password_confirmation",
+          submitData.password_confirmation
+        );
+      }
       formdata.append("gender", submitData.gender);
       formdata.append("age", submitData.age);
       formdata.append("country", submitData.country);
@@ -178,9 +221,13 @@ export default function AddStudentModal({
     queryFn: async () => await fetchClient(`client/countries`, axios_config),
   });
 
-
   return (
-    <Modal isOpen={isOpen} scrollBehavior={scrollBehavior} onOpenChange={(open) => !open && onClose()} size="4xl">
+    <Modal
+      isOpen={isOpen}
+      scrollBehavior={scrollBehavior}
+      onOpenChange={(open) => !open && onClose()}
+      size="4xl"
+    >
       <ModalContent>
         {(closeModal) => (
           <>
@@ -203,7 +250,9 @@ export default function AddStudentModal({
                         checked={field.value}
                         onChange={(val) => field.onChange(val)}
                       />
-                      <span className="text-lg font-semibold text-[#272727]">طالب تابع</span>
+                      <span className="text-lg font-semibold text-[#272727]">
+                        طالب تابع
+                      </span>
                     </div>
                   )}
                 />
@@ -249,126 +298,132 @@ export default function AddStudentModal({
                     base: "mb-4",
                   }}
                 />
-                {!subAccount && (<>
-                <Input
-                  label="البريد الإلكتروني"
-                  placeholder="نص الكتابه"
-                  type="text"
-                  {...register("email")}
-                  isInvalid={!!errors.email?.message}
-                  errorMessage={errors.email?.message}
-                  labelPlacement="outside"
-                  classNames={{
-                    label: "text-[#272727] font-bold text-sm",
-                    inputWrapper: "shadow-none",
-                    base: "mb-4",
-                  }}
-                />
-                <div className="flex flex-col gap-1">
-                  <label className="text-[#272727] font-bold text-sm">رقم الهاتف</label>
-                  <div
-                    style={{ "direction": "ltr" }}
-                    className={`
+                {!subAccount && (
+                  <>
+                    <Input
+                      label="البريد الإلكتروني"
+                      placeholder="نص الكتابه"
+                      type="text"
+                      {...register("email")}
+                      isInvalid={!!errors.email?.message}
+                      errorMessage={errors.email?.message}
+                      labelPlacement="outside"
+                      classNames={{
+                        label: "text-[#272727] font-bold text-sm",
+                        inputWrapper: "shadow-none",
+                        base: "mb-4",
+                      }}
+                    />
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[#272727] font-bold text-sm">
+                        رقم الهاتف
+                      </label>
+                      <div
+                        style={{ direction: "ltr" }}
+                        className={`
       shadow-none border-stroke border rounded-lg px-3 py-2 flex items-center
       focus-within:border-primary transition dir-ltr
     `}
-                  >
-                    <Controller
-                      name="phone"
-                      control={control}
-                      rules={{
-                        required: "برجاء إدخال رقم هاتف",
-                        validate: (value) =>
-                          isValidPhoneNumber(value || "") || "رقم الهاتف غير صحيح",
-                      }}
-                      render={({ field }) => (
-                        <PhoneInput
-                          {...field}
-                          defaultCountry="EG"
-                          value={field.value}
-                          onChange={field.onChange}
-                          international
-                          countryCallingCodeEditable={false}
-                          placeholder="ادخل رقم الهاتف"
-                          className="flex-1 text-sm outline-none border-0 focus:ring-0"
+                      >
+                        <Controller
+                          name="phone"
+                          control={control}
+                          rules={{
+                            required: "برجاء إدخال رقم هاتف",
+                            validate: (value) =>
+                              isValidPhoneNumber(value || "") ||
+                              "رقم الهاتف غير صحيح",
+                          }}
+                          render={({ field }) => (
+                            <PhoneInput
+                              {...field}
+                              defaultCountry="EG"
+                              value={field.value}
+                              onChange={field.onChange}
+                              international
+                              countryCallingCodeEditable={false}
+                              placeholder="ادخل رقم الهاتف"
+                              className="flex-1 text-sm outline-none border-0 focus:ring-0"
+                            />
+                          )}
                         />
+                      </div>
+                      {errors.phone && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.phone.message}
+                        </p>
                       )}
-                    />
-
-                  </div>
-                  {errors.phone && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.phone.message}
-                    </p>
-                  )}
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[#272727] font-bold text-sm">رقم الواتس آب</label>
-                  <div
-                    style={{ "direction": "ltr" }}
-                    className={`
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[#272727] font-bold text-sm">
+                        رقم الواتس آب
+                      </label>
+                      <div
+                        style={{ direction: "ltr" }}
+                        className={`
       shadow-none border-stroke border rounded-lg px-3 py-2 flex items-center
       focus-within:border-primary transition dir-ltr
     `}
-                  >
-                    <Controller
-                      name="whats_app"
-                      control={control}
-                      rules={{
-                        required: "برجاء إدخال رقم هاتف",
-                        validate: (value) =>
-                          isValidPhoneNumber(value || "") || "رقم الهاتف غير صحيح",
-                      }}
-                      render={({ field }) => (
-                        <PhoneInput
-                          {...field}
-                          defaultCountry="EG"
-                          value={field.value}
-                          onChange={field.onChange}
-                          international
-                          countryCallingCodeEditable={false}
-                          placeholder="ادخل رقم الهاتف"
-                          className="flex-1 text-sm outline-none border-0 focus:ring-0"
+                      >
+                        <Controller
+                          name="whats_app"
+                          control={control}
+                          rules={{
+                            required: "برجاء إدخال رقم هاتف",
+                            validate: (value) =>
+                              isValidPhoneNumber(value || "") ||
+                              "رقم الهاتف غير صحيح",
+                          }}
+                          render={({ field }) => (
+                            <PhoneInput
+                              {...field}
+                              defaultCountry="EG"
+                              value={field.value}
+                              onChange={field.onChange}
+                              international
+                              countryCallingCodeEditable={false}
+                              placeholder="ادخل رقم الهاتف"
+                              className="flex-1 text-sm outline-none border-0 focus:ring-0"
+                            />
+                          )}
                         />
+                      </div>
+                      {errors.whats_app && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.whats_app.message}
+                        </p>
                       )}
+                    </div>
+                    <Input
+                      label="كلمة المرور"
+                      placeholder="نص الكتابه"
+                      type="password"
+                      {...register("password")}
+                      isInvalid={!!errors.password?.message}
+                      errorMessage={errors.password?.message}
+                      labelPlacement="outside"
+                      classNames={{
+                        label: "text-[#272727] font-bold text-sm",
+                        inputWrapper: "shadow-none",
+                        base: "mb-4",
+                      }}
                     />
-
-                  </div>
-                  {errors.whats_app && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.whats_app.message}
-                    </p>
-                  )}
-                </div>
-                <Input
-                  label="كلمة المرور"
-                  placeholder="نص الكتابه"
-                  type="password"
-                  {...register("password")}
-                  isInvalid={!!errors.password?.message}
-                  errorMessage={errors.password?.message}
-                  labelPlacement="outside"
-                  classNames={{
-                    label: "text-[#272727] font-bold text-sm",
-                    inputWrapper: "shadow-none",
-                    base: "mb-4",
-                  }}
-                />
-                <Input
-                  label="تأكيد كلمة المرور"
-                  placeholder="نص الكتابه"
-                  type="password"
-                  {...register("password_confirmation")}
-                  isInvalid={!!errors.password_confirmation?.message}
-                  errorMessage={errors.password_confirmation?.message}
-                  labelPlacement="outside"
-                  classNames={{
-                    label: "text-[#272727] font-bold text-sm",
-                    inputWrapper: "shadow-none",
-                    base: "mb-4",
-                  }}
-                />
-                </>)}
+                    <Input
+                      label="تأكيد كلمة المرور"
+                      placeholder="نص الكتابه"
+                      type="password"
+                      {...register("password_confirmation")}
+                      isInvalid={!!errors.password_confirmation?.message}
+                      errorMessage={errors.password_confirmation?.message}
+                      labelPlacement="outside"
+                      classNames={{
+                        label: "text-[#272727] font-bold text-sm",
+                        inputWrapper: "shadow-none",
+                        base: "mb-4",
+                      }}
+                    />
+                  </>
+                )}
                 <Input
                   label="العمر"
                   placeholder="نص الكتابه"
@@ -422,7 +477,9 @@ export default function AddStudentModal({
                     <Select
                       {...field}
                       selectedKeys={field.value ? [field.value] : [""]}
-                      onSelectionChange={(keys) => field.onChange(Array.from(keys)[0])}
+                      onSelectionChange={(keys) =>
+                        field.onChange(Array.from(keys)[0])
+                      }
                       label="الدولة"
                       labelPlacement="outside"
                       placeholder="اختر الدولة"
@@ -473,7 +530,9 @@ export default function AddStudentModal({
                     className="text-white"
                     isDisabled={CreateStudent?.isPending}
                   >
-                    {CreateStudent?.isPending && <Spinner color="white" size="sm" />}
+                    {CreateStudent?.isPending && (
+                      <Spinner color="white" size="sm" />
+                    )}
                     التالي
                   </Button>
                 </div>
